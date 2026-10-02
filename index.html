@@ -192,15 +192,21 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 @media(max-width:340px){.obTop h2{letter-spacing:.2em}.obCard{padding-left:14px;padding-right:14px}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
 </style>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 
+<!-- ==============================================
+     FIREBASE INITIALIZATION (UPDATED REALTIME)
+     ============================================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+// Exact Firebase Configuration with Database URL
 const firebaseConfig = {
   apiKey: "AIzaSyCHDKJIX2hTnmo9HXaOxIJopFRBjKFGAnI",
   authDomain: "atomic-app-55e9b.firebaseapp.com",
+  databaseURL: "https://atomic-app-55e9b-default-rtdb.firebaseio.com",
   projectId: "atomic-app-55e9b",
   storageBucket: "atomic-app-55e9b.firebasestorage.app",
   messagingSenderId: "268858397066",
@@ -213,11 +219,14 @@ let analytics = null;
 try { analytics = getAnalytics(app); } catch(e) {}
 const auth = getAuth(app);
 const db = getDatabase(app);
+
 window.__ATOMIX_FIREBASE__ = { app, auth, db, ref, set, onValue, analytics, signInAnonymously, onAuthStateChanged };
+
 onAuthStateChanged(auth, function(user){
   window.__ATOMIX_FIREBASE_AUTH_USER__ = user || null;
   window.dispatchEvent(new Event("atomix-firebase-auth"));
 });
+
 signInAnonymously(auth).catch(function(e){ console.warn("Firebase anonymous auth failed", e); });
 window.__ATOMIX_FIREBASE_READY__ = true;
 window.dispatchEvent(new Event("atomix-firebase-ready"));
@@ -236,7 +245,7 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
 <header><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 8v8M8.5 10l7 4"/></svg></div>
 <div><b>Atomix</b><small><span class="dot"></span>Online</small></div><div class="sp"></div>
 <button class="ib n" onclick="toast('No new notifications')" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 0112 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 004 0"/></svg></button>
-<button class="ib" onclick="go('profile')" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></button></header>
+<button class="ib" onclick="go('v-profile')" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></button></header>
 
 <div id="views">
 <section class="view on" id="v-home">
@@ -264,7 +273,7 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
  <button class="btn dg" id="mainB" onclick="startMining()"></button>
 
  <div class="card" style="margin-top:12px"><div class="row"><div><div class="lbl">Pending DOGS reward</div><div class="amt" style="font-size:22px"><span id="pend">0.00</span><small>DOGS</small></div></div><button class="btn sm ok" id="clB" onclick="claim()">Claim</button></div></div>
- <div class="note">DOGS balances shown here are tracked in-app on this device only.</div>
+ <div class="note">DOGS balances shown here are synchronized in real-time with the cloud database.</div>
 </section>
 
 <section class="view" id="v-mining">
@@ -286,41 +295,38 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
  <div class="note">Only DOGS can be mined. Prices from CoinGecko; estimates only.</div>
 </section>
 
-<section class="view" id="v-coin"><button class="back" onclick="go('wallet')">‹ Back</button><div id="cd"></div></section>
+<section class="view" id="v-coin"><button class="back" onclick="go('v-wallet')">‹ Back</button><div id="cd"></div></section>
 
 <section class="view" id="v-rewards">
  <h1>Rewards</h1>
  <div class="card"><div class="row"><div class="row" style="gap:12px;justify-content:flex-start"><span data-coin="DOGS" data-size="sm"></span><div><b>Daily Reward</b><div class="lbl" id="dtx"></div></div></div><button class="btn sm ok" id="dB" onclick="daily()">Claim</button></div><div class="days" id="days"></div></div>
  <div class="card"><div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="t"><b>Watch Ads</b><small id="adS">0 / 10 completed</small></div><button class="btn sm" onclick="watchAd()">Watch</button></div>
- <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-3.5 3.2-5 7-5s6.400 1.500 7 5M17 5a3.500 3.500 0 010 7M19 15c1.700.6 2.600 2 3 4"/></svg></div><div class="t"><b>Referral Reward</b><small>Invite friends, earn bonus</small></div><button class="btn sm" onclick="go('ref')">Open</button></div>
+ <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-3.5 3.2-5 7-5s6.400 1.500 7 5M17 5a3.500 3.500 0 010 7M19 15c1.700.6 2.600 2 3 4"/></svg></div><div class="t"><b>Referral Reward</b><small>Invite friends, earn bonus</small></div><button class="btn sm" onclick="go('v-ref')">Open</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-3 0-4-4-1.500-4S12 8 12 8zM12 8c3 0 4-4 1.500-4S12 8 12 8z"/></svg></div><div class="t"><b>Welcome Bonus</b><small id="bnS">Available once</small></div><button class="btn sm ok" id="bnB" onclick="bonus()">Claim</button></div></div>
  
  <!-- ADMIN DYNAMIC CUSTOM BONUSES RENDER HERE -->
  <div id="customBonusesContainer" style="display:none"></div>
- 
 </section>
 
 <section class="view" id="v-profile">
  <div class="card" style="text-align:center"><div class="av" id="av">A</div><div id="pname" style="font-weight:700;font-size:17px;margin-bottom:2px;display:none"></div><b id="uid"></b><div class="lbl" style="margin-top:4px">DOGS Balance</div><div class="amt" style="font-size:22px"><span id="pbal"></span><small>DOGS</small></div></div>
  <div class="g2"><div class="card stat"><div class="lbl">Total mined</div><b id="stM">0</b></div><div class="card stat"><div class="lbl">Sessions</div><b id="stS">0</b></div><div class="card stat"><div class="lbl">Referral earnings</div><b id="stR">0</b></div><div class="card stat"><div class="lbl">Level</div><b id="stL">1</b></div></div>
  <div class="card" style="margin-top:12px">
-  <div class="it" onclick="go('tx')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></div><div class="t"><b>Transaction History</b></div>›</div>
+  <div class="it" onclick="go('v-tx')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></div><div class="t"><b>Transaction History</b></div>›</div>
   <div class="it" onclick="toast('Settings coming soon')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div><div class="t"><b>Settings</b></div>›</div>
-  <div class="it" onclick="toast('support@example.com')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.500 9a2.500 2.500 0 115 0c0 1.500-2.500 2-2.500 4M12 17h.01"/></svg></div><div class="t"><b>Help &amp; Support</b></div>›</div></div>
- <div class="note">Demo data is stored on this device only.</div>
+  <div class="it" onclick="toast('support@atomix.network')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.500 9a2.500 2.500 0 115 0c0 1.500-2.500 2-2.500 4M12 17h.01"/></svg></div><div class="t"><b>Help &amp; Support</b></div>›</div></div>
 </section>
 
 <section class="view" id="v-ref">
- <button class="back" onclick="go('rewards')">‹ Back</button>
+ <button class="back" onclick="go('v-rewards')">‹ Back</button>
  <div class="card" style="text-align:center"><svg width="150" height="90" viewBox="0 0 150 90"><circle cx="75" cy="40" r="16" fill="#ff8a3d33" stroke="#ff8a3d"/><circle cx="30" cy="62" r="11" fill="#9b6cff33" stroke="#9b6cff"/><circle cx="120" cy="62" r="11" fill="#38e0a033" stroke="#38e0a0"/><path d="M62 52L38 58M88 52l24 6" stroke="#ffffff44" stroke-dasharray="3 3"/><circle cx="75" cy="40" r="4" fill="#ffc98a"/></svg>
  <h1 style="margin-top:8px">Invite Friends</h1><p style="color:var(--mut)">Invite friends and earn bonus rewards.</p>
  <div class="lbl" style="margin-top:14px">Your referral code</div><div class="code"><div id="rc"></div><button class="btn sm" style="width:auto" onclick="copyCode()">COPY</button></div>
  <button class="btn" onclick="shareRef()">Invite Friends</button></div>
  <div class="g2" style="grid-template-columns:repeat(3,1fr)"><div class="card stat"><div class="lbl">Invited</div><b id="rI">0</b></div><div class="card stat"><div class="lbl">Active</div><b id="rA">0</b></div><div class="card stat"><div class="lbl">Earned</div><b id="rE">0</b></div></div>
- <div class="note">Verified referral tracking requires a server backend.</div>
 </section>
 
-<section class="view" id="v-tx"><button class="back" onclick="go('profile')">‹ Back</button><h1>Transactions</h1><div class="card" id="txl"></div></section>
+<section class="view" id="v-tx"><button class="back" onclick="go('v-profile')">‹ Back</button><h1>Transactions</h1><div class="card" id="txl"></div></section>
 </div>
 
 <nav id="nav"></nav></div>
@@ -351,7 +357,7 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
    <button class="btn" id="obGo" type="button"><span id="obGoT">LOGIN &amp; CONTINUE</span><i class="ld"></i></button>
    <button class="obAlt" id="obAlt" type="button" style="display:none">Use another account</button>
   </div>
-  <div class="obFt">Your profile is stored on this device.</div>
+  <div class="obFt">Your profile is synchronized with cloud database.</div>
  </div>
 </div>
 
@@ -363,7 +369,7 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
 "use strict";
 var $=function(i){return document.getElementById(i)};
 
-// 🔥 GLOBAL SETTINGS (WILL OVERRIDE WITH FIREBASE DATA)
+// GLOBAL SETTINGS (SYNCED WITH ADMIN VIA FIREBASE)
 var GLOBAL_SET = {
     app: {maintenance:false, maintenanceMsg:"Under maintenance"},
     mining: {enabled:true, session:7200, baseRate:0.25, rateStep:0.15, costBase:100, adsReq:10},
@@ -413,17 +419,17 @@ function firebaseWrite(){
   },120);
 }
 
-// 🔥 GLOBAL REALTIME SYNC (SETTINGS, BONUSES, NOTIFICATIONS)
+// REALTIME SYNC (SETTINGS, BONUSES, NOTIFICATIONS, BALANCE, BAN)
 function startFirebaseUserSync(){
   if(!FB.ready||!FB.authReady||FB.started||!S||!S.uid||!window.__ATOMIX_FIREBASE__)return;
   FB.started=true;var F=window.__ATOMIX_FIREBASE__;var path=firebaseUserPath();if(!path)return;var r=F.ref(F.db,path);
   
-  // Listen Settings
+  // Realtime Listen App Settings
   F.onValue(F.ref(F.db,"settings"), function(s){
     var v=s.val();
     if(v) {
         GLOBAL_SET = Object.assign({}, GLOBAL_SET, v);
-        if(GLOBAL_SET.app.maintenance) {
+        if(GLOBAL_SET.app && GLOBAL_SET.app.maintenance) {
             $("maint-screen").style.display = "flex";
             $("maint-msg").textContent = GLOBAL_SET.app.maintenanceMsg || "System under maintenance.";
         } else if(!S.banned) { 
@@ -433,13 +439,13 @@ function startFirebaseUserSync(){
     }
   });
 
-  // Listen Custom Bonuses
+  // Realtime Listen Custom Bonuses
   F.onValue(F.ref(F.db, "customBonuses"), function(s){
       CUSTOM_BONUSES = s.val() || {};
       if(typeof window.renderCustomBonuses === "function") window.renderCustomBonuses();
   });
 
-  // Listen Global Notifications (Alerts from Admin)
+  // Realtime Listen Admin Push Alerts
   let lastNotifTime = localStorage.getItem("atomix_last_notif") || 0;
   F.onValue(F.ref(F.db, "settings/globalNotification"), function(s){
       let notif = s.val();
@@ -450,6 +456,7 @@ function startFirebaseUserSync(){
       }
   });
 
+  // Realtime Listen User's Own Account (Balance updates, Ban, etc.)
   FB.unsub=F.onValue(r,function(snap){
     var remote=snap.val();
     if(remote&&typeof remote==="object"){
@@ -462,7 +469,7 @@ function startFirebaseUserSync(){
       if(remote.banned) {
           $("maint-screen").style.display = "flex";
           $("maint-msg").textContent = "Your account has been disabled by the admin.";
-      } else if (!GLOBAL_SET.app.maintenance) {
+      } else if (!GLOBAL_SET.app || !GLOBAL_SET.app.maintenance) {
           $("maint-screen").style.display = "none";
       }
 
@@ -485,7 +492,6 @@ window.atomixGetUid=function(){return S.uid};
 function f(n){return n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
 function usd(n){return n>=1?"$"+f(n):"$"+n.toFixed(n>=.01?4:8).replace(/0+$/,"0")}
 
-// Rate and Cost dynamic overrides
 function rate(){return GLOBAL_SET.mining.baseRate + GLOBAL_SET.mining.rateStep*(S.lvl-1)}
 function cost(){return GLOBAL_SET.mining.costBase * S.lvl * S.lvl}
 
@@ -498,7 +504,7 @@ $("nav").innerHTML=TABS.map(function(t){return '<button data-t="v-'+t[0]+'" oncl
 var cur="home",curCoin=0;
 window.go=function(v){
  let pKey = v==="v-ref"?"rewards":v==="v-tx"?"profile":v==="v-coin"?"wallet":v.replace("v-","");
- if(!GLOBAL_SET.pages[pKey]){toast("This section is temporarily unavailable.");return} 
+ if(GLOBAL_SET.pages && GLOBAL_SET.pages[pKey] === false){toast("This section is temporarily unavailable.");return} 
  cur=v;document.querySelectorAll(".view").forEach(function(s){s.classList.toggle("on",s.id===v)});
  var tv=v==="v-ref"?"v-rewards":v==="v-tx"?"v-profile":v==="v-coin"?"v-wallet":v;
  document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.dataset.t===tv)});
@@ -529,7 +535,7 @@ window.upgrade=function(){var c=cost();if(S.dogsBalance<c){toast("Need "+f(c)+" 
 window.daily=function(){var t=today();if(S.daily.last===t)return;var y=new Date(Date.now()-864e5).toISOString().slice(0,10);if(S.daily.last&&S.daily.last!==y)S.daily.day=0;var a=getDAILY()[Math.min(S.daily.day, getDAILY().length-1)];S.daily.last=t;S.daily.day=(S.daily.day+1)%7;S.dogsBalance+=a;addTx("Daily Reward",a);save();ui();success("Daily reward",a,"Come back tomorrow for more.")};
 window.bonus=function(){if(S.bonus)return;S.bonus=true;S.dogsBalance+=25;addTx("Welcome Bonus",25);save();ui();success("Bonus",25,"Welcome bonus claimed.")};
 
-// 🔥 CUSTOM BONUSES CLAIM LOGIC
+// CUSTOM BONUSES CLAIM LOGIC
 window.claimCustomBonus = function(id, type, reqAds, reward) {
     if(S.claimedBonuses && S.claimedBonuses[id]) { toast("Already claimed"); return; }
     if(type === "ads") {
@@ -698,7 +704,7 @@ function draw(t){
  if(t-lastSp>550&&pulses.length<8&&nodes.length){lastSp=t;a=Math.floor(Math.random()*nodes.length);for(j=0;j<nodes.length;j++){if(j===a)continue;dx=nodes[a].x-nodes[j].x;dy=nodes[a].y-nodes[j].y;if(dx*dx+dy*dy<78000){pulses.push({a:a,b:j,p:0});break}}}
  for(i=pulses.length-1;i>=0;i--){p=pulses[i];p.p+=.011;if(p.p>=1){pulses.splice(i,1);continue}a=nodes[p.a];b=nodes[p.b];glow(a.x+(b.x-a.x)*p.p,a.y+(b.y-a.y)*p.p,1.8,"200,215,255",.95)}
  for(i=0;i<nodes.length;i++){a=nodes[i];al=.55+.45*Math.sin(t/1100+a.ph);glow(a.x,a.y,a.r*(1+.28*Math.sin(t/800+a.ph)),a.c,al)}
- for(i=0;i<parts.length;i++){a=parts[i];a.x+=a.vx;a.y+=a.vy;if(a.y<-8)a.y=H+8;else if(a.y>H+8)a.y=-8;if(a.x<-8)a.x=W+8;else if(a.x>W+8)a.x=-8;
+ for(i=parts.length;i--;){a=parts[i];a.x+=a.vx;a.y+=a.vy;if(a.y<-8)a.y=H+8;else if(a.y>H+8)a.y=-8;if(a.x<-8)a.x=W+8;else if(a.x>W+8)a.x=-8;
   al=.25+.5*(.5+.5*Math.sin(t*a.sp*6+a.ph));glow(a.x,a.y,a.r*(.8+.35*Math.sin(t*a.sp*4+a.ph)),a.c,al)}
  raf=requestAnimationFrame(draw)}
 if(ctx){size();seed();raf=requestAnimationFrame(draw)}
