@@ -34,7 +34,6 @@ h1{font-size:20px;margin:4px 0 12px}
 .coin.sm i,.coin.gen i{font-size:12px;letter-spacing:-.02em}.coin.sm.dg i{font-size:18px}
 @keyframes fl{50%{transform:translateY(-4px)}}
 
-/* ===== PNG COIN ICONS (reusable) ===== */
 .coinImg{position:relative;width:52px;height:52px;flex:none;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(255,255,255,.10),0 6px 18px rgba(0,0,0,.35);isolation:isolate}
 .coinImg img{width:100%;height:100%;display:block;object-fit:cover;image-rendering:auto;-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .coinImg:after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:linear-gradient(150deg,rgba(255,255,255,.22) 0,rgba(255,255,255,.05) 32%,transparent 55%),radial-gradient(circle at 50% 120%,rgba(0,0,0,.22),transparent 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
@@ -77,6 +76,7 @@ h1{font-size:20px;margin:4px 0 12px}
 .btn.sm{width:auto;padding:10px 16px;font-size:12px;border-radius:12px;box-shadow:0 4px 0 var(--edge),0 8px 16px #6c8cff44,inset 0 1px 0 #ffffff55}
 .btn.sm:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
 .btn.ok{background:linear-gradient(120deg,#20c997,#38e0a0);color:#04231a;--edge:#12876a}
+.btn.gray{background:#ffffff11;color:#fff;--edge:#ffffff11;box-shadow:0 4px 0 var(--edge),0 8px 16px #0004,inset 0 1px 0 #ffffff22;animation:none;}
 .btn.dg{background:linear-gradient(120deg,#ff8a3d,#ffc25c,#ff8a3d);background-size:200% 100%;color:#2a1200;--edge:#b0561a;box-shadow:0 6px 0 var(--edge),0 12px 22px #ff8a3d55,inset 0 2px 0 #ffffff66}
 .rp{position:absolute;border-radius:50%;background:#fff5;transform:scale(0);animation:rp .6s ease-out forwards;pointer-events:none}
 @keyframes rp{to{transform:scale(4);opacity:0}}
@@ -116,33 +116,28 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 .spin{width:44px;height:44px;border-radius:50%;border:3px solid #ffffff22;border-top-color:var(--c1);margin:14px auto;animation:rot2 .8s linear infinite}
 #toast{position:fixed;left:50%;bottom:calc(var(--sab) + 84px);transform:translate(-50%,20px);background:#1a2040;border:1px solid var(--bd);padding:10px 16px;border-radius:14px;opacity:0;transition:.3s;z-index:30;font-size:13px;pointer-events:none;white-space:nowrap}#toast.on{opacity:1;transform:translate(-50%,0)}
 
-/* ===== LOGIN / PROFILE SCREEN (added) ===== */
+/* ===== LOGIN / PROFILE SCREEN ===== */
 #ob{position:fixed;inset:0;z-index:100;height:100vh;height:100dvh;background:radial-gradient(520px 420px at 15% -8%,#3a3fa077,transparent),radial-gradient(480px 420px at 105% 45%,#6a2fa066,transparent),radial-gradient(400px 360px at 40% 110%,#1b3a8a55,transparent),#05070f;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transition:opacity .7s ease-in-out,transform .7s ease-in-out}
 #ob.out{opacity:0;transform:scale(1.06);pointer-events:none}
-/* F: perspective grid, moves upward, faded on every edge (no frame) */
 #obGrid{position:fixed;left:-60%;right:-60%;bottom:-8%;height:72%;pointer-events:none;transform-origin:50% 100%;transform:perspective(520px) rotateX(64deg);background-image:linear-gradient(#6c8cff26 1px,transparent 1px),linear-gradient(90deg,#6c8cff26 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 45%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 45%,transparent 100%);animation:obg 7s linear infinite}
 @keyframes obg{to{background-position:0 -46px,0 -46px}}
 .obBm{position:fixed;top:-20%;width:34%;height:140%;pointer-events:none;background:linear-gradient(90deg,transparent,#6c8cff14,transparent);transform:rotate(18deg);animation:obBm 14s ease-in-out infinite}
 .obBm.b2{background:linear-gradient(90deg,transparent,#9b6cff12,transparent);animation-duration:19s;animation-delay:-7s}
 @keyframes obBm{0%,100%{left:-30%;opacity:.3}50%{left:85%;opacity:1}}
-/* G: scan */
 #obScan{position:fixed;left:0;right:0;top:0;height:110px;pointer-events:none;background:linear-gradient(180deg,transparent,#6c8cff0b 60%,#9b6cff12 98%,transparent);animation:obSc 11s ease-in-out infinite}
 @keyframes obSc{0%{transform:translateY(-130px)}100%{transform:translateY(105vh)}}
 #obCv{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 #obIn{position:relative;z-index:2;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(var(--sat) + 18px) 16px calc(var(--sab) + 18px);max-width:440px;margin:auto}
-/* floating glass panel: NO border, NO outline, only soft shadow */
 .obCard{position:relative;width:100%;border:0;outline:0;background:rgba(10,14,35,.55);border-radius:28px;padding:20px 18px 16px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 20px 80px rgba(70,80,220,.16);animation:obIn .9s cubic-bezier(.4,0,.2,1) both}
 @keyframes obIn{from{opacity:0;transform:translateY(20px) scale(.96)}}
 .obCard>*,.obTop>*:not(.obLg){position:relative;z-index:1}
 .obTop{text-align:center;margin-bottom:10px}
 .obLg{position:relative;width:84px;height:84px;margin:4px auto 10px;display:grid;place-items:center;animation:obFl 6s ease-in-out infinite}
 @keyframes obFl{50%{transform:translateY(-4px)}}
-/* E: radial energy glow 0.25 -> 0.55 -> 0.25 */
 .obLg:before{content:"";position:absolute;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,#6c8cffaa,#9b6cff55 40%,transparent 68%);animation:obGl 6s ease-in-out infinite}
 @keyframes obGl{0%,100%{opacity:.25;transform:scale(.95)}50%{opacity:.55;transform:scale(1.12)}}
 .obLg .rg{position:absolute;left:0;top:0;width:100%;height:100%;animation:rot2 20s linear infinite;pointer-events:none}
 .obLg .rg2{left:8px;top:8px;width:calc(100% - 16px);height:calc(100% - 16px);animation-duration:30s;animation-direction:reverse}
-/* D: big holographic rings (cw, ccw, scale+fade), very low opacity */
 .obLg .rgB,.obLg .rgC,.obLg .rgD{left:50%;top:50%}
 .obLg .rgB{width:250px;height:250px;margin:-125px 0 0 -125px;opacity:.5;animation:obRA 46s linear infinite}
 .obLg .rgC{width:330px;height:330px;margin:-165px 0 0 -165px;animation:obRB 62s linear infinite,obFd 10s ease-in-out infinite}
@@ -151,7 +146,6 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 @keyframes obRB{0%{transform:rotate(0) scale(1)}50%{transform:rotate(-180deg) scale(.94)}100%{transform:rotate(-360deg) scale(1)}}
 @keyframes obRC{0%{transform:rotate(0) scale(.96)}50%{transform:rotate(180deg) scale(1.06)}100%{transform:rotate(360deg) scale(.96)}}
 @keyframes obFd{0%,100%{opacity:.15}50%{opacity:.55}}
-/* logo orbiting particles */
 .orb{position:absolute;left:50%;top:50%;pointer-events:none;animation:rot2 7s linear infinite}
 .orb:after{content:"";position:absolute;left:50%;top:0;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#cfd8ff;box-shadow:0 0 8px #8fa8ff,0 0 14px #9b6cff}
 .orb.o1{width:100px;height:100px;margin:-50px 0 0 -50px}
@@ -185,7 +179,6 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 .obAcc .av{margin:0;width:44px;height:44px;font-size:18px;flex:none}
 .obAcc b{display:block;font-size:17px;word-break:break-word}.obAcc small{color:var(--mut);font-size:11px}
 #ob.back .obAcc{display:flex}#ob.back .obF{display:none}
-/* button: slow horizontal gradient, travelling light reflection */
 #obGo{margin-top:2px;background-size:250% 100%;animation:sh 7s ease-in-out infinite alternate;box-shadow:0 5px 0 var(--edge),0 10px 24px #6c8cff40,inset 0 1px 0 #ffffff40}
 #obGo:active:not([disabled]){transform:translateY(4px) scale(.975);box-shadow:0 1px 0 var(--edge),0 0 28px #9b6cff88}
 #obGo:after{content:"";position:absolute;top:0;bottom:0;left:-40%;width:30%;background:linear-gradient(100deg,transparent,#ffffff40,transparent);transform:skewX(-20deg);pointer-events:none;animation:obShine 4.5s ease-in-out infinite}
@@ -198,7 +191,8 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 @media(max-height:720px){#obIn{gap:8px;padding-top:calc(var(--sat) + 10px);padding-bottom:calc(var(--sab) + 10px)}.obLg{width:60px;height:60px;margin:0 auto 6px}.obLg .logo{width:38px;height:38px}.orb.o1{width:76px;height:76px;margin:-38px 0 0 -38px}.orb.o2{width:92px;height:92px;margin:-46px 0 0 -46px}.orb.o3{width:68px;height:68px;margin:-34px 0 0 -34px}.orb.o4{width:106px;height:106px;margin:-53px 0 0 -53px}.obTop h2{font-size:20px}.obTop{margin-bottom:4px}.obOn{margin-top:5px}.obCard{padding:14px 16px 12px}.obCard h1{font-size:18px;margin-top:4px}.obCard .sub{margin-bottom:8px;font-size:12px}.obF{margin-bottom:8px}.obF input{height:44px}#obGo{padding:14px}}
 @media(max-width:340px){.obTop h2{letter-spacing:.2em}.obCard{padding-left:14px;padding-right:14px}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
-</style><script type="module">
+</style>
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
@@ -224,13 +218,19 @@ onAuthStateChanged(auth, function(user){
   window.__ATOMIX_FIREBASE_AUTH_USER__ = user || null;
   window.dispatchEvent(new Event("atomix-firebase-auth"));
 });
-signInAnonymously(auth).catch(function(e){
-  console.warn("Firebase anonymous auth failed", e);
-});
+signInAnonymously(auth).catch(function(e){ console.warn("Firebase anonymous auth failed", e); });
 window.__ATOMIX_FIREBASE_READY__ = true;
 window.dispatchEvent(new Event("atomix-firebase-ready"));
 </script>
 </head><body>
+
+<!-- SYSTEM MAINTENANCE / BAN OVERLAY -->
+<div id="maint-screen" style="display:none;position:fixed;inset:0;z-index:90000;background:#05070f;color:#fff;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;">
+    <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#ff5c7a" stroke-width="2" style="margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <h1 style="font-size:24px; margin:0 0 8px">Access Denied</h1>
+    <p style="color:#7f89a8;line-height:1.5" id="maint-msg">App is undergoing maintenance.</p>
+</div>
+
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="gr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffc25c"/></linearGradient></defs></svg>
 <div id="app">
 <header><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 8v8M8.5 10l7 4"/></svg></div>
@@ -255,7 +255,7 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
   <i class="pt" style="--x:-40px"></i><i class="pt" style="--x:30px;animation-delay:.8s"></i><i class="pt" style="--x:-10px;animation-delay:1.6s"></i><i class="pt" style="--x:55px;animation-delay:2.2s"></i></div>
 
  <div class="card" id="adCard"><div class="adp"><div class="mini"><svg width="64" height="64" viewBox="0 0 64 64"><circle class="trk" cx="32" cy="32" r="27" fill="none" stroke-width="6"/><circle id="adR" cx="32" cy="32" r="27" fill="none" stroke="url(#gr)" stroke-width="6" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="169.6" style="transition:stroke-dashoffset .6s"/></svg><b id="adN">0/10</b></div>
-  <div style="flex:1"><div class="lbl">Watch ads</div><div id="adT" style="margin:2px 0 8px">Watch 10 ads to unlock DOGS mining.</div><button class="btn sm dg" id="adB" onclick="watchAd()">Watch ad</button></div></div></div>
+  <div style="flex:1"><div class="lbl">Watch ads</div><div id="adT" style="margin:2px 0 8px">Watch ads to unlock DOGS mining.</div><button class="btn sm dg" id="adB" onclick="watchAd()">Watch ad</button></div></div></div>
 
  <div class="card" id="tmCard" style="display:none"><div class="lbl" style="text-align:center">DOGS mining active</div>
   <div class="ringw"><svg viewBox="0 0 150 150"><circle class="trk" cx="75" cy="75" r="66" fill="none" stroke-width="8"/><circle class="prg" id="ring" cx="75" cy="75" r="66" fill="none" stroke-width="8" stroke-dasharray="414.7" stroke-dashoffset="414.7"/></svg><div class="c"><b id="tm">02:00:00</b><span class="lbl">remaining</span></div></div>
@@ -276,7 +276,7 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
   <div class="row" style="margin:14px 0 4px"><span>Level <span id="lv1"></span> → Level <span id="lv2"></span></span><span class="lbl" id="cost"></span></div>
   <button class="btn dg" id="upB" onclick="upgrade()" style="margin-top:10px">Upgrade</button></div>
  <div class="g2"><div class="card stat"><div class="lbl">Session</div><b>2 hours</b></div><div class="card stat"><div class="lbl">Session reward</div><b id="sr"></b></div></div>
- <div class="card" style="margin-top:12px"><div class="lbl">How it works</div><p style="margin-top:6px;color:var(--mut)">Watch 10 ads → DOGS mining unlocks → start a 2-hour session → claim your DOGS. Higher power levels mine faster.</p></div>
+ <div class="card" style="margin-top:12px"><div class="lbl">How it works</div><p style="margin-top:6px;color:var(--mut)">Watch ads → DOGS mining unlocks → start a 2-hour session → claim your DOGS. Higher power levels mine faster.</p></div>
 </section>
 
 <section class="view" id="v-wallet">
@@ -293,7 +293,11 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
  <div class="card"><div class="row"><div class="row" style="gap:12px;justify-content:flex-start"><span data-coin="DOGS" data-size="sm"></span><div><b>Daily Reward</b><div class="lbl" id="dtx"></div></div></div><button class="btn sm ok" id="dB" onclick="daily()">Claim</button></div><div class="days" id="days"></div></div>
  <div class="card"><div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="t"><b>Watch Ads</b><small id="adS">0 / 10 completed</small></div><button class="btn sm" onclick="watchAd()">Watch</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-3.5 3.2-5 7-5s6.400 1.500 7 5M17 5a3.500 3.500 0 010 7M19 15c1.700.6 2.600 2 3 4"/></svg></div><div class="t"><b>Referral Reward</b><small>Invite friends, earn bonus</small></div><button class="btn sm" onclick="go('ref')">Open</button></div>
- <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-3 0-4-4-1.500-4S12 8 12 8zM12 8c3 0 4-4 1.500-4S12 8 12 8z"/></svg></div><div class="t"><b>Bonus</b><small id="bnS">Available once</small></div><button class="btn sm ok" id="bnB" onclick="bonus()">Claim</button></div></div>
+ <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-3 0-4-4-1.500-4S12 8 12 8zM12 8c3 0 4-4 1.500-4S12 8 12 8z"/></svg></div><div class="t"><b>Welcome Bonus</b><small id="bnS">Available once</small></div><button class="btn sm ok" id="bnB" onclick="bonus()">Claim</button></div></div>
+ 
+ <!-- ADMIN DYNAMIC CUSTOM BONUSES RENDER HERE -->
+ <div id="customBonusesContainer" style="display:none"></div>
+ 
 </section>
 
 <section class="view" id="v-profile">
@@ -322,7 +326,7 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
 <nav id="nav"></nav></div>
 <div id="md"><div class="pop" id="pop"></div></div><div id="toast"></div>
 
-<!-- LOGIN / PROFILE OVERLAY (added). Visible by default so the app never flashes before the check runs. -->
+<!-- LOGIN / PROFILE OVERLAY -->
 <div id="ob" role="dialog" aria-label="Atomix login">
  <div id="obGrid"></div><i class="obBm"></i><i class="obBm b2"></i><div id="obScan"></div><canvas id="obCv"></canvas>
  <div id="obIn">
@@ -351,13 +355,29 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
  </div>
 </div>
 
+<!-- ==============================================
+     USER LOGIC (SYNCED WITH FIREBASE SETTINGS)
+     ============================================== -->
 <script>
 (function(){
 "use strict";
-var $=function(i){return document.getElementById(i)},SES=7200,ADS=10,DAILY=[10,15,20,25,30,40,60];
-/* ===== CONFIG: coins. cg = CoinGecko id. Verify the DOGS id on coingecko.com if the price shows unavailable.
-   To add a coin: add one object here with an "icon" PNG filename (placed next to this HTML file).
-   The wallet, coin detail page and price fetch pick it up automatically. ===== */
+var $=function(i){return document.getElementById(i)};
+
+// 🔥 GLOBAL SETTINGS (WILL OVERRIDE WITH FIREBASE DATA)
+var GLOBAL_SET = {
+    app: {maintenance:false, maintenanceMsg:"Under maintenance"},
+    mining: {enabled:true, session:7200, baseRate:0.25, rateStep:0.15, costBase:100, adsReq:10},
+    rewards: {daily:[10,15,20,25,30,40,60], bonus:25},
+    referral: {enabled:true},
+    pages: {home:true, mining:true, wallet:true, rewards:true, profile:true},
+    buttons: {mainB:{textUnl:"START DOGS MINING", textAds:"WATCH {ADS} ADS", textMin:"MINING ACTIVE"}}
+};
+var CUSTOM_BONUSES = {};
+
+function getSES(){return GLOBAL_SET.mining.session;}
+function getADS(){return GLOBAL_SET.mining.adsReq;}
+function getDAILY(){return GLOBAL_SET.rewards.daily;}
+
 var COINS=[
  {k:"dogsBalance",sym:"DOGS",name:"DOGS Token",cg:"dogs-2",cls:"dg",icon:"dogs.png",mine:true},
  {k:"bonkBalance",sym:"BONK",name:"BONK",cg:"bonk",cls:"bk",icon:"bonk.png"},
@@ -365,113 +385,135 @@ var COINS=[
  {k:"flokiBalance",sym:"FLOKI",name:"FLOKI",cg:"floki",cls:"fl",icon:"floki.png"},
  {k:"walletCoin5Balance",sym:"CUSTOM",name:"WALLET COIN",cg:null,manualPrice:0,cls:"gen",icon:"custom.png"}
 ];
-/* ===== reusable PNG coin icon (used everywhere a coin is shown) ===== */
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
-function coinIcon(c,sizeClass){
- return '<div class="coinImg '+(c.cls||'')+' '+(sizeClass||'')+'"><img src="'+esc(c.icon)+'" alt="'+esc(c.sym)+'" draggable="false" decoding="async" onerror="coinImgErr(this)"></div>';
-}
-/* missing PNG -> professional fallback showing the coin symbol; app keeps working */
+function coinIcon(c,sizeClass){return '<div class="coinImg '+(c.cls||'')+' '+(sizeClass||'')+'"><img src="'+esc(c.icon)+'" alt="'+esc(c.sym)+'" draggable="false" decoding="async" onerror="coinImgErr(this)"></div>';}
 window.coinImgErr=function(img){try{var w=img.parentNode;if(w)w.innerHTML='<div class="coinFallback">'+esc(img.getAttribute("alt"))+'</div>'}catch(e){}};
 function coinBySym(s){for(var i=0;i<COINS.length;i++)if(COINS[i].sym===s)return COINS[i];return null}
-/* static placeholders in the HTML: <span data-coin="DOGS" data-size="big"></span> */
 Array.prototype.slice.call(document.querySelectorAll("[data-coin]")).forEach(function(el){var c=coinBySym(el.getAttribute("data-coin"));if(c)el.outerHTML=coinIcon(c,el.getAttribute("data-size")||"")});
 var IC={home:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',mining:'<path d="M12 3l8 4.500v9L12 21l-8-4.500v-9z"/><circle cx="12" cy="12" r="3"/>',wallet:'<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/>',rewards:'<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-3 0-4-4-1.500-4S12 8 12 8zM12 8c3 0 4-4 1.500-4S12 8 12 8z"/>',profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>'};
+
 var def={dogsBalance:0,bonkBalance:0,trxBalance:0,flokiBalance:0,walletCoin5Balance:0,ads:0,unlocked:false,mining:null,claim:0,lvl:1,ref:{code:"DOGS"+Math.random().toString(36).slice(2,6).toUpperCase(),inv:0,act:0,earn:0},daily:{day:0,last:""},bonus:false,tx:[],sessions:0,total:0,uid:"ID"+Math.floor(100000+Math.random()*900000)};
 var S;try{S=Object.assign({},def,JSON.parse(localStorage.getItem("atomix")||"{}"))}catch(e){S=def}
 if(typeof S.bal==="number"){S.dogsBalance+=S.bal;delete S.bal}
 S.tx.forEach(function(x){if(!x.c)x.c="DOGS"});
 
-/* ===== Firebase Realtime Database sync ===== */
 var FB={ready:false,authReady:false,started:false,remoteLoaded:false,writing:false,timer:null,unsub:null};
 function firebaseUserPath(){var au=window.__ATOMIX_FIREBASE_AUTH_USER__;return au?"users/"+au.uid:null}
 function firebasePayload(){
-  return JSON.parse(JSON.stringify({
-    ...S,
-    profile:P||null,
-    updatedAt:Date.now(),
-    authUid:(window.__ATOMIX_FIREBASE_AUTH_USER__&&window.__ATOMIX_FIREBASE_AUTH_USER__.uid)||null
-  }));
+  return JSON.parse(JSON.stringify({...S,profile:P||null,updatedAt:Date.now(),authUid:(window.__ATOMIX_FIREBASE_AUTH_USER__&&window.__ATOMIX_FIREBASE_AUTH_USER__.uid)||null}));
 }
 function firebaseWrite(){
   if(!FB.ready||!FB.authReady||!S||!S.uid||!window.__ATOMIX_FIREBASE__)return;
   clearTimeout(FB.timer);
   FB.timer=setTimeout(function(){
     try{
-      FB.writing=true;
-      var F=window.__ATOMIX_FIREBASE__;
-      F.set(F.ref(F.db,firebaseUserPath()),firebasePayload()).catch(function(e){
-        console.warn("Firebase save failed",e); toast("Cloud save failed — local data kept");
-      }).finally(function(){setTimeout(function(){FB.writing=false},300)});
+      FB.writing=true;var F=window.__ATOMIX_FIREBASE__;
+      F.set(F.ref(F.db,firebaseUserPath()),firebasePayload()).catch(function(e){console.warn("Firebase save failed",e);toast("Cloud save failed — local data kept");}).finally(function(){setTimeout(function(){FB.writing=false},300)});
     }catch(e){FB.writing=false;console.warn(e)}
   },120);
 }
+
+// 🔥 GLOBAL REALTIME SYNC (SETTINGS, BONUSES, NOTIFICATIONS)
 function startFirebaseUserSync(){
   if(!FB.ready||!FB.authReady||FB.started||!S||!S.uid||!window.__ATOMIX_FIREBASE__)return;
-  FB.started=true;
-  var F=window.__ATOMIX_FIREBASE__;
-  var path=firebaseUserPath();
-  if(!path)return;
-  var r=F.ref(F.db,path);
+  FB.started=true;var F=window.__ATOMIX_FIREBASE__;var path=firebaseUserPath();if(!path)return;var r=F.ref(F.db,path);
+  
+  // Listen Settings
+  F.onValue(F.ref(F.db,"settings"), function(s){
+    var v=s.val();
+    if(v) {
+        GLOBAL_SET = Object.assign({}, GLOBAL_SET, v);
+        if(GLOBAL_SET.app.maintenance) {
+            $("maint-screen").style.display = "flex";
+            $("maint-msg").textContent = GLOBAL_SET.app.maintenanceMsg || "System under maintenance.";
+        } else if(!S.banned) { 
+            $("maint-screen").style.display = "none";
+        }
+        try { ui(); } catch(e){}
+    }
+  });
+
+  // Listen Custom Bonuses
+  F.onValue(F.ref(F.db, "customBonuses"), function(s){
+      CUSTOM_BONUSES = s.val() || {};
+      if(typeof window.renderCustomBonuses === "function") window.renderCustomBonuses();
+  });
+
+  // Listen Global Notifications (Alerts from Admin)
+  let lastNotifTime = localStorage.getItem("atomix_last_notif") || 0;
+  F.onValue(F.ref(F.db, "settings/globalNotification"), function(s){
+      let notif = s.val();
+      if(notif && notif.time > lastNotifTime) {
+          lastNotifTime = notif.time;
+          localStorage.setItem("atomix_last_notif", lastNotifTime);
+          modal('<div class="chk" style="background:#ff5c7a22;color:#ff5c7a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div><div class="lbl" style="margin-top:14px">🔔 ADMIN ALERT</div><div class="big" style="font-size:22px;margin-bottom:10px">' + esc(notif.title) + '</div><p style="color:var(--mut);margin-bottom:16px">' + esc(notif.body) + '</p><button class="btn bad" onclick="closeM()">DISMISS</button>');
+      }
+  });
+
   FB.unsub=F.onValue(r,function(snap){
     var remote=snap.val();
     if(remote&&typeof remote==="object"){
       var incoming=Object.assign({},def,remote);
-      delete incoming.profile;
-      delete incoming.updatedAt;
+      delete incoming.profile;delete incoming.updatedAt;
       if(typeof incoming.ref==="string")incoming.ref={code:incoming.ref,inv:0,act:0,earn:0};
       S=incoming;
+      
+      // User Ban Logic
+      if(remote.banned) {
+          $("maint-screen").style.display = "flex";
+          $("maint-msg").textContent = "Your account has been disabled by the admin.";
+      } else if (!GLOBAL_SET.app.maintenance) {
+          $("maint-screen").style.display = "none";
+      }
+
       if(remote.profile)P=remote.profile;
       try{localStorage.setItem("atomix",JSON.stringify(S));if(P)localStorage.setItem("atomix_profile",JSON.stringify(P))}catch(e){}
-      FB.remoteLoaded=true;
-      try{ui()}catch(e){}
+      FB.remoteLoaded=true;try{ui()}catch(e){}
     }else{
       firebaseWrite();
     }
-  },function(e){console.warn("Firebase realtime listener failed",e);toast("Cloud connection failed — local mode active")});
+  },function(e){console.warn("Firebase listener fail",e);toast("Cloud connection failed")});
 }
-window.addEventListener("atomix-firebase-auth",function(){
-  FB.authReady=!!window.__ATOMIX_FIREBASE_AUTH_USER__;
-  if(FB.authReady){startFirebaseUserSync();firebaseWrite()}
-});
-window.addEventListener("atomix-firebase-ready",function(){
-  FB.ready=true;
-  FB.authReady=!!window.__ATOMIX_FIREBASE_AUTH_USER__;
-  startFirebaseUserSync();
-  firebaseWrite();
-});
+window.addEventListener("atomix-firebase-auth",function(){FB.authReady=!!window.__ATOMIX_FIREBASE_AUTH_USER__;if(FB.authReady){startFirebaseUserSync();firebaseWrite()}});
+window.addEventListener("atomix-firebase-ready",function(){FB.ready=true;FB.authReady=!!window.__ATOMIX_FIREBASE_AUTH_USER__;startFirebaseUserSync();firebaseWrite()});
 if(window.__ATOMIX_FIREBASE_READY__){FB.ready=true;FB.authReady=!!window.__ATOMIX_FIREBASE_AUTH_USER__;startFirebaseUserSync()}
-function save(){
-  try{localStorage.setItem("atomix",JSON.stringify(S))}catch(e){}
-  firebaseWrite();
-}
-/* ===== profile (added): separate "atomix_profile" key, existing "atomix" data untouched ===== */
+function save(){try{localStorage.setItem("atomix",JSON.stringify(S))}catch(e){}firebaseWrite();}
+
 var P=null;try{P=JSON.parse(localStorage.getItem("atomix_profile")||"null")}catch(e){P=null}
 window.atomixProfileApply=function(p){P=p;if(p&&p.uid&&S.uid!==p.uid){S.uid=p.uid}save();ui()};
 window.atomixGetUid=function(){return S.uid};
 function f(n){return n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
 function usd(n){return n>=1?"$"+f(n):"$"+n.toFixed(n>=.01?4:8).replace(/0+$/,"0")}
-function rate(){return .25+.15*(S.lvl-1)}function cost(){return 100*S.lvl*S.lvl}
+
+// Rate and Cost dynamic overrides
+function rate(){return GLOBAL_SET.mining.baseRate + GLOBAL_SET.mining.rateStep*(S.lvl-1)}
+function cost(){return GLOBAL_SET.mining.costBase * S.lvl * S.lvl}
+
 function toast(m){var t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove("on")},1800)}
 window.toast=toast;
 function addTx(t,a,c){S.tx.unshift({t:t,a:a,c:c||"DOGS",d:Date.now()});S.tx=S.tx.slice(0,50)}
-/* nav */
+
 var TABS=[["home","HOME"],["mining","MINING"],["wallet","WALLET"],["rewards","REWARDS"],["profile","PROFILE"]];
-$("nav").innerHTML=TABS.map(function(t){return '<button data-t="'+t[0]+'" onclick="go(\''+t[0]+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+IC[t[0]]+'</svg>'+t[1]+'</button>'}).join("");
+$("nav").innerHTML=TABS.map(function(t){return '<button data-t="v-'+t[0]+'" onclick="go(\'v-'+t[0]+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+IC[t[0]]+'</svg>'+t[1]+'</button>'}).join("");
 var cur="home",curCoin=0;
-window.go=function(v){cur=v;document.querySelectorAll(".view").forEach(function(s){s.classList.toggle("on",s.id==="v-"+v)});
- var tv=v==="ref"?"rewards":v==="tx"?"profile":v==="coin"?"wallet":v;document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.dataset.t===tv)});
- $("views").scrollTop=0;if(v==="tx")txList();lastW="";ui()};
-window.coinD=function(i){curCoin=i;go("coin")};
+window.go=function(v){
+ let pKey = v==="v-ref"?"rewards":v==="v-tx"?"profile":v==="v-coin"?"wallet":v.replace("v-","");
+ if(!GLOBAL_SET.pages[pKey]){toast("This section is temporarily unavailable.");return} 
+ cur=v;document.querySelectorAll(".view").forEach(function(s){s.classList.toggle("on",s.id===v)});
+ var tv=v==="v-ref"?"v-rewards":v==="v-tx"?"v-profile":v==="v-coin"?"v-wallet":v;
+ document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.dataset.t===tv)});
+ $("views").scrollTop=0;if(v==="v-tx")txList();lastW="";ui()
+};
+window.coinD=function(i){curCoin=i;go("v-coin")};
 document.addEventListener("click",function(e){var b=e.target.closest(".btn");if(!b||b.disabled)return;var r=b.getBoundingClientRect(),s=document.createElement("span"),z=Math.max(r.width,r.height);
  s.className="rp";s.style.cssText="width:"+z+"px;height:"+z+"px;left:"+(e.clientX-r.left-z/2)+"px;top:"+(e.clientY-r.top-z/2)+"px";b.appendChild(s);setTimeout(function(){s.remove()},600)});
 function modal(h){$("pop").innerHTML=h;$("md").classList.add("on")}
 window.closeM=function(){$("md").classList.remove("on")};
 function success(t,a,m){modal('<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg></div><div class="lbl" style="margin-top:14px">'+t+'</div><div class="big">+'+f(a)+' DOGS</div><p style="color:var(--mut);margin-bottom:16px">'+m+'</p><button class="btn dg" onclick="closeM()">CONTINUE</button>')}
-/* ===== ADS: all ad code lives in showMiningAd(). Replace its body with your Monetag call.
-   It must return a Promise that resolves TRUE only when the ad completed successfully. ===== */
+
 function showMiningAd(){
  return new Promise(function(resolve){
-  var t=3;modal('<div class="lbl">Sponsored</div><div class="spin"></div><div class="big" id="adc">'+t+'</div><p style="color:var(--mut)">Ad placeholder. Connect Monetag inside showMiningAd().</p>');
+  var t=3;modal('<div class="lbl">Sponsored</div><div class="spin"></div><div class="big" id="adc">'+t+'</div><p style="color:var(--mut)">Ad placeholder.</p>');
   var iv=setInterval(function(){t--;if($("adc"))$("adc").textContent=t;if(t<=0){clearInterval(iv);closeM();resolve(true)}},1000);
  });
 }
@@ -479,20 +521,84 @@ var adBusy=false;
 window.watchAd=function(){if(adBusy)return;if(S.unlocked||S.mining){toast(S.mining?"Mining in progress":"DOGS mining already unlocked");return}
  adBusy=true;
  showMiningAd().then(function(ok){adBusy=false;if(ok!==true){toast("Ad not completed");return}
-  S.ads=Math.min(ADS,S.ads+1);if(S.ads>=ADS){S.unlocked=true;toast("DOGS mining unlocked")}save();ui()}).catch(function(){adBusy=false;closeM();toast("Ad failed")})};
-/* mining: ONLY dogsBalance / claim is ever increased */
-window.startMining=function(){if(S.mining||!S.unlocked)return;S.mining={s:Date.now(),e:Date.now()+SES*1000,r:rate()};S.unlocked=false;S.ads=0;save();ui()};
-function finish(){var m=S.mining;if(!m)return;var r=m.r*SES/60;S.mining=null;S.claim+=r;S.sessions++;S.total+=r;addTx("DOGS Mining Reward",r);save();ui();success("Mining complete",r,"DOGS mining session completed.")}
+  S.ads=Math.min(getADS(),S.ads+1);if(S.ads>=getADS()){S.unlocked=true;toast("DOGS mining unlocked")}save();ui()}).catch(function(){adBusy=false;closeM();toast("Ad failed")})};
+window.startMining=function(){if(S.mining||!S.unlocked)return;S.mining={s:Date.now(),e:Date.now()+getSES()*1000,r:rate()};S.unlocked=false;S.ads=0;save();ui()};
+function finish(){var m=S.mining;if(!m)return;var r=m.r*getSES()/60;S.mining=null;S.claim+=r;S.sessions++;S.total+=r;addTx("DOGS Mining Reward",r);save();ui();success("Mining complete",r,"DOGS mining session completed.")}
 window.claim=function(){if(S.mining||S.claim<=0)return;var a=S.claim;S.claim=0;S.dogsBalance+=a;addTx("DOGS Reward Claimed",a);save();ui();success("Reward claimed",a,"Added to your DOGS balance.")};
 window.upgrade=function(){var c=cost();if(S.dogsBalance<c){toast("Need "+f(c)+" DOGS");return}if(S.mining){toast("Upgrade after the session");return}S.dogsBalance-=c;S.lvl++;addTx("Power Upgrade",-c);save();ui();toast("Upgraded to Level "+S.lvl)};
-window.daily=function(){var t=today();if(S.daily.last===t)return;var y=new Date(Date.now()-864e5).toISOString().slice(0,10);if(S.daily.last&&S.daily.last!==y)S.daily.day=0;var a=DAILY[S.daily.day];S.daily.last=t;S.daily.day=(S.daily.day+1)%7;S.dogsBalance+=a;addTx("Daily Reward",a);save();ui();success("Daily reward",a,"Come back tomorrow for more.")};
+window.daily=function(){var t=today();if(S.daily.last===t)return;var y=new Date(Date.now()-864e5).toISOString().slice(0,10);if(S.daily.last&&S.daily.last!==y)S.daily.day=0;var a=getDAILY()[Math.min(S.daily.day, getDAILY().length-1)];S.daily.last=t;S.daily.day=(S.daily.day+1)%7;S.dogsBalance+=a;addTx("Daily Reward",a);save();ui();success("Daily reward",a,"Come back tomorrow for more.")};
 window.bonus=function(){if(S.bonus)return;S.bonus=true;S.dogsBalance+=25;addTx("Welcome Bonus",25);save();ui();success("Bonus",25,"Welcome bonus claimed.")};
+
+// 🔥 CUSTOM BONUSES CLAIM LOGIC
+window.claimCustomBonus = function(id, type, reqAds, reward) {
+    if(S.claimedBonuses && S.claimedBonuses[id]) { toast("Already claimed"); return; }
+    if(type === "ads") {
+        if(!S.bonusAds) S.bonusAds = {};
+        if(!S.bonusAds[id]) S.bonusAds[id] = 0;
+        showMiningAd().then(function(ok){
+            if(!ok){toast("Ad not completed");return;}
+            S.bonusAds[id]++;
+            if(S.bonusAds[id] >= reqAds) {
+                if(!S.claimedBonuses) S.claimedBonuses = {};
+                S.claimedBonuses[id] = true;
+                S.dogsBalance += reward;
+                addTx("Bonus Reward", reward);
+                success("Bonus Claimed", reward, "You completed the task!");
+            } else {
+                toast("Ad " + S.bonusAds[id] + " / " + reqAds + " completed");
+            }
+            save(); ui(); window.renderCustomBonuses();
+        });
+    } else {
+        if(!S.claimedBonuses) S.claimedBonuses = {};
+        S.claimedBonuses[id] = true;
+        S.dogsBalance += reward;
+        addTx("Bonus Reward", reward);
+        save(); ui(); window.renderCustomBonuses();
+        success("Bonus Claimed", reward, "Free bonus claimed!");
+    }
+};
+
+window.renderCustomBonuses = function() {
+    let container = $("customBonusesContainer");
+    if(!container) return;
+    let keys = Object.keys(CUSTOM_BONUSES);
+    if(keys.length === 0) {
+        container.style.display = "none";
+        return;
+    }
+    container.style.display = "block";
+    let h = '<div class="card">';
+    keys.sort((a,b)=>CUSTOM_BONUSES[b].createdAt - CUSTOM_BONUSES[a].createdAt).forEach(k => {
+        let b = CUSTOM_BONUSES[k];
+        let isClaimed = S.claimedBonuses && S.claimedBonuses[k];
+        let btnTxt = "Claim";
+        let btnCls = "ok";
+        let progress = "";
+        let disabled = "";
+        if(isClaimed) {
+            btnTxt = "Claimed"; btnCls = "gray"; disabled = "disabled"; progress = "Completed";
+        } else if(b.type === "ads") {
+            let watched = (S.bonusAds && S.bonusAds[k]) || 0;
+            btnTxt = "Watch"; btnCls = "dg"; progress = watched + " / " + b.adsReq + " Ads";
+        } else {
+            progress = "Free Claim";
+        }
+        h += `<div class="it">
+            <div class="ico" style="background:#ffc25c22;color:#ffc25c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+            <div class="t"><b>${esc(b.name)}</b><small>${progress} · +${b.reward} DOGS</small></div>
+            <button class="btn sm ${btnCls}" ${disabled} onclick="claimCustomBonus('${k}', '${b.type}', ${b.adsReq||0}, ${b.reward})">${btnTxt}</button>
+        </div>`;
+    });
+    h += '</div>';
+    container.innerHTML = h;
+};
+
 function today(){return new Date().toISOString().slice(0,10)}
 window.copyCode=function(){try{navigator.clipboard.writeText(S.ref.code).then(function(){toast("Code copied")},function(){toast(S.ref.code)})}catch(e){toast(S.ref.code)}};
 window.shareRef=function(){var t="Join me on Atomix Miner. Code: "+S.ref.code;if(navigator.share)navigator.share({text:t}).catch(function(){});else window.copyCode()};
 function txRows(list){return list.length?list.map(function(x){return '<div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div><div class="t"><b>'+x.t+'</b><small>'+new Date(x.d).toLocaleString()+' · Completed</small></div><span class="'+(x.a>=0?"pos":"")+'">'+(x.a>=0?"+":"")+f(x.a)+' '+x.c+'</span></div>'}).join(""):'<p class="note">No transactions yet.</p>'}
 function txList(){$("txl").innerHTML=txRows(S.tx)}
-/* ===== live prices (cached) ===== */
 var PX={};try{PX=JSON.parse(localStorage.getItem("atomix_px")||"{}")}catch(e){}
 var pxOk=null;
 function fetchPx(){var ids=COINS.filter(function(c){return c.cg}).map(function(c){return c.cg}).join(",");
@@ -504,7 +610,7 @@ function chHtml(p){if(!p||p.ch==null||isNaN(p.ch))return '<span class="ch x">—
 function val(c){var p=price(c);return p?S[c.k]*p.p:0}
 var lastW="";
 function renderWallet(){
- if(cur!=="wallet"&&cur!=="coin")return;
+ if(cur!=="v-wallet"&&cur!=="v-coin")return;
  var tot=0;COINS.forEach(function(c){tot+=val(c)});
  $("tot").textContent="$"+f(tot);
  $("pxSt").className="live"+(pxOk===false?" off":"");$("pxSt").textContent=pxOk===false?"Price unavailable — showing last cached":pxOk?"Live prices":"Loading prices…";
@@ -513,49 +619,51 @@ function renderWallet(){
  var c=COINS[curCoin],p=price(c),d='<div style="text-align:center;margin-bottom:12px">'+coinIcon(c,"big")+'<div class="amt" style="font-size:22px;margin-top:8px">'+c.sym+'</div><div class="lbl">'+c.name+'</div></div>'
  +'<div class="g2"><div class="card stat"><div class="lbl">Live price</div><b>'+(p?usd(p.p):"Price unavailable")+'</b>'+chHtml(p)+'</div><div class="card stat"><div class="lbl">Balance</div><b>'+f(S[c.k])+'</b></div></div>'
  +'<div class="card" style="margin-top:12px"><div class="lbl">Estimated value</div><div class="amt">$'+f(val(c))+'</div></div>';
- if(c.mine){var m=S.mining,on=!!m,el=on?Math.min(SES,(Date.now()-m.s)/1000):0;
-  d+='<div class="card"><div class="row"><div><div class="lbl">Mining status</div><b>'+(on?"Mining":S.unlocked?"Ready":"Idle")+'</b></div><div style="text-align:right"><div class="lbl">Rate</div><b class="pos">+'+rate().toFixed(2)+' DOGS/min</b></div></div><div class="lbl" style="margin-top:12px">Mining progress</div><div class="bar"><i style="width:'+(el/SES*100)+'%"></i></div></div>'
+ if(c.mine){var m=S.mining,on=!!m,el=on?Math.min(getSES(),(Date.now()-m.s)/1000):0;
+  d+='<div class="card"><div class="row"><div><div class="lbl">Mining status</div><b>'+(on?"Mining":S.unlocked?"Ready":"Idle")+'</b></div><div style="text-align:right"><div class="lbl">Rate</div><b class="pos">+'+rate().toFixed(2)+' DOGS/min</b></div></div><div class="lbl" style="margin-top:12px">Mining progress</div><div class="bar"><i style="width:'+(el/getSES()*100)+'%"></i></div></div>'
   +'<div class="card"><div class="lbl">Mining history</div>'+txRows(S.tx.filter(function(x){return x.c==="DOGS"&&/Mining|Claimed/.test(x.t)}))+'</div>';
  }else d+='<div class="card"><div class="lbl">Transaction history</div>'+txRows(S.tx.filter(function(x){return x.c===c.sym}))+'</div>';
- if(cur==="coin"&&$("cd").dataset.h!==d){$("cd").dataset.h=d;$("cd").innerHTML=d}
+ if(cur==="v-coin"&&$("cd").dataset.h!==d){$("cd").dataset.h=d;$("cd").innerHTML=d}
 }
 var shown=-1;function tween(to){var from=shown<0?to:shown,t0=performance.now();shown=to;(function st(n){var p=Math.min(1,(n-t0)/700);$("bal").textContent=f(from+(to-from)*p);$("pbal").textContent=$("bal").textContent;if(p<1)requestAnimationFrame(st)})(t0)}
 function pad(n){return(n<10?"0":"")+n}
 function ui(){var now=Date.now(),m=S.mining,on=!!m;
  if(m&&now>=m.e){finish();return}
  $("mach").classList.toggle("on-m",on);
- var el=on?Math.min(SES,(now-m.s)/1000):0,left=on?Math.max(0,Math.ceil((m.e-now)/1000)):0,earn=on?m.r*el/60:0;
+ var el=on?Math.min(getSES(),(now-m.s)/1000):0,left=on?Math.max(0,Math.ceil((m.e-now)/1000)):0,earn=on?m.r*el/60:0;
  $("liveT").className="live"+(on?"":" off");$("liveT").textContent=on?"+"+rate().toFixed(2)+" DOGS/min":"Idle";
  $("adCard").style.display=on?"none":"block";$("tmCard").style.display=on?"block":"none";
- $("adN").textContent=S.ads+"/"+ADS;$("adR").style.strokeDashoffset=169.6*(1-S.ads/ADS);$("adS").textContent=S.ads+" / "+ADS+" completed";
- $("adT").innerHTML=S.unlocked?'<span class="unl">✓ DOGS MINING UNLOCKED</span>':"Watch 10 ads to unlock DOGS mining.";
+ $("adN").textContent=S.ads+"/"+getADS();$("adR").style.strokeDashoffset=169.6*(1-S.ads/getADS());$("adS").textContent=S.ads+" / "+getADS()+" completed";
+ $("adT").innerHTML=S.unlocked?'<span class="unl">✓ DOGS MINING UNLOCKED</span>':"Watch "+getADS()+" ads to unlock DOGS mining.";
  $("adB").style.display=S.unlocked?"none":"inline-flex";
  $("tm").textContent=pad(Math.floor(left/3600))+":"+pad(Math.floor(left%3600/60))+":"+pad(left%60);
- $("ring").style.strokeDashoffset=414.7*(el/SES);$("spd").textContent="+"+(m?m.r:rate()).toFixed(2)+" DOGS/min";$("ern").textContent="+"+f(earn)+" DOGS";
- var b=$("mainB");b.disabled=on||!S.unlocked;b.innerHTML=on?"MINING ACTIVE":S.unlocked?"START DOGS MINING":"WATCH 10 ADS";
+ $("ring").style.strokeDashoffset=414.7*(el/getSES());$("spd").textContent="+"+(m?m.r:rate()).toFixed(2)+" DOGS/min";$("ern").textContent="+"+f(earn)+" DOGS";
+ var b=$("mainB");b.disabled=on||!S.unlocked;
+ b.innerHTML=on?GLOBAL_SET.buttons.mainB.textMin:S.unlocked?GLOBAL_SET.buttons.mainB.textUnl:GLOBAL_SET.buttons.mainB.textAds.replace("{ADS}",getADS());
  $("pend").textContent=f(on?earn:S.claim);$("clB").disabled=on||S.claim<=0;
  tween(S.dogsBalance);
- $("mSt").textContent=on?"Mining":S.unlocked?"Ready":"Idle";$("mRt").textContent="+"+rate().toFixed(2)+" DOGS/min";$("mBar").style.width=(el/SES*100)+"%";
+ $("mSt").textContent=on?"Mining":S.unlocked?"Ready":"Idle";$("mRt").textContent="+"+rate().toFixed(2)+" DOGS/min";$("mBar").style.width=(el/getSES()*100)+"%";
  $("lv").textContent=S.lvl;$("lvR").textContent="+"+rate().toFixed(2)+" DOGS/min";$("lv1").textContent=S.lvl;$("lv2").textContent=S.lvl+1;$("cost").textContent="Cost "+f(cost())+" DOGS";
- $("lvB").style.width=Math.min(100,S.dogsBalance/cost()*100)+"%";$("sr").textContent=f(rate()*120)+" DOGS";$("upB").disabled=on;
- var t=today(),done=S.daily.last===t;$("dB").disabled=done;$("dB").textContent=done?"Claimed":"Claim";$("dtx").textContent=done?"Come back tomorrow":"Day "+(S.daily.day+1)+" · +"+DAILY[S.daily.day]+" DOGS";
- $("days").innerHTML=DAILY.map(function(a,i){var d=i<S.daily.day||(done&&i===S.daily.day-1)||(done&&S.daily.day===0&&i===6);return '<div class="'+(d?"d":i===S.daily.day&&!done?"n":"")+'">'+(d?"✓":a)+'</div>'}).join("");
+ $("lvB").style.width=Math.min(100,S.dogsBalance/cost()*100)+"%";$("sr").textContent=f(rate()*(getSES()/60))+" DOGS";$("upB").disabled=on;
+ var t=today(),done=S.daily.last===t;$("dB").disabled=done;$("dB").textContent=done?"Claimed":"Claim";$("dtx").textContent=done?"Come back tomorrow":"Day "+(S.daily.day+1)+" · +"+getDAILY()[Math.min(S.daily.day, getDAILY().length-1)]+" DOGS";
+ $("days").innerHTML=getDAILY().map(function(a,i){var d=i<S.daily.day||(done&&i===S.daily.day-1)||(done&&S.daily.day===0&&i===6);return '<div class="'+(d?"d":i===S.daily.day&&!done?"n":"")+'">'+(d?"✓":a)+'</div>'}).join("");
  $("bnB").disabled=S.bonus;$("bnB").textContent=S.bonus?"Claimed":"Claim";$("bnS").textContent=S.bonus?"Already claimed":"Available once";
  $("uid").textContent=S.uid;$("stM").textContent=f(S.total);$("stS").textContent=S.sessions;$("stR").textContent=f(S.ref.earn);$("stL").textContent=S.lvl;
  $("rc").textContent=S.ref.code;$("rI").textContent=S.ref.inv;$("rA").textContent=S.ref.act;$("rE").textContent=f(S.ref.earn);
- /* profile name + avatar letter (added, null-safe) */
  var av=$("av"),pn=$("pname"),nm=P&&typeof P.name==="string"?P.name:"";
  if(av)av.textContent=nm?nm.charAt(0).toUpperCase():"A";
  if(pn){pn.textContent=nm;pn.style.display=nm?"block":"none"}
- renderWallet()}
+ renderWallet();
+ if(typeof window.renderCustomBonuses === "function") window.renderCustomBonuses();
+}
 document.addEventListener("pointerdown",function(e){if(e.target.closest("button,.wc,.it[onclick]")&&navigator.vibrate)try{navigator.vibrate(8)}catch(x){}});
-go("home");fetchPx();setInterval(fetchPx,60000);setInterval(ui,1000);
+go("v-home");fetchPx();setInterval(fetchPx,60000);setInterval(ui,1000);
 document.addEventListener("visibilitychange",ui);
 })();
 </script>
 
 <script>
-/* ===== LOGIN / PROFILE SETUP (added) ===== */
+/* ===== LOGIN / PROFILE SETUP ===== */
 (function(){
 "use strict";
 var ob=document.getElementById("ob");if(!ob)return;
@@ -566,8 +674,6 @@ var saved=!!(prof&&prof.setupComplete&&typeof prof.name==="string"&&prof.name.le
 var $=function(i){return document.getElementById(i)};
 var nm=$("obName"),rf=$("obRef"),go=$("obGo"),goT=$("obGoT"),er=$("obNameErr"),alt=$("obAlt"),sv=$("obSaved"),avl=$("obAv");
 var raf=0,alive=true,busy=false,mode=saved?"back":"new";
-
-/* ---------- canvas background (no shadowBlur, Android-friendly) ---------- */
 var cv=$("obCv"),ctx=cv&&cv.getContext?cv.getContext("2d"):null,W=0,H=0,nodes=[],parts=[],paths=[],pulses=[],lastSp=0,COLS=["120,150,255","170,120,255"];
 function rnd(a,b){return a+Math.random()*(b-a)}
 function size(){if(!cv)return;var d=Math.min(window.devicePixelRatio||1,1.5);W=window.innerWidth;H=window.innerHeight;cv.width=W*d;cv.height=H*d;if(ctx)ctx.setTransform(d,0,0,d,0,0)}
@@ -582,19 +688,16 @@ function glow(x,y,r,c,al){ctx.fillStyle="rgba("+c+","+(al*.16).toFixed(3)+")";ct
 function draw(t){
  if(!alive||!ctx)return;
  ctx.clearRect(0,0,W,H);var i,j,a,b,dx,dy,d,p,q,pt,al;
- /* C: curved energy paths + travelling light points */
  ctx.lineWidth=1;
  for(i=0;i<paths.length;i++){p=paths[i];p.t=(p.t+p.sp)%1;q=p.p;
   ctx.strokeStyle="rgba("+p.c+",.13)";ctx.beginPath();ctx.moveTo(q[0][0],q[0][1]);ctx.bezierCurveTo(q[1][0],q[1][1],q[2][0],q[2][1],q[3][0],q[3][1]);ctx.stroke();
   for(j=0;j<4;j++){pt=bz(q,((p.t-j*.012)%1+1)%1);glow(pt[0],pt[1],2.2-j*.4,p.c,.9-j*.2)}
   pt=bz(q,(p.t+.5)%1);glow(pt[0],pt[1],1.8,p.c,.8)}
- /* B: network nodes + links whose brightness moves */
  for(i=0;i<nodes.length;i++){a=nodes[i];a.x+=a.vx;a.y+=a.vy;if(a.x<-20)a.x=W+20;else if(a.x>W+20)a.x=-20;if(a.y<-20)a.y=H+20;else if(a.y>H+20)a.y=-20}
  for(i=0;i<nodes.length;i++){a=nodes[i];for(j=i+1;j<nodes.length;j++){b=nodes[j];dx=a.x-b.x;dy=a.y-b.y;d=dx*dx+dy*dy;if(d<78000){al=(1-d/78000)*(.28+.16*Math.sin(t/1300+i*1.7+j));ctx.strokeStyle="rgba(130,150,255,"+al.toFixed(3)+")";ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}}}
  if(t-lastSp>550&&pulses.length<8&&nodes.length){lastSp=t;a=Math.floor(Math.random()*nodes.length);for(j=0;j<nodes.length;j++){if(j===a)continue;dx=nodes[a].x-nodes[j].x;dy=nodes[a].y-nodes[j].y;if(dx*dx+dy*dy<78000){pulses.push({a:a,b:j,p:0});break}}}
  for(i=pulses.length-1;i>=0;i--){p=pulses[i];p.p+=.011;if(p.p>=1){pulses.splice(i,1);continue}a=nodes[p.a];b=nodes[p.b];glow(a.x+(b.x-a.x)*p.p,a.y+(b.y-a.y)*p.p,1.8,"200,215,255",.95)}
  for(i=0;i<nodes.length;i++){a=nodes[i];al=.55+.45*Math.sin(t/1100+a.ph);glow(a.x,a.y,a.r*(1+.28*Math.sin(t/800+a.ph)),a.c,al)}
- /* A: particles, mixed directions, twinkling size + opacity */
  for(i=0;i<parts.length;i++){a=parts[i];a.x+=a.vx;a.y+=a.vy;if(a.y<-8)a.y=H+8;else if(a.y>H+8)a.y=-8;if(a.x<-8)a.x=W+8;else if(a.x>W+8)a.x=-8;
   al=.25+.5*(.5+.5*Math.sin(t*a.sp*6+a.ph));glow(a.x,a.y,a.r*(.8+.35*Math.sin(t*a.sp*4+a.ph)),a.c,al)}
  raf=requestAnimationFrame(draw)}
@@ -602,11 +705,10 @@ if(ctx){size();seed();raf=requestAnimationFrame(draw)}
 window.addEventListener("resize",function(){if(alive&&ctx){size();seed()}});
 document.addEventListener("visibilitychange",function(){if(!alive||!ctx)return;cancelAnimationFrame(raf);if(!document.hidden)raf=requestAnimationFrame(draw)});
 
-function closeOb(){ob.classList.add("out");setTimeout(function(){alive=false;cancelAnimationFrame(raf);if(ob&&ob.parentNode)ob.parentNode.removeChild(ob);if(typeof window.go==="function")window.go("home")},720)}
+function closeOb(){ob.classList.add("out");setTimeout(function(){alive=false;cancelAnimationFrame(raf);if(ob&&ob.parentNode)ob.parentNode.removeChild(ob);},720)}
 
-if(!nm||!rf||!go){closeOb();return} /* never trap the user behind a broken overlay */
+if(!nm||!rf||!go){closeOb();return}
 
-/* ---------- mode handling ---------- */
 function setMode(m){mode=m;ob.classList.toggle("back",m==="back");
  if(saved&&alt){alt.style.display="block";alt.textContent=m==="back"?"Use another account":"Back to saved account"}
  clearErr();if(m==="new"){nm.value="";rf.value=""}
@@ -634,7 +736,7 @@ function submit(){if(busy)return;var name,ref,createdAt;
   var uid=typeof window.atomixGetUid==="function"?window.atomixGetUid():(prof&&prof.uid)||"ID"+Math.floor(100000+Math.random()*900000);
   var p={setupComplete:true,name:name,referralCode:ref,uid:uid,createdAt:createdAt||Date.now()};
   try{localStorage.setItem(KEY,JSON.stringify(p))}catch(x){}
-  if(typeof window.atomixProfileApply==="function")window.atomixProfileApply(p); /* only sets uid + refreshes Profile page; referral stored, never rewarded */
+  if(typeof window.atomixProfileApply==="function")window.atomixProfileApply(p);
   closeOb()},900)}
 
 setMode(mode);
