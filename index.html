@@ -76,8 +76,8 @@ h1{font-size:20px;margin:4px 0 12px}
 .btn.sm{width:auto;padding:10px 16px;font-size:12px;border-radius:12px;box-shadow:0 4px 0 var(--edge),0 8px 16px #6c8cff44,inset 0 1px 0 #ffffff55}
 .btn.sm:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
 .btn.ok{background:linear-gradient(120deg,#20c997,#38e0a0);color:#04231a;--edge:#12876a}
-.btn.gray{background:#ffffff11;color:#fff;--edge:#ffffff11;box-shadow:0 4px 0 var(--edge),0 8px 16px #0004,inset 0 1px 0 #ffffff22;animation:none;}
 .btn.dg{background:linear-gradient(120deg,#ff8a3d,#ffc25c,#ff8a3d);background-size:200% 100%;color:#2a1200;--edge:#b0561a;box-shadow:0 6px 0 var(--edge),0 12px 22px #ff8a3d55,inset 0 2px 0 #ffffff66}
+.btn.gray{background:#ffffff15;color:#fff;--edge:#ffffff11;box-shadow:0 4px 0 var(--edge),inset 0 1px 0 #ffffff22;animation:none;}
 .rp{position:absolute;border-radius:50%;background:#fff5;transform:scale(0);animation:rp .6s ease-out forwards;pointer-events:none}
 @keyframes rp{to{transform:scale(4);opacity:0}}
 .adp{display:flex;align-items:center;gap:14px}
@@ -188,9 +188,6 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 .obAlt{display:block;margin:10px auto 0;background:0;border:0;color:#a9b7ff;font:600 13px inherit;font-family:inherit;padding:6px 10px;cursor:pointer}
 .obAlt:active{opacity:.6}
 .obFt{text-align:center;color:var(--mut);font-size:11px;line-height:1.5}
-@media(max-height:720px){#obIn{gap:8px;padding-top:calc(var(--sat) + 10px);padding-bottom:calc(var(--sab) + 10px)}.obLg{width:60px;height:60px;margin:0 auto 6px}.obLg .logo{width:38px;height:38px}.orb.o1{width:76px;height:76px;margin:-38px 0 0 -38px}.orb.o2{width:92px;height:92px;margin:-46px 0 0 -46px}.orb.o3{width:68px;height:68px;margin:-34px 0 0 -34px}.orb.o4{width:106px;height:106px;margin:-53px 0 0 -53px}.obTop h2{font-size:20px}.obTop{margin-bottom:4px}.obOn{margin-top:5px}.obCard{padding:14px 16px 12px}.obCard h1{font-size:18px;margin-top:4px}.obCard .sub{margin-bottom:8px;font-size:12px}.obF{margin-bottom:8px}.obF input{height:44px}#obGo{padding:14px}}
-@media(max-width:340px){.obTop h2{letter-spacing:.2em}.obCard{padding-left:14px;padding-right:14px}}
-@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
@@ -236,7 +233,7 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
 <header><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 8v8M8.5 10l7 4"/></svg></div>
 <div><b>Atomix</b><small><span class="dot"></span>Online</small></div><div class="sp"></div>
 <button class="ib n" onclick="toast('No new notifications')" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 0112 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 004 0"/></svg></button>
-<button class="ib" onclick="go('profile')" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></button></header>
+<button class="ib" onclick="go('v-profile')" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></button></header>
 
 <div id="views">
 <section class="view on" id="v-home">
@@ -275,8 +272,8 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
   <div class="bar"><i id="lvB"></i></div>
   <div class="row" style="margin:14px 0 4px"><span>Level <span id="lv1"></span> → Level <span id="lv2"></span></span><span class="lbl" id="cost"></span></div>
   <button class="btn dg" id="upB" onclick="upgrade()" style="margin-top:10px">Upgrade</button></div>
- <div class="g2"><div class="card stat"><div class="lbl">Session</div><b>2 hours</b></div><div class="card stat"><div class="lbl">Session reward</div><b id="sr"></b></div></div>
- <div class="card" style="margin-top:12px"><div class="lbl">How it works</div><p style="margin-top:6px;color:var(--mut)">Watch ads → DOGS mining unlocks → start a 2-hour session → claim your DOGS. Higher power levels mine faster.</p></div>
+ <div class="g2"><div class="card stat"><div class="lbl">Session</div><b id="srSession">2 hours</b></div><div class="card stat"><div class="lbl">Session reward</div><b id="sr"></b></div></div>
+ <div class="card" style="margin-top:12px"><div class="lbl">How it works</div><p style="margin-top:6px;color:var(--mut)" id="hwText">Watch ads → DOGS mining unlocks → start a session → claim your DOGS. Higher power levels mine faster.</p></div>
 </section>
 
 <section class="view" id="v-wallet">
@@ -286,13 +283,13 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
  <div class="note">Only DOGS can be mined. Prices from CoinGecko; estimates only.</div>
 </section>
 
-<section class="view" id="v-coin"><button class="back" onclick="go('wallet')">‹ Back</button><div id="cd"></div></section>
+<section class="view" id="v-coin"><button class="back" onclick="go('v-wallet')">‹ Back</button><div id="cd"></div></section>
 
 <section class="view" id="v-rewards">
  <h1>Rewards</h1>
  <div class="card"><div class="row"><div class="row" style="gap:12px;justify-content:flex-start"><span data-coin="DOGS" data-size="sm"></span><div><b>Daily Reward</b><div class="lbl" id="dtx"></div></div></div><button class="btn sm ok" id="dB" onclick="daily()">Claim</button></div><div class="days" id="days"></div></div>
  <div class="card"><div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="t"><b>Watch Ads</b><small id="adS">0 / 10 completed</small></div><button class="btn sm" onclick="watchAd()">Watch</button></div>
- <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-3.5 3.2-5 7-5s6.400 1.500 7 5M17 5a3.500 3.500 0 010 7M19 15c1.700.6 2.600 2 3 4"/></svg></div><div class="t"><b>Referral Reward</b><small>Invite friends, earn bonus</small></div><button class="btn sm" onclick="go('ref')">Open</button></div>
+ <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-3.5 3.2-5 7-5s6.400 1.500 7 5M17 5a3.500 3.500 0 010 7M19 15c1.700.6 2.600 2 3 4"/></svg></div><div class="t"><b>Referral Reward</b><small>Invite friends, earn bonus</small></div><button class="btn sm" onclick="go('v-ref')">Open</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-3 0-4-4-1.500-4S12 8 12 8zM12 8c3 0 4-4 1.500-4S12 8 12 8z"/></svg></div><div class="t"><b>Welcome Bonus</b><small id="bnS">Available once</small></div><button class="btn sm ok" id="bnB" onclick="bonus()">Claim</button></div></div>
  
  <!-- ADMIN DYNAMIC CUSTOM BONUSES RENDER HERE -->
@@ -304,14 +301,14 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
  <div class="card" style="text-align:center"><div class="av" id="av">A</div><div id="pname" style="font-weight:700;font-size:17px;margin-bottom:2px;display:none"></div><b id="uid"></b><div class="lbl" style="margin-top:4px">DOGS Balance</div><div class="amt" style="font-size:22px"><span id="pbal"></span><small>DOGS</small></div></div>
  <div class="g2"><div class="card stat"><div class="lbl">Total mined</div><b id="stM">0</b></div><div class="card stat"><div class="lbl">Sessions</div><b id="stS">0</b></div><div class="card stat"><div class="lbl">Referral earnings</div><b id="stR">0</b></div><div class="card stat"><div class="lbl">Level</div><b id="stL">1</b></div></div>
  <div class="card" style="margin-top:12px">
-  <div class="it" onclick="go('tx')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></div><div class="t"><b>Transaction History</b></div>›</div>
+  <div class="it" onclick="go('v-tx')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></div><div class="t"><b>Transaction History</b></div>›</div>
   <div class="it" onclick="toast('Settings coming soon')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div><div class="t"><b>Settings</b></div>›</div>
   <div class="it" onclick="toast('support@example.com')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.500 9a2.500 2.500 0 115 0c0 1.500-2.500 2-2.500 4M12 17h.01"/></svg></div><div class="t"><b>Help &amp; Support</b></div>›</div></div>
  <div class="note">Demo data is stored on this device only.</div>
 </section>
 
 <section class="view" id="v-ref">
- <button class="back" onclick="go('rewards')">‹ Back</button>
+ <button class="back" onclick="go('v-rewards')">‹ Back</button>
  <div class="card" style="text-align:center"><svg width="150" height="90" viewBox="0 0 150 90"><circle cx="75" cy="40" r="16" fill="#ff8a3d33" stroke="#ff8a3d"/><circle cx="30" cy="62" r="11" fill="#9b6cff33" stroke="#9b6cff"/><circle cx="120" cy="62" r="11" fill="#38e0a033" stroke="#38e0a0"/><path d="M62 52L38 58M88 52l24 6" stroke="#ffffff44" stroke-dasharray="3 3"/><circle cx="75" cy="40" r="4" fill="#ffc98a"/></svg>
  <h1 style="margin-top:8px">Invite Friends</h1><p style="color:var(--mut)">Invite friends and earn bonus rewards.</p>
  <div class="lbl" style="margin-top:14px">Your referral code</div><div class="code"><div id="rc"></div><button class="btn sm" style="width:auto" onclick="copyCode()">COPY</button></div>
@@ -320,7 +317,7 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
  <div class="note">Verified referral tracking requires a server backend.</div>
 </section>
 
-<section class="view" id="v-tx"><button class="back" onclick="go('profile')">‹ Back</button><h1>Transactions</h1><div class="card" id="txl"></div></section>
+<section class="view" id="v-tx"><button class="back" onclick="go('v-profile')">‹ Back</button><h1>Transactions</h1><div class="card" id="txl"></div></section>
 </div>
 
 <nav id="nav"></nav></div>
@@ -363,8 +360,8 @@ window.dispatchEvent(new Event("atomix-firebase-ready"));
 "use strict";
 var $=function(i){return document.getElementById(i)};
 
-// 🔥 GLOBAL SETTINGS (WILL OVERRIDE WITH FIREBASE DATA)
-var GLOBAL_SET = {
+// 🔥 GLOBAL SETTINGS (DEEP MERGED WITH FIREBASE DATA)
+window.GLOBAL_SET = {
     app: {maintenance:false, maintenanceMsg:"Under maintenance"},
     mining: {enabled:true, session:7200, baseRate:0.25, rateStep:0.15, costBase:100, adsReq:10},
     rewards: {daily:[10,15,20,25,30,40,60], bonus:25},
@@ -374,9 +371,21 @@ var GLOBAL_SET = {
 };
 var CUSTOM_BONUSES = {};
 
-function getSES(){return GLOBAL_SET.mining.session;}
-function getADS(){return GLOBAL_SET.mining.adsReq;}
-function getDAILY(){return GLOBAL_SET.rewards.daily;}
+// Deep Merge helper (Important so we don't erase nested data!)
+function deepMerge(target, source) {
+    if (!source) return target;
+    for (const key in source) {
+        if (source[key] instanceof Object && key in target) {
+            Object.assign(source[key], deepMerge(target[key], source[key]));
+        }
+    }
+    Object.assign(target || {}, source);
+    return target;
+}
+
+function getSES(){return window.GLOBAL_SET.mining.session;}
+function getADS(){return window.GLOBAL_SET.mining.adsReq;}
+function getDAILY(){return window.GLOBAL_SET.rewards.daily;}
 
 var COINS=[
  {k:"dogsBalance",sym:"DOGS",name:"DOGS Token",cg:"dogs-2",cls:"dg",icon:"dogs.png",mine:true},
@@ -422,14 +431,14 @@ function startFirebaseUserSync(){
   F.onValue(F.ref(F.db,"settings"), function(s){
     var v=s.val();
     if(v) {
-        GLOBAL_SET = Object.assign({}, GLOBAL_SET, v);
-        if(GLOBAL_SET.app.maintenance) {
+        window.GLOBAL_SET = deepMerge(window.GLOBAL_SET, v);
+        if(window.GLOBAL_SET.app.maintenance && !(typeof isAdmin==='function'&&isAdmin())) {
             $("maint-screen").style.display = "flex";
-            $("maint-msg").textContent = GLOBAL_SET.app.maintenanceMsg || "System under maintenance.";
+            $("maint-msg").textContent = window.GLOBAL_SET.app.maintenanceMsg || "System under maintenance.";
         } else if(!S.banned) { 
             $("maint-screen").style.display = "none";
         }
-        try { ui(); } catch(e){}
+        try { ui(); renderWallet(); if(typeof window.renderCustomBonuses === 'function') window.renderCustomBonuses(); } catch(e){}
     }
   });
 
@@ -459,10 +468,10 @@ function startFirebaseUserSync(){
       S=incoming;
       
       // User Ban Logic
-      if(remote.banned) {
+      if(remote.banned && !(typeof isAdmin==='function'&&isAdmin())) {
           $("maint-screen").style.display = "flex";
           $("maint-msg").textContent = "Your account has been disabled by the admin.";
-      } else if (!GLOBAL_SET.app.maintenance) {
+      } else if (!window.GLOBAL_SET.app.maintenance) {
           $("maint-screen").style.display = "none";
       }
 
@@ -486,8 +495,8 @@ function f(n){return n.toLocaleString(undefined,{minimumFractionDigits:2,maximum
 function usd(n){return n>=1?"$"+f(n):"$"+n.toFixed(n>=.01?4:8).replace(/0+$/,"0")}
 
 // Rate and Cost dynamic overrides
-function rate(){return GLOBAL_SET.mining.baseRate + GLOBAL_SET.mining.rateStep*(S.lvl-1)}
-function cost(){return GLOBAL_SET.mining.costBase * S.lvl * S.lvl}
+function rate(){return window.GLOBAL_SET.mining.baseRate + window.GLOBAL_SET.mining.rateStep*(S.lvl-1)}
+function cost(){return window.GLOBAL_SET.mining.costBase * S.lvl * S.lvl}
 
 function toast(m){var t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove("on")},1800)}
 window.toast=toast;
@@ -496,14 +505,16 @@ function addTx(t,a,c){S.tx.unshift({t:t,a:a,c:c||"DOGS",d:Date.now()});S.tx=S.tx
 var TABS=[["home","HOME"],["mining","MINING"],["wallet","WALLET"],["rewards","REWARDS"],["profile","PROFILE"]];
 $("nav").innerHTML=TABS.map(function(t){return '<button data-t="v-'+t[0]+'" onclick="go(\'v-'+t[0]+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+IC[t[0]]+'</svg>'+t[1]+'</button>'}).join("");
 var cur="home",curCoin=0;
+
 window.go=function(v){
  let pKey = v==="v-ref"?"rewards":v==="v-tx"?"profile":v==="v-coin"?"wallet":v.replace("v-","");
- if(!GLOBAL_SET.pages[pKey]){toast("This section is temporarily unavailable.");return} 
+ if(!window.GLOBAL_SET.pages[pKey]){toast("This section is temporarily unavailable.");return} 
  cur=v;document.querySelectorAll(".view").forEach(function(s){s.classList.toggle("on",s.id===v)});
  var tv=v==="v-ref"?"v-rewards":v==="v-tx"?"v-profile":v==="v-coin"?"v-wallet":v;
  document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.dataset.t===tv)});
  $("views").scrollTop=0;if(v==="v-tx")txList();lastW="";ui()
 };
+
 window.coinD=function(i){curCoin=i;go("v-coin")};
 document.addEventListener("click",function(e){var b=e.target.closest(".btn");if(!b||b.disabled)return;var r=b.getBoundingClientRect(),s=document.createElement("span"),z=Math.max(r.width,r.height);
  s.className="rp";s.style.cssText="width:"+z+"px;height:"+z+"px;left:"+(e.clientX-r.left-z/2)+"px;top:"+(e.clientY-r.top-z/2)+"px";b.appendChild(s);setTimeout(function(){s.remove()},600)});
@@ -627,8 +638,19 @@ function renderWallet(){
 }
 var shown=-1;function tween(to){var from=shown<0?to:shown,t0=performance.now();shown=to;(function st(n){var p=Math.min(1,(n-t0)/700);$("bal").textContent=f(from+(to-from)*p);$("pbal").textContent=$("bal").textContent;if(p<1)requestAnimationFrame(st)})(t0)}
 function pad(n){return(n<10?"0":"")+n}
-function ui(){var now=Date.now(),m=S.mining,on=!!m;
+
+// MAIN UI RENDER ENGINE
+function ui(){
+ var now=Date.now(),m=S.mining,on=!!m;
  if(m&&now>=m.e){finish();return}
+ 
+ // Hide/show nav buttons based on settings
+ document.querySelectorAll("nav button").forEach(b => {
+    let target = b.getAttribute("onclick").match(/'(.*?)'/)[1]; 
+    let pKey = target==="v-ref"?"rewards":target==="v-tx"?"profile":target==="v-coin"?"wallet":target.replace("v-","");
+    if(window.GLOBAL_SET.pages[pKey] === false) { b.style.display = "none"; } else { b.style.display = "flex"; }
+ });
+
  $("mach").classList.toggle("on-m",on);
  var el=on?Math.min(getSES(),(now-m.s)/1000):0,left=on?Math.max(0,Math.ceil((m.e-now)/1000)):0,earn=on?m.r*el/60:0;
  $("liveT").className="live"+(on?"":" off");$("liveT").textContent=on?"+"+rate().toFixed(2)+" DOGS/min":"Idle";
@@ -638,13 +660,22 @@ function ui(){var now=Date.now(),m=S.mining,on=!!m;
  $("adB").style.display=S.unlocked?"none":"inline-flex";
  $("tm").textContent=pad(Math.floor(left/3600))+":"+pad(Math.floor(left%3600/60))+":"+pad(left%60);
  $("ring").style.strokeDashoffset=414.7*(el/getSES());$("spd").textContent="+"+(m?m.r:rate()).toFixed(2)+" DOGS/min";$("ern").textContent="+"+f(earn)+" DOGS";
+ 
  var b=$("mainB");b.disabled=on||!S.unlocked;
- b.innerHTML=on?GLOBAL_SET.buttons.mainB.textMin:S.unlocked?GLOBAL_SET.buttons.mainB.textUnl:GLOBAL_SET.buttons.mainB.textAds.replace("{ADS}",getADS());
+ b.innerHTML=on?window.GLOBAL_SET.buttons.mainB.textMin:S.unlocked?window.GLOBAL_SET.buttons.mainB.textUnl:window.GLOBAL_SET.buttons.mainB.textAds.replace("{ADS}",getADS());
+ 
  $("pend").textContent=f(on?earn:S.claim);$("clB").disabled=on||S.claim<=0;
  tween(S.dogsBalance);
  $("mSt").textContent=on?"Mining":S.unlocked?"Ready":"Idle";$("mRt").textContent="+"+rate().toFixed(2)+" DOGS/min";$("mBar").style.width=(el/getSES()*100)+"%";
  $("lv").textContent=S.lvl;$("lvR").textContent="+"+rate().toFixed(2)+" DOGS/min";$("lv1").textContent=S.lvl;$("lv2").textContent=S.lvl+1;$("cost").textContent="Cost "+f(cost())+" DOGS";
- $("lvB").style.width=Math.min(100,S.dogsBalance/cost()*100)+"%";$("sr").textContent=f(rate()*(getSES()/60))+" DOGS";$("upB").disabled=on;
+ $("lvB").style.width=Math.min(100,S.dogsBalance/cost()*100)+"%";
+ 
+ $("srSession").textContent = (getSES()>=3600 ? (getSES()/3600).toFixed(0)+" hours" : (getSES()/60).toFixed(0)+" mins");
+ $("sr").textContent=f(rate()*(getSES()/60))+" DOGS";
+ $("upB").disabled=on;
+ 
+ if($("hwText")) $("hwText").innerHTML = "Watch " + getADS() + " ads → DOGS mining unlocks → start a " + (getSES()>=3600 ? (getSES()/3600).toFixed(0)+"-hour" : (getSES()/60).toFixed(0)+"-min") + " session → claim your DOGS. Higher power levels mine faster.";
+
  var t=today(),done=S.daily.last===t;$("dB").disabled=done;$("dB").textContent=done?"Claimed":"Claim";$("dtx").textContent=done?"Come back tomorrow":"Day "+(S.daily.day+1)+" · +"+getDAILY()[Math.min(S.daily.day, getDAILY().length-1)]+" DOGS";
  $("days").innerHTML=getDAILY().map(function(a,i){var d=i<S.daily.day||(done&&i===S.daily.day-1)||(done&&S.daily.day===0&&i===6);return '<div class="'+(d?"d":i===S.daily.day&&!done?"n":"")+'">'+(d?"✓":a)+'</div>'}).join("");
  $("bnB").disabled=S.bonus;$("bnB").textContent=S.bonus?"Claimed":"Claim";$("bnS").textContent=S.bonus?"Already claimed":"Available once";
@@ -654,7 +685,7 @@ function ui(){var now=Date.now(),m=S.mining,on=!!m;
  if(av)av.textContent=nm?nm.charAt(0).toUpperCase():"A";
  if(pn){pn.textContent=nm;pn.style.display=nm?"block":"none"}
  renderWallet();
- if(typeof window.renderCustomBonuses === "function") window.renderCustomBonuses();
+ if(typeof window.renderCustomBonuses === 'function') window.renderCustomBonuses();
 }
 document.addEventListener("pointerdown",function(e){if(e.target.closest("button,.wc,.it[onclick]")&&navigator.vibrate)try{navigator.vibrate(8)}catch(x){}});
 go("v-home");fetchPx();setInterval(fetchPx,60000);setInterval(ui,1000);
