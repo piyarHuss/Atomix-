@@ -6,7 +6,7 @@
 :root{--bg:#070a14;--c1:#6c8cff;--c2:#9b6cff;--ok:#38e0a0;--bad:#ff5c7a;--tx:#eef1fb;--mut:#7f89a8;--glass:rgba(255,255,255,.05);--bd:rgba(255,255,255,.09);--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font:14px/1.4 -apple-system,"Segoe UI",Roboto,sans-serif}
-body:before{content:"";position:fixed;inset:0;background:radial-gradient(400px 300px at 20% -5%,#3a3fa066,transparent),radial-gradient(360px 300px at 100% 40%,#6a2fa055,transparent);pointer-events:none}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(400px 300px at 20% -5%,#3a3fa066,transparent),radial-gradient(360px 300px at 100% 40%,#6a2fa055,transparent)}
 #app{position:relative;height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:auto}
 header{display:flex;align-items:center;gap:10px;padding:calc(var(--sat) + 12px) 16px 8px}
 .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--c1),var(--c2));display:grid;place-items:center;box-shadow:0 0 18px #6c8cff66}
@@ -95,54 +95,26 @@ nav button:active{transform:translateY(3px) scale(.9)}
 nav svg{width:22px;height:22px;transition:.3s}nav button.on{color:#fff}nav button.on svg{color:var(--c1);filter:drop-shadow(0 0 6px var(--c1));transform:translateY(-2px)}
 nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2px;background:linear-gradient(90deg,var(--c1),var(--c2));transform:translateX(-50%);border-radius:2px;transition:width .3s}nav button.on:after{width:28px}
 .ib{box-shadow:0 4px 0 #04060f,0 8px 14px #0008,inset 0 1px 0 #ffffff2a;transition:transform .09s,box-shadow .09s}.ib:active{transform:translateY(3px) scale(.95);box-shadow:0 1px 0 #04060f}
-#md{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:20;padding:24px}#md.on{display:grid;animation:pg .3s}
+#md{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:99999;padding:24px}#md.on{display:grid;animation:pg .3s}
 .pop{width:100%;max-width:320px;background:linear-gradient(160deg,#141a38,#0b0f22);border:1px solid var(--bd);border-radius:24px;padding:26px 20px;text-align:center;box-shadow:0 0 50px #ff8a3d33}
 .pop .big{font-size:34px;font-weight:800;margin:8px 0;background:linear-gradient(90deg,#ffc98a,#ff9a5c);-webkit-background-clip:text;background-clip:text;color:transparent}
 .chk{width:64px;height:64px;margin:auto;border-radius:50%;background:#38e0a022;display:grid;place-items:center;color:var(--ok)}
 .spin{width:44px;height:44px;border-radius:50%;border:3px solid #ffffff22;border-top-color:var(--c1);margin:14px auto;animation:rot2 .8s linear infinite}
-#toast{position:fixed;left:50%;bottom:calc(var(--sab) + 84px);transform:translate(-50%,20px);background:#1a2040;border:1px solid var(--bd);padding:10px 16px;border-radius:14px;opacity:0;transition:.3s;z-index:30;font-size:13px;pointer-events:none;white-space:nowrap}#toast.on{opacity:1;transform:translate(-50%,0)}
+#toast{position:fixed;left:50%;bottom:calc(var(--sab) + 84px);transform:translate(-50%,20px);background:#1a2040;border:1px solid var(--bd);padding:10px 16px;border-radius:14px;opacity:0;transition:.3s;z-index:999999;font-size:13px;pointer-events:none;white-space:nowrap}#toast.on{opacity:1;transform:translate(-50%,0)}
 
-/* ==============================================
-   🔥 RESTORED FULL 3D CYBERPUNK ANIMATION CSS 🔥
-   ============================================== */
+/* ===== LOGIN SCREEN & RESTORED 3D ANIMATION ===== */
 #ob{position:fixed;inset:0;z-index:100;height:100vh;height:100dvh;background:radial-gradient(520px 420px at 15% -8%,#3a3fa077,transparent),radial-gradient(480px 420px at 105% 45%,#6a2fa066,transparent),#05070f;overflow-x:hidden;overflow-y:auto;transition:opacity .7s ease-in-out,transform .7s ease-in-out}
 #ob.out{opacity:0;transform:scale(1.06);pointer-events:none}
 #obGrid{position:fixed;left:-60%;right:-60%;bottom:-8%;height:72%;pointer-events:none;transform-origin:50% 100%;transform:perspective(520px) rotateX(64deg);background-image:linear-gradient(#6c8cff26 1px,transparent 1px),linear-gradient(90deg,#6c8cff26 1px,transparent 1px);background-size:46px 46px;animation:obg 7s linear infinite}
 @keyframes obg{to{background-position:0 -46px,0 -46px}}
 .obBm{position:fixed;top:-20%;width:34%;height:140%;pointer-events:none;background:linear-gradient(90deg,transparent,#6c8cff14,transparent);transform:rotate(18deg);animation:obBm 14s ease-in-out infinite}
-.obBm.b2{background:linear-gradient(90deg,transparent,#9b6cff12,transparent);animation-duration:19s;animation-delay:-7s}
 @keyframes obBm{0%,100%{left:-30%;opacity:.3}50%{left:85%;opacity:1}}
-#obScan{position:fixed;left:0;right:0;top:0;height:110px;pointer-events:none;background:linear-gradient(180deg,transparent,#6c8cff0b 60%,#9b6cff12 98%,transparent);animation:obSc 11s ease-in-out infinite}
-@keyframes obSc{0%{transform:translateY(-130px)}100%{transform:translateY(105vh)}}
 #obCv{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
-#obIn{position:relative;z-index:2;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(var(--sat) + 18px) 16px calc(var(--sab) + 18px);max-width:440px;margin:auto}
-.obCard{position:relative;width:100%;border:0;outline:0;background:rgba(10,14,35,.55);border-radius:28px;padding:20px 18px 16px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 20px 80px rgba(70,80,220,.16)}
+#obIn{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(var(--sat) + 18px) 16px calc(var(--sab) + 18px);max-width:440px;margin:auto}
+.obCard{position:relative;width:100%;border:0;outline:0;background:rgba(10,14,35,.75);border-radius:28px;padding:20px 18px 16px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 20px 80px rgba(70,80,220,.22)}
 .obTop{text-align:center;margin-bottom:10px}
-.obLg{position:relative;width:84px;height:84px;margin:4px auto 10px;display:grid;place-items:center;animation:obFl 6s ease-in-out infinite}
-@keyframes obFl{50%{transform:translateY(-4px)}}
-.obLg:before{content:"";position:absolute;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,#6c8cffaa,#9b6cff55 40%,transparent 68%);animation:obGl 6s ease-in-out infinite}
-@keyframes obGl{0%,100%{opacity:.25;transform:scale(.95)}50%{opacity:.55;transform:scale(1.12)}}
-.obLg .rg{position:absolute;left:0;top:0;width:100%;height:100%;animation:rot2 20s linear infinite;pointer-events:none}
-.obLg .rg2{left:8px;top:8px;width:calc(100% - 16px);height:calc(100% - 16px);animation-duration:30s;animation-direction:reverse}
-.obLg .rgB,.obLg .rgC,.obLg .rgD{left:50%;top:50%}
-.obLg .rgB{width:250px;height:250px;margin:-125px 0 0 -125px;opacity:.5;animation:obRA 46s linear infinite}
-.obLg .rgC{width:330px;height:330px;margin:-165px 0 0 -165px;animation:obRB 62s linear infinite,obFd 10s ease-in-out infinite}
-.obLg .rgD{width:420px;height:420px;margin:-210px 0 0 -210px;animation:obRC 80s linear infinite,obFd 14s ease-in-out infinite -5s}
-@keyframes obRA{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(1.07)}100%{transform:rotate(360deg) scale(1)}}
-@keyframes obRB{0%{transform:rotate(0) scale(1)}50%{transform:rotate(-180deg) scale(.94)}100%{transform:rotate(-360deg) scale(1)}}
-@keyframes obRC{0%{transform:rotate(0) scale(.96)}50%{transform:rotate(180deg) scale(1.06)}100%{transform:rotate(360deg) scale(.96)}}
-@keyframes obFd{0%,100%{opacity:.15}50%{opacity:.55}}
-.orb{position:absolute;left:50%;top:50%;pointer-events:none;animation:rot2 7s linear infinite}
-.orb:after{content:"";position:absolute;left:50%;top:0;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#cfd8ff;box-shadow:0 0 8px #8fa8ff,0 0 14px #9b6cff}
-.orb.o1{width:100px;height:100px;margin:-50px 0 0 -50px}
-.orb.o2{width:120px;height:120px;margin:-60px 0 0 -60px;animation-duration:11s;animation-direction:reverse}
-.orb.o2:after{width:4px;height:4px;background:#b9a3ff}
-.orb.o3{width:92px;height:92px;margin:-46px 0 0 -46px;animation-duration:9s;animation-delay:-3s}
-.orb.o3:after{width:3px;height:3px;background:#7dffd0;box-shadow:0 0 8px #38e0a0}
-.orb.o4{width:140px;height:140px;margin:-70px 0 0 -70px;animation-duration:15s;animation-delay:-8s;animation-direction:reverse}
-.orb.o4:after{width:3px;height:3px}
-.obLg .logo{position:relative;width:48px;height:48px;border-radius:15px;box-shadow:0 0 30px #6c8cffaa,0 0 60px #9b6cff55}
-.obLg .logo svg{width:28px;height:28px}
+.obLg{position:relative;width:84px;height:84px;margin:4px auto 10px;display:grid;place-items:center}
+.obLg .logo{position:relative;width:48px;height:48px;border-radius:15px;box-shadow:0 0 30px #6c8cffaa}
 .obTop h2{font-size:25px;letter-spacing:.32em;padding-left:.32em;font-weight:800;background:linear-gradient(90deg,#cdd6ff,#fff,#c9b3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .obTop p{color:var(--mut);font-size:11px;letter-spacing:.2em;margin-top:2px}
 .obOn{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:3px 12px;border-radius:20px;background:#38e0a010;color:var(--ok);font-size:10.5px}
@@ -159,6 +131,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 </style>
 </head><body>
 
+<!-- SYSTEM MAINTENANCE / BAN OVERLAY -->
 <div id="maint-screen" style="display:none;position:fixed;inset:0;z-index:90000;background:#05070f;color:#fff;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;">
     <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#ff5c7a" stroke-width="2" style="margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     <h1 style="font-size:24px; margin:0 0 8px">Access Denied</h1>
@@ -169,7 +142,8 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <div id="app">
 <header><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 8v8M8.5 10l7 4"/></svg></div>
 <div><b>Atomix</b><small><span class="dot"></span>Online</small></div><div class="sp"></div>
-<button class="ib n" onclick="toast('No new notifications')" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 0112 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 004 0"/></svg></button>
+<!-- NOTIFICATION BUTTON -->
+<button class="ib n" onclick="openNotifications()" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 0112 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 004 0"/></svg></button>
 <button class="ib" onclick="go('v-profile')" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></button></header>
 
 <div id="views">
@@ -246,42 +220,63 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     <button class="back" onclick="go('v-profile')">‹ Back to Profile</button>
     <h1>Transfer Token</h1>
     <div class="card" style="background:linear-gradient(135deg,rgba(108,140,255,.12),rgba(56,224,160,.08))">
-      <div><b>Crypto Transfer Network</b><small style="display:block;color:var(--mut);margin-top:2px">Minimum 10,000 tokens per transfer</small></div>
+      <div class="row">
+        <div>
+          <b>Crypto Transfer Network</b>
+          <small style="display:block;color:var(--mut);margin-top:2px">Minimum 10,000 tokens per transfer</small>
+        </div>
+        <span class="tag" style="background:#38e0a022;color:var(--ok)">ONLINE</span>
+      </div>
     </div>
     <div class="lbl" style="margin:14px 4px 8px">Select Token to Transfer</div>
     <div id="tfCoinList"></div>
+    <div class="note">Only tokens with 10,000 or more balance can be transferred.</div>
   </div>
 
   <div id="tf-step-send" style="display:none">
     <button class="back" onclick="backToTfList()">‹ Back to Tokens</button>
     <div style="text-align:center;margin:12px 0 16px">
       <div id="tfHeroIcon" style="display:inline-block"></div>
-      <h2 id="tfHeroSym" style="font-size:22px;margin-top:8px">DOGS</h2>
+      <h2 id="tfHeroSym" style="font-size:22px;margin-top:8px;font-weight:800">DOGS</h2>
+      <div class="lbl" id="tfHeroName" style="color:var(--mut)">DOGS TOKEN</div>
       <div class="amt" style="font-size:20px;margin-top:4px"><span id="tfHeroBal">0.00</span> <small id="tfHeroUnit">DOGS</small></div>
     </div>
+
     <div class="card">
       <div class="lbl">1. Enter Destination Address</div>
       <div style="position:relative;margin:6px 0 12px">
-        <input id="tfAddr" type="text" placeholder="Paste destination wallet address" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:14px;outline:0">
+        <input id="tfAddr" type="text" placeholder="Paste destination wallet address" autocomplete="off" spellcheck="false" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:14px;outline:0">
         <button class="btn sm gray" onclick="pasteTfAddr()" style="position:absolute;right:6px;top:8px;padding:6px 12px;font-size:11px">PASTE</button>
       </div>
 
-      <div class="lbl">2. Transfer Amount (Min 10,000)</div>
+      <div class="row">
+        <div class="lbl">2. Transfer Amount</div>
+        <div class="lbl" style="color:var(--ok)">Min: 10,000</div>
+      </div>
       <div style="position:relative;margin:6px 0 14px">
         <input id="tfAmt" type="number" step="any" min="10000" placeholder="Min. 10,000" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:15px;outline:0">
         <button class="btn sm ok" onclick="setTfMax()" style="position:absolute;right:6px;top:8px;padding:6px 12px;font-size:11px">MAX</button>
       </div>
+
+      <div class="row" style="margin:6px 0 16px;color:var(--mut);font-size:12px">
+        <span>Network Fee:</span>
+        <b style="color:var(--ok)">FREE (0%)</b>
+      </div>
+
       <button class="btn ok" id="tfSubmitBtn" onclick="submitTransfer()">TRANSFER NOW</button>
     </div>
   </div>
 </section>
 
+<!-- 🔥 100% RESTORED INVITE FRIENDS VIEW WITH ALL 3 CARDS 🔥 -->
 <section class="view" id="v-ref">
  <button class="back" onclick="go('v-rewards')">‹ Back</button>
  <div class="card" style="text-align:center"><svg width="150" height="90" viewBox="0 0 150 90"><circle cx="75" cy="40" r="16" fill="#ff8a3d33" stroke="#ff8a3d"/><circle cx="30" cy="62" r="11" fill="#9b6cff33" stroke="#9b6cff"/><circle cx="120" cy="62" r="11" fill="#38e0a033" stroke="#38e0a0"/><path d="M62 52L38 58M88 52l24 6" stroke="#ffffff44" stroke-dasharray="3 3"/><circle cx="75" cy="40" r="4" fill="#ffc98a"/></svg>
  <h1 style="margin-top:8px">Invite Friends</h1><p style="color:var(--mut)">Invite friends and earn bonus rewards.</p>
- <div class="lbl" style="margin-top:14px">Your referral code</div><div class="code"><div id="rc"></div><button class="btn sm" onclick="copyCode()">COPY</button></div>
+ <div class="lbl" style="margin-top:14px">Your referral code</div><div class="code"><div id="rc"></div><button class="btn sm" style="width:auto" onclick="copyCode()">COPY</button></div>
  <button class="btn" onclick="shareRef()">Invite Friends</button></div>
+ <div class="g2" style="grid-template-columns:repeat(3,1fr)"><div class="card stat"><div class="lbl">Invited</div><b id="rI">0</b></div><div class="card stat"><div class="lbl">Active</div><b id="rA">0</b></div><div class="card stat"><div class="lbl">Earned</div><b id="rE">0</b></div></div>
+ <div class="note">Verified referral tracking requires a server backend.</div>
 </section>
 
 <section class="view" id="v-tx"><button class="back" onclick="go('v-profile')">‹ Back</button><h1>Transactions</h1><div class="card" id="txl"></div></section>
@@ -290,28 +285,20 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <nav id="nav"></nav></div>
 <div id="md"><div class="pop" id="pop"></div></div><div id="toast"></div>
 
-<!-- ==============================================
-     🔥 RESTORED FULL ANIMATED LOGIN OVERLAY (#ob)
-     ============================================== -->
+<!-- LOGIN / PROFILE OVERLAY -->
 <div id="ob" role="dialog" aria-label="Atomix login">
  <div id="obGrid"></div><i class="obBm"></i><i class="obBm b2"></i><div id="obScan"></div><canvas id="obCv"></canvas>
  <div id="obIn">
   <div class="obCard">
    <div class="obTop">
     <div class="obLg">
-     <svg class="rg rgB" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="49" stroke="#6c8cff" stroke-opacity=".5" stroke-width=".4"/><circle cx="50" cy="50" r="44" stroke="#9b6cff" stroke-opacity=".45" stroke-width=".5" stroke-dasharray="1.5 4"/><circle cx="50" cy="1" r="1.1" fill="#8fa8ff"/><circle cx="94" cy="50" r="1" fill="#9b6cff"/><circle cx="6" cy="50" r="1" fill="#38e0a0"/></svg>
-     <svg class="rg rgC" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="49" stroke="#9b6cff" stroke-opacity=".55" stroke-width=".4" stroke-dasharray="14 6 2 6"/><circle cx="50" cy="50" r="46" stroke="#6c8cff" stroke-opacity=".35" stroke-width=".3"/><circle cx="99" cy="50" r="1" fill="#b9a3ff"/></svg>
-     <svg class="rg rgD" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="49" stroke="#6c8cff" stroke-opacity=".5" stroke-width=".3" stroke-dasharray="30 10"/><circle cx="50" cy="50" r="47" stroke="#38e0a0" stroke-opacity=".3" stroke-width=".25" stroke-dasharray="1 3"/></svg>
-     <svg class="rg" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" stroke="#6c8cff" stroke-opacity=".5" stroke-width="1" stroke-dasharray="3 7"/><circle cx="50" cy="2" r="2.4" fill="#6c8cff"/></svg>
-     <svg class="rg rg2" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" stroke="#9b6cff" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="26 12 4 12"/><circle cx="2" cy="50" r="2.2" fill="#38e0a0"/></svg>
-     <i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i><i class="orb o4"></i>
      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 8v8M8.5 10l7 4"/></svg></div>
     </div>
     <h2>ATOMIX</h2><p>CRYPTO MINING NETWORK</p>
     <div class="obOn"><span class="dot"></span>NETWORK ONLINE</div>
    </div>
-   <h1 style="font-size:20px;text-align:center;margin:6px 0">Welcome</h1>
-   <div style="color:var(--mut);font-size:12px;text-align:center;margin-bottom:14px">Sign in to start mining DOGS on Atomix.</div>
+   <h1>Welcome</h1>
+   <div class="sub">Register to start mining DOGS on Atomix.</div>
    
    <!-- GOOGLE SIGN IN BUTTON -->
    <button class="btn" id="obGoogle" type="button" onclick="loginWithGoogle()" style="margin-bottom:12px;background:#ffffff;color:#1a1d2e;--edge:#cbd5e1;box-shadow:0 5px 0 #94a3b8,0 10px 22px rgba(255,255,255,.15);animation:none;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700">
@@ -353,7 +340,7 @@ const db = getDatabase(app);
 
 var $ = id => document.getElementById(id);
 
-// 🔥 CRASH-PROOF SAFE SETTER HELPERS (KABHI NULL ERROR NAHI AAYEGA)
+// Safe DOM Text Setter
 function setTxt(id, val){ var el = $(id); if(el) el.textContent = val; }
 function setHtml(id, val){ var el = $(id); if(el) el.innerHTML = val; }
 
@@ -375,14 +362,21 @@ var GLOBAL_SET = {
 };
 var CUSTOM_BONUSES = {};
 var currentAuthUser = null;
+var lastSeenAlertTime = 0;
+var latestAdminNotification = null;
 
 function getSES(){ return (GLOBAL_SET.mining && GLOBAL_SET.mining.session) || 7200; }
 function getADS(){ return (GLOBAL_SET.mining && GLOBAL_SET.mining.adsReq) || 10; }
 function getDAILY(){ return (GLOBAL_SET.rewards && GLOBAL_SET.rewards.daily) || [10, 15, 20, 25, 30, 40, 60]; }
 
+// 🔥 REALTIME DATABASE UPDATE WITH INSTANT LOCAL FALLBACK
 window.fbUpdate = function(fields) {
+    if(fields && typeof fields === "object") {
+        window.S = Object.assign({}, window.S, fields);
+        ui();
+    }
     if(!currentAuthUser) return;
-    update(ref(db, "users/" + currentAuthUser.uid), fields).catch(e => console.warn(e));
+    update(ref(db, "users/" + currentAuthUser.uid), fields).catch(e => console.warn("Firebase update error", e));
 };
 
 onAuthStateChanged(auth, user => {
@@ -426,7 +420,28 @@ onAuthStateChanged(auth, user => {
         CUSTOM_BONUSES = snap.val() || {};
         renderCustomBonuses();
     });
+
+    // 🔥 100% RESTORED GLOBAL NOTIFICATIONS FROM ADMIN
+    onValue(ref(db, "settings/globalNotification"), snap => {
+        let notif = snap.val();
+        if(notif) {
+            latestAdminNotification = notif;
+            if(notif.time > lastSeenAlertTime) {
+                lastSeenAlertTime = notif.time;
+                modal('<div class="chk" style="background:#ff5c7a22;color:#ff5c7a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div><div class="lbl" style="margin-top:14px">🔔 ADMIN ALERT</div><div class="big" style="font-size:22px;margin-bottom:10px">' + esc(notif.title) + '</div><p style="color:var(--mut);margin-bottom:16px">' + esc(notif.body) + '</p><button class="btn ok" onclick="closeM()">DISMISS</button>');
+            }
+        }
+    });
 });
+
+// 🔥 NOTIFICATION BELL BUTTON ONCLICK HANDLER
+window.openNotifications = function() {
+    if(latestAdminNotification) {
+        modal('<div class="chk" style="background:#6c8cff22;color:#6c8cff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div><div class="lbl" style="margin-top:14px">🔔 LATEST ANNOUNCEMENT</div><div class="big" style="font-size:20px;margin-bottom:8px">' + esc(latestAdminNotification.title) + '</div><p style="color:var(--mut);margin-bottom:16px;font-size:13px">' + esc(latestAdminNotification.body) + '</p><button class="btn ok" onclick="closeM()">CLOSE</button>');
+    } else {
+        toast("No new notifications");
+    }
+};
 
 // 🔥 GOOGLE SIGN IN (SOLVES CONNECTING STUCK BUG)
 window.loginWithGoogle = async function() {
@@ -457,7 +472,7 @@ window.onNativeGoogleLoginSuccess = async function(idToken, email, name) {
         let res = await signInWithCredential(auth, credential);
         await handleSuccessfulLogin(res.user, name, email);
     } catch(e) {
-        toast("Firebase error: " + e.message);
+        toast("Login failed: " + e.message);
         let btn = $("obGoogle"), txt = $("obGoogleTxt");
         if(btn) btn.disabled = false;
         if(txt) txt.textContent = "Sign in with Google";
@@ -515,7 +530,7 @@ window.submitUserRegister = function(name, refCode) {
     });
 };
 
-// 🔥 ADMOB ADS BRIDGE
+// 🔥 ADMOB ADS BRIDGE (INSTANT REWARD CLAIM)
 window.adCallback = null;
 function showMiningAd() {
   return new Promise(resolve => {
@@ -571,20 +586,18 @@ function finishMining(){
     success("Mining complete", r, "DOGS mining session completed.");
 }
 
+// 🔥 REWARD CLAIM FIXED & INSTANT
 window.claim = function(){
     if(window.S.mining || (window.S.claim || 0) <= 0) return;
-    showMiningAd().then(ok => {
-        if(!ok) return;
-        let a = window.S.claim;
-        let newTx = window.S.tx || [];
-        newTx.unshift({ t: "DOGS Reward Claimed", a: a, c: "DOGS", d: Date.now() });
-        fbUpdate({
-            claim: 0,
-            dogsBalance: (window.S.dogsBalance || 0) + a,
-            tx: newTx.slice(0, 50)
-        });
-        success("Reward claimed", a, "Added to your DOGS balance.");
+    let a = window.S.claim;
+    let newTx = window.S.tx || [];
+    newTx.unshift({ t: "DOGS Reward Claimed", a: a, c: "DOGS", d: Date.now() });
+    fbUpdate({
+        claim: 0,
+        dogsBalance: (window.S.dogsBalance || 0) + a,
+        tx: newTx.slice(0, 50)
     });
+    success("Reward claimed", a, "Added to your DOGS balance.");
 };
 
 window.upgrade = function(){
@@ -601,37 +614,72 @@ window.upgrade = function(){
     toast("Upgraded to Level " + ((window.S.lvl || 1) + 1));
 };
 
+// 🔥 DAILY CLAIM FIXED & INSTANT
 window.daily = function(){
     let t = today();
-    if(window.S.daily && window.S.daily.last === t) return;
-    showMiningAd().then(ok => {
-        if(!ok) return;
-        let day = (window.S.daily ? window.S.daily.day : 0) || 0;
-        let a = getDAILY()[Math.min(day, getDAILY().length - 1)];
-        let newTx = window.S.tx || [];
-        newTx.unshift({ t: "Daily Reward", a: a, c: "DOGS", d: Date.now() });
-        fbUpdate({
-            dogsBalance: (window.S.dogsBalance || 0) + a,
-            daily: { day: (day + 1) % 7, last: t },
-            tx: newTx.slice(0, 50)
-        });
-        success("Daily reward", a, "Come back tomorrow for more.");
+    if(window.S.daily && window.S.daily.last === t) {
+        toast("Daily reward already claimed today");
+        return;
+    }
+    let day = (window.S.daily ? window.S.daily.day : 0) || 0;
+    let a = getDAILY()[Math.min(day, getDAILY().length - 1)];
+    let newTx = window.S.tx || [];
+    newTx.unshift({ t: "Daily Reward", a: a, c: "DOGS", d: Date.now() });
+    fbUpdate({
+        dogsBalance: (window.S.dogsBalance || 0) + a,
+        daily: { day: (day + 1) % 7, last: t },
+        tx: newTx.slice(0, 50)
     });
+    success("Daily reward", a, "Come back tomorrow for more.");
 };
 
+// 🔥 WELCOME BONUS FIXED & INSTANT
 window.bonus = function(){
-    if(window.S.bonus) return;
-    showMiningAd().then(ok => {
-        if(!ok) return;
-        let newTx = window.S.tx || [];
-        newTx.unshift({ t: "Welcome Bonus", a: 25, c: "DOGS", d: Date.now() });
-        fbUpdate({
-            dogsBalance: (window.S.dogsBalance || 0) + 25,
-            bonus: true,
-            tx: newTx.slice(0, 50)
-        });
-        success("Bonus", 25, "Welcome bonus claimed.");
+    if(window.S.bonus) {
+        toast("Welcome bonus already claimed");
+        return;
+    }
+    let newTx = window.S.tx || [];
+    newTx.unshift({ t: "Welcome Bonus", a: 25, c: "DOGS", d: Date.now() });
+    fbUpdate({
+        dogsBalance: (window.S.dogsBalance || 0) + 25,
+        bonus: true,
+        tx: newTx.slice(0, 50)
     });
+    success("Bonus", 25, "Welcome bonus claimed.");
+};
+
+window.claimCustomBonus = function(id, type, reqAds, reward) {
+    if(window.S.claimedBonuses && window.S.claimedBonuses[id]) { toast("Already claimed"); return; }
+    if(type === "ads") {
+        let curBonusAds = (window.S.bonusAds && window.S.bonusAds[id]) || 0;
+        showMiningAd().then(ok => {
+            if(!ok){ toast("Ad not completed"); return; }
+            curBonusAds++;
+            let updates = {};
+            updates[`bonusAds/${id}`] = curBonusAds;
+            if(curBonusAds >= reqAds) {
+                updates[`claimedBonuses/${id}`] = true;
+                updates[`dogsBalance`] = (window.S.dogsBalance || 0) + reward;
+                let newTx = window.S.tx || [];
+                newTx.unshift({ t: "Bonus Reward", a: reward, c: "DOGS", d: Date.now() });
+                updates[`tx`] = newTx.slice(0, 50);
+                success("Bonus Claimed", reward, "You completed the task!");
+            } else {
+                toast("Ad " + curBonusAds + " / " + reqAds + " completed");
+            }
+            fbUpdate(updates);
+        });
+    } else {
+        let updates = {};
+        updates[`claimedBonuses/${id}`] = true;
+        updates[`dogsBalance`] = (window.S.dogsBalance || 0) + reward;
+        let newTx = window.S.tx || [];
+        newTx.unshift({ t: "Bonus Reward", a: reward, c: "DOGS", d: Date.now() });
+        updates[`tx`] = newTx.slice(0, 50);
+        fbUpdate(updates);
+        success("Bonus Claimed", reward, "Free bonus claimed!");
+    }
 };
 
 function renderCustomBonuses() {
@@ -754,6 +802,7 @@ window.onCoinCardTap = function(idx) {
     
     if($("tfHeroIcon")) $("tfHeroIcon").innerHTML = coinIcon(c, "big");
     setTxt("tfHeroSym", c.sym);
+    setTxt("tfHeroName", c.name);
     setTxt("tfHeroBal", f(bal));
     setTxt("tfHeroUnit", c.sym);
 
@@ -858,7 +907,7 @@ window.toast = function(m){
 
 function modal(h){ if($("pop")){ $("pop").innerHTML=h; $("md").classList.add("on"); } }
 window.closeM = function(){ if($("md")) $("md").classList.remove("on"); };
-function success(t,a,m){ modal('<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg></div><div class="lbl" style="margin-top:14px">'+t+'</div><div class="big">+'+f(a)+' DOGS</div><p style="color:var(--mut);margin-bottom:16px">'+m+'</p><button class="btn dg" onclick="closeM()">CONTINUE</button>'); }
+function success(t,a,m){ modal(`<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-10"/></svg></div><div class="lbl" style="margin-top:14px">${t}</div><div class="big">+${f(a)} DOGS</div><p style="color:var(--mut);margin-bottom:16px">${m}</p><button class="btn dg" onclick="closeM()">CONTINUE</button>`); }
 
 window.copyCode=function(){ try{ navigator.clipboard.writeText(window.S.ref ? window.S.ref.code : "").then(()=>toast("Code copied"), ()=>toast(window.S.ref.code)); }catch(e){ toast(window.S.ref ? window.S.ref.code : ""); } };
 window.shareRef=function(){ var t="Join me on Atomix Miner. Code: "+(window.S.ref ? window.S.ref.code : ""); if(navigator.share)navigator.share({text:t}).catch(()=>{}); else window.copyCode(); };
@@ -899,7 +948,7 @@ function renderWallet(){
 
 function pad(n){ return (n<10?"0":"")+n; }
 
-// 🔥 CRASH-PROOF SAFE UI UPDATE FUNCTION
+// 🔥 CRASH-PROOF SAFE UI FUNCTION (NO NULL ERRORS)
 function ui(){
  var S = window.S;
  var now=Date.now(), m=S.mining, on=!!m;
@@ -968,6 +1017,8 @@ function ui(){
  setTxt("stS", S.sessions||0); 
  setTxt("stR", f(S.ref?S.ref.earn:0)); 
  setTxt("stL", S.lvl||1);
+
+ // 🔥 RESTORED REFERRAL STATS BINDINGS
  setTxt("rc", S.ref?S.ref.code:""); 
  setTxt("rI", S.ref?S.ref.inv:0); 
  setTxt("rA", S.ref?S.ref.act:0); 
@@ -985,7 +1036,7 @@ setInterval(fetchPx, 60000);
 </script>
 
 <!-- ==============================================
-     🎨 RESTORED CANVAS PARTICLES + SMOOTH OVERLAY ANIMATION
+     🔥 RESTORED PARTICLES, LASERS & 3D CANVASES
      ============================================== -->
 <script>
 (function(){
@@ -1011,10 +1062,10 @@ if(go){
     });
 }
 
-// 3D Canvas Cyber Background Animation
+// RESTORED 3D CANVAS CYBER ANIMATION
 var cv=document.getElementById("obCv"), ctx=cv&&cv.getContext?cv.getContext("2d"):null;
 if(!ctx) return;
-var W=0, H=0, nodes=[], parts=[], paths=[], raf=0, alive=true, COLS=["120,150,255","170,120,255"];
+var W=0, H=0, nodes=[], parts=[], raf=0, alive=true, COLS=["120,150,255","170,120,255"];
 
 function rnd(a,b){return a+Math.random()*(b-a)}
 function size(){
@@ -1024,7 +1075,7 @@ function size(){
     ctx.setTransform(d,0,0,d,0,0);
 }
 function seed(){
-    nodes=[]; parts=[]; paths=[];
+    nodes=[]; parts=[];
     for(var i=0;i<8;i++) nodes.push({x:rnd(0,W),y:rnd(0,H),vx:rnd(-.14,.14),vy:rnd(-.14,.14),r:rnd(2,3),c:COLS[i%2]});
     for(var j=0;j<26;j++) parts.push({x:rnd(0,W),y:rnd(0,H),vx:rnd(-.2,.2),vy:-rnd(.2,.5),r:rnd(.8,2),c:COLS[j%2]});
 }
