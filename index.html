@@ -349,7 +349,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <nav id="nav"></nav></div>
 <div id="md"><div class="pop" id="pop"></div></div><div id="toast"></div>
 
-<!-- LOGIN / PROFILE OVERLAY (100% ORIGINAL WITH ALL ANIMATIONS) -->
+<!-- LOGIN / PROFILE OVERLAY -->
 <div id="ob" role="dialog" aria-label="Atomix login">
  <div id="obGrid"></div><i class="obBm"></i><i class="obBm b2"></i><div id="obScan"></div><canvas id="obCv"></canvas>
  <div id="obIn">
@@ -520,9 +520,12 @@ onAuthStateChanged(auth, user => {
     });
 });
 
-// GOOGLE AUTH & LOGOUT
+// GOOGLE AUTH WITH ACCOUNT SELECTOR
 window.loginWithGoogle = async function() {
     let provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+        prompt: 'select_account'
+    });
     let btn = $("obGoogle"), txt = $("obGoogleTxt");
     try {
         if(btn) btn.disabled = true;
