@@ -6,14 +6,14 @@
 :root{--bg:#070a14;--c1:#6c8cff;--c2:#9b6cff;--ok:#38e0a0;--bad:#ff5c7a;--tx:#eef1fb;--mut:#7f89a8;--glass:rgba(255,255,255,.05);--bd:rgba(255,255,255,.09);--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font:14px/1.4 -apple-system,"Segoe UI",Roboto,sans-serif}
-body:before{content:"";position:fixed;inset:0;background:radial-gradient(400px 300px at 20% -5%,#3a3fa066,transparent),radial-gradient(360px 300px at 100% 40%,#6a2fa055,transparent)}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(400px 300px at 20% -5%,#3a3fa066,transparent),radial-gradient(360px 300px at 100% 40%,#6a2fa055,transparent);pointer-events:none}
 #app{position:relative;height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:auto}
 header{display:flex;align-items:center;gap:10px;padding:calc(var(--sat) + 12px) 16px 8px}
 .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--c1),var(--c2));display:grid;place-items:center;box-shadow:0 0 18px #6c8cff66}
 .logo svg{width:20px;height:20px}
 header b{font-size:16px;letter-spacing:.02em}header small{display:flex;align-items:center;gap:5px;color:var(--mut);font-size:11px}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:bl 2s infinite}
-.ib{width:36px;height:36px;border-radius:12px;background:var(--glass);border:1px solid var(--bd);display:grid;place-items:center;color:var(--tx);position:relative}
+.ib{width:36px;height:36px;border-radius:12px;background:var(--glass);border:1px solid var(--bd);display:grid;place-items:center;color:var(--tx);position:relative;cursor:pointer}
 .ib svg{width:18px;height:18px}.sp{flex:1}
 .ib.n:after{content:"";position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:#ff5c7a}
 #views{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 16px 20px;-webkit-overflow-scrolling:touch}
@@ -31,7 +31,6 @@ h1{font-size:20px;margin:4px 0 12px}
 .coin.sm{width:44px;height:44px;animation:none}.coin.sm i{width:32px;height:32px;font-size:16px}
 .coin.gen{background:conic-gradient(#6c8cff,#9b6cff,#6c8cff);box-shadow:0 0 18px #6c8cff66;animation:none}.coin.gen i{color:#cdd6ff;font-size:13px}
 .coin.bk{background:conic-gradient(#ff9a3d,#ffd27a,#ff9a3d);animation:none}.coin.tr{background:conic-gradient(#ff4d4d,#ff8a8a,#ff4d4d);animation:none}.coin.fl{background:conic-gradient(#4da3ff,#9bd0ff,#4da3ff);animation:none}
-.coin.sm i,.coin.gen i{font-size:12px;letter-spacing:-.02em}.coin.sm.dg i{font-size:18px}
 @keyframes fl{50%{transform:translateY(-4px)}}
 
 .coinImg{position:relative;width:52px;height:52px;flex:none;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(255,255,255,.10),0 6px 18px rgba(0,0,0,.35);isolation:isolate}
@@ -39,14 +38,7 @@ h1{font-size:20px;margin:4px 0 12px}
 .coinImg:after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:linear-gradient(150deg,rgba(255,255,255,.22) 0,rgba(255,255,255,.05) 32%,transparent 55%),radial-gradient(circle at 50% 120%,rgba(0,0,0,.22),transparent 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
 .coinImg.sm{width:44px;height:44px}
 .coinImg.big{width:84px;height:84px;margin:0 auto}
-.coinImg.float{animation:fl 3.5s ease-in-out infinite}
 .coinFallback{width:100%;height:100%;display:grid;place-items:center;padding:0 3px;text-align:center;overflow:hidden;font:800 11px/1 system-ui,sans-serif;letter-spacing:-.02em;color:#dfe6ff;background:linear-gradient(135deg,#2a3272,#4a2a86)}
-.coinImg.big .coinFallback{font-size:17px}
-.coinImg.sm .coinFallback{font-size:9.5px}
-.coinImg.dg .coinFallback{background:linear-gradient(135deg,#ff9a3d,#c4611a);color:#2a1200}
-.coinImg.bk .coinFallback{background:linear-gradient(135deg,#ffb84d,#c47a1a);color:#2a1600}
-.coinImg.tr .coinFallback{background:linear-gradient(135deg,#ff5c5c,#b02a2a);color:#fff}
-.coinImg.fl .coinFallback{background:linear-gradient(135deg,#4da3ff,#2a5fb0);color:#fff}
 
 .amt{font-size:28px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.amt small{font-size:14px;color:#ffc98a;margin-left:4px}
 .live{font-size:12px;color:var(--ok);display:flex;align-items:center;gap:6px}.live.off{color:var(--mut)}
@@ -69,24 +61,21 @@ h1{font-size:20px;margin:4px 0 12px}
 .ringw .c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
 .ringw b{font:700 24px ui-monospace,Menlo,monospace;letter-spacing:.02em}
 .trk{stroke:#ffffff12}.prg{stroke:url(#gr);stroke-linecap:round;transition:stroke-dashoffset 1s linear}
-.btn{position:relative;overflow:hidden;width:100%;border:0;border-radius:16px;padding:16px;font:700 15px inherit;letter-spacing:.06em;color:#fff;background:linear-gradient(120deg,var(--c1),var(--c2),var(--c1));background-size:200% 100%;animation:sh 4s linear infinite;display:flex;align-items:center;justify-content:center;gap:8px;--edge:#3a49b8;box-shadow:0 6px 0 var(--edge),0 12px 22px #6c8cff55,inset 0 2px 0 #ffffff55,inset 0 -2px 0 #0003;transform:translateY(0);transition:transform .09s ease,box-shadow .09s ease,opacity .3s,filter .3s;cursor:pointer}
+.btn{position:relative;overflow:hidden;width:100%;border:0;border-radius:16px;padding:16px;font:700 15px inherit;letter-spacing:.06em;color:#fff;background:linear-gradient(120deg,var(--c1),var(--c2),var(--c1));background-size:200% 100%;animation:sh 4s linear infinite;display:flex;align-items:center;justify-content:center;gap:8px;--edge:#3a49b8;box-shadow:0 6px 0 var(--edge),0 12px 22px #6c8cff55,inset 0 2px 0 #ffffff55;cursor:pointer;transition:transform .09s ease,box-shadow .09s ease,opacity .3s}
 @keyframes sh{to{background-position:200% 0}}
-.btn:active:not([disabled]){transform:translateY(5px) scale(.985);box-shadow:0 1px 0 var(--edge),0 3px 8px #6c8cff44,inset 0 2px 0 #ffffff33}
-.btn[disabled]{opacity:.45;animation:none;filter:grayscale(.5);--edge:#2a2f55;box-shadow:0 5px 0 var(--edge),inset 0 1px 0 #fff2}
-.btn.sm{width:auto;padding:10px 16px;font-size:12px;border-radius:12px;box-shadow:0 4px 0 var(--edge),0 8px 16px #6c8cff44,inset 0 1px 0 #ffffff55}
-.btn.sm:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
+.btn:active:not([disabled]){transform:translateY(5px) scale(.985);box-shadow:0 1px 0 var(--edge)}
+.btn[disabled]{opacity:.45;animation:none;filter:grayscale(.5);--edge:#2a2f55;box-shadow:0 5px 0 var(--edge)}
+.btn.sm{width:auto;padding:10px 16px;font-size:12px;border-radius:12px}
 .btn.ok{background:linear-gradient(120deg,#20c997,#38e0a0);color:#04231a;--edge:#12876a}
-.btn.gray{background:#ffffff11;color:#fff;--edge:#ffffff11;box-shadow:0 4px 0 var(--edge),0 8px 16px #0004,inset 0 1px 0 #ffffff22;animation:none;}
-.btn.dg{background:linear-gradient(120deg,#ff8a3d,#ffc25c,#ff8a3d);background-size:200% 100%;color:#2a1200;--edge:#b0561a;box-shadow:0 6px 0 var(--edge),0 12px 22px #ff8a3d55,inset 0 2px 0 #ffffff66}
-.rp{position:absolute;border-radius:50%;background:#fff5;transform:scale(0);animation:rp .6s ease-out forwards;pointer-events:none}
-@keyframes rp{to{transform:scale(4);opacity:0}}
+.btn.gray{background:#ffffff11;color:#fff;--edge:#ffffff11;box-shadow:none;animation:none}
+.btn.dg{background:linear-gradient(120deg,#ff8a3d,#ffc25c,#ff8a3d);background-size:200% 100%;color:#2a1200;--edge:#b0561a;box-shadow:0 6px 0 var(--edge),0 12px 22px #ff8a3d55}
 .adp{display:flex;align-items:center;gap:14px}
 .mini{position:relative;width:64px;height:64px;flex:none}.mini svg{transform:rotate(-90deg)}.mini b{position:absolute;inset:0;display:grid;place-items:center;font-size:13px}
 .bar{height:6px;border-radius:6px;background:#ffffff14;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff8a3d,#ffc25c);border-radius:6px;transition:width .5s}
 .unl{color:var(--ok);font-weight:700;letter-spacing:.05em}
 .it{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd)}.it:last-child{border:0}
 .ico{width:40px;height:40px;border-radius:12px;background:#6c8cff22;display:grid;place-items:center;color:#a9b7ff;flex:none}.ico svg{width:20px;height:20px}
-.it .t{flex:1}.it .t b{display:block}.it .t small{color:var(--mut);font-size:11px}.pos{color:var(--ok);font-weight:700}.neg{color:var(--bad)}
+.it .t{flex:1}.it .t b{display:block}.it .t small{color:var(--mut);font-size:11px}.pos{color:var(--ok);font-weight:700}
 .days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:12px 0}
 .days div{aspect-ratio:1;border-radius:10px;background:#ffffff0d;border:1px solid var(--bd);display:grid;place-items:center;font-size:11px;color:var(--mut)}
 .days .d{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;border:0}.days .n{border-color:var(--c1);color:#fff;animation:bl 1.6s infinite}
@@ -103,23 +92,22 @@ h1{font-size:20px;margin:4px 0 12px}
 nav{display:flex;padding:8px 6px calc(var(--sab) + 8px);background:#0a0e1cd9;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--bd);position:relative}
 nav button{flex:1;background:0;border:0;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:9.5px;letter-spacing:.06em;padding:6px 0;position:relative;transition:transform .12s,color .3s;cursor:pointer}
 nav button:active{transform:translateY(3px) scale(.9)}
-nav svg{width:22px;height:22px;transition:.3s}nav button.on{color:#fff}nav button.on svg{color:var(--c1);filter:drop-shadow(0 0 6px var(--c1));transform:translateY(-2px);animation:tab3d .6s cubic-bezier(.3,1.5,.5,1)}
-@keyframes tab3d{0%{transform:translateY(4px) rotateY(0) scale(.7)}100%{transform:translateY(-2px) rotateY(360deg) scale(1)}}
-nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2px;background:linear-gradient(90deg,var(--c1),var(--c2));transform:translateX(-50%);border-radius:2px;transition:width .3s;box-shadow:0 0 8px var(--c1)}nav button.on:after{width:28px}
+nav svg{width:22px;height:22px;transition:.3s}nav button.on{color:#fff}nav button.on svg{color:var(--c1);filter:drop-shadow(0 0 6px var(--c1));transform:translateY(-2px)}
+nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2px;background:linear-gradient(90deg,var(--c1),var(--c2));transform:translateX(-50%);border-radius:2px;transition:width .3s}nav button.on:after{width:28px}
 .ib{box-shadow:0 4px 0 #04060f,0 8px 14px #0008,inset 0 1px 0 #ffffff2a;transition:transform .09s,box-shadow .09s}.ib:active{transform:translateY(3px) scale(.95);box-shadow:0 1px 0 #04060f}
 #md{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:20;padding:24px}#md.on{display:grid;animation:pg .3s}
-.pop{width:100%;max-width:320px;background:linear-gradient(160deg,#141a38,#0b0f22);border:1px solid var(--bd);border-radius:24px;padding:26px 20px;text-align:center;box-shadow:0 0 50px #ff8a3d33;animation:pp .5s cubic-bezier(.2,1.4,.4,1)}
-@keyframes pp{from{transform:scale(.7);opacity:0}}
+.pop{width:100%;max-width:320px;background:linear-gradient(160deg,#141a38,#0b0f22);border:1px solid var(--bd);border-radius:24px;padding:26px 20px;text-align:center;box-shadow:0 0 50px #ff8a3d33}
 .pop .big{font-size:34px;font-weight:800;margin:8px 0;background:linear-gradient(90deg,#ffc98a,#ff9a5c);-webkit-background-clip:text;background-clip:text;color:transparent}
-.chk{width:64px;height:64px;margin:auto;border-radius:50%;background:#38e0a022;display:grid;place-items:center;color:var(--ok)}.chk svg{width:32px;height:32px;stroke-dasharray:30;animation:dr .6s .2s both}
-@keyframes dr{from{stroke-dashoffset:30}}
+.chk{width:64px;height:64px;margin:auto;border-radius:50%;background:#38e0a022;display:grid;place-items:center;color:var(--ok)}
 .spin{width:44px;height:44px;border-radius:50%;border:3px solid #ffffff22;border-top-color:var(--c1);margin:14px auto;animation:rot2 .8s linear infinite}
 #toast{position:fixed;left:50%;bottom:calc(var(--sab) + 84px);transform:translate(-50%,20px);background:#1a2040;border:1px solid var(--bd);padding:10px 16px;border-radius:14px;opacity:0;transition:.3s;z-index:30;font-size:13px;pointer-events:none;white-space:nowrap}#toast.on{opacity:1;transform:translate(-50%,0)}
 
-/* ===== LOGIN / PROFILE SCREEN ===== */
-#ob{position:fixed;inset:0;z-index:100;height:100vh;height:100dvh;background:radial-gradient(520px 420px at 15% -8%,#3a3fa077,transparent),radial-gradient(480px 420px at 105% 45%,#6a2fa066,transparent),radial-gradient(400px 360px at 40% 110%,#1b3a8a55,transparent),#05070f;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transition:opacity .7s ease-in-out,transform .7s ease-in-out}
+/* ==============================================
+   🔥 RESTORED FULL 3D CYBERPUNK ANIMATION CSS 🔥
+   ============================================== */
+#ob{position:fixed;inset:0;z-index:100;height:100vh;height:100dvh;background:radial-gradient(520px 420px at 15% -8%,#3a3fa077,transparent),radial-gradient(480px 420px at 105% 45%,#6a2fa066,transparent),#05070f;overflow-x:hidden;overflow-y:auto;transition:opacity .7s ease-in-out,transform .7s ease-in-out}
 #ob.out{opacity:0;transform:scale(1.06);pointer-events:none}
-#obGrid{position:fixed;left:-60%;right:-60%;bottom:-8%;height:72%;pointer-events:none;transform-origin:50% 100%;transform:perspective(520px) rotateX(64deg);background-image:linear-gradient(#6c8cff26 1px,transparent 1px),linear-gradient(90deg,#6c8cff26 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 45%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 45%,transparent 100%);animation:obg 7s linear infinite}
+#obGrid{position:fixed;left:-60%;right:-60%;bottom:-8%;height:72%;pointer-events:none;transform-origin:50% 100%;transform:perspective(520px) rotateX(64deg);background-image:linear-gradient(#6c8cff26 1px,transparent 1px),linear-gradient(90deg,#6c8cff26 1px,transparent 1px);background-size:46px 46px;animation:obg 7s linear infinite}
 @keyframes obg{to{background-position:0 -46px,0 -46px}}
 .obBm{position:fixed;top:-20%;width:34%;height:140%;pointer-events:none;background:linear-gradient(90deg,transparent,#6c8cff14,transparent);transform:rotate(18deg);animation:obBm 14s ease-in-out infinite}
 .obBm.b2{background:linear-gradient(90deg,transparent,#9b6cff12,transparent);animation-duration:19s;animation-delay:-7s}
@@ -128,9 +116,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 @keyframes obSc{0%{transform:translateY(-130px)}100%{transform:translateY(105vh)}}
 #obCv{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 #obIn{position:relative;z-index:2;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(var(--sat) + 18px) 16px calc(var(--sab) + 18px);max-width:440px;margin:auto}
-.obCard{position:relative;width:100%;border:0;outline:0;background:rgba(10,14,35,.55);border-radius:28px;padding:20px 18px 16px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 20px 80px rgba(70,80,220,.16);animation:obIn .9s cubic-bezier(.4,0,.2,1) both}
-@keyframes obIn{from{opacity:0;transform:translateY(20px) scale(.96)}}
-.obCard>*,.obTop>*:not(.obLg){position:relative;z-index:1}
+.obCard{position:relative;width:100%;border:0;outline:0;background:rgba(10,14,35,.55);border-radius:28px;padding:20px 18px 16px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 20px 80px rgba(70,80,220,.16)}
 .obTop{text-align:center;margin-bottom:10px}
 .obLg{position:relative;width:84px;height:84px;margin:4px auto 10px;display:grid;place-items:center;animation:obFl 6s ease-in-out infinite}
 @keyframes obFl{50%{transform:translateY(-4px)}}
@@ -159,28 +145,11 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 .obLg .logo svg{width:28px;height:28px}
 .obTop h2{font-size:25px;letter-spacing:.32em;padding-left:.32em;font-weight:800;background:linear-gradient(90deg,#cdd6ff,#fff,#c9b3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .obTop p{color:var(--mut);font-size:11px;letter-spacing:.2em;margin-top:2px}
-.obOn{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:3px 12px;border-radius:20px;background:#38e0a010;color:var(--ok);font-size:10.5px;letter-spacing:.14em}
-.obOn .dot{animation:obDot 2.4s ease-in-out infinite}
-@keyframes obDot{0%,100%{box-shadow:0 0 4px var(--ok);opacity:.6}50%{box-shadow:0 0 12px var(--ok),0 0 20px #38e0a066;opacity:1}}
-.obCard h1{font-size:21px;margin:8px 0 2px;text-align:center;background:linear-gradient(90deg,#fff,#c9b3ff 60%,#9fb4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
-.obCard .sub{color:var(--mut);font-size:13px;margin-bottom:14px;text-align:center}
+.obOn{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:3px 12px;border-radius:20px;background:#38e0a010;color:var(--ok);font-size:10.5px}
 .obF{margin-bottom:11px}
 .obF label{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#a9b3d6;margin-bottom:6px}
-.obF label em{font-style:normal;text-transform:none;letter-spacing:.02em;font-size:10px;color:var(--mut)}
-.obF input{display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 15px;font-family:inherit;font-size:16px;font-weight:500;outline:0;transition:border-color .3s ease-in-out,box-shadow .3s ease-in-out;-webkit-appearance:none;appearance:none;user-select:text;-webkit-user-select:text}
-.obF input::placeholder{color:#5d6788}
+.obF input{display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 15px;font-family:inherit;font-size:16px;font-weight:500;outline:0}
 .obF input:focus{border-color:rgba(140,150,255,.4);box-shadow:0 0 18px rgba(120,110,255,.18)}
-.obF input.bad{border-color:rgba(255,92,122,.75)}
-.obF input.shake{animation:obSh .45s ease-in-out}
-@keyframes obSh{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
-#obRef{text-transform:uppercase;letter-spacing:.12em;font-family:ui-monospace,Menlo,monospace}#obRef::placeholder{text-transform:none;letter-spacing:0;font-family:inherit}
-.obErr{height:0;overflow:hidden;font-size:12px;color:var(--bad);opacity:0;transform:translateY(-4px);transition:.3s ease-in-out}.obErr.on{height:19px;padding-top:4px;opacity:1;transform:none}
-#obGo{margin-top:2px;background-size:250% 100%;animation:sh 7s ease-in-out infinite alternate;box-shadow:0 5px 0 var(--edge),0 10px 24px #6c8cff40,inset 0 1px 0 #ffffff40}
-#obGo:active:not([disabled]){transform:translateY(4px) scale(.975);box-shadow:0 1px 0 var(--edge),0 0 28px #9b6cff88}
-#obGo:after{content:"";position:absolute;top:0;bottom:0;left:-40%;width:30%;background:linear-gradient(100deg,transparent,#ffffff40,transparent);transform:skewX(-20deg);pointer-events:none;animation:obShine 4.5s ease-in-out infinite}
-@keyframes obShine{0%,55%{left:-40%}100%{left:130%}}
-#obGo .ld{display:none;width:18px;height:18px;border-radius:50%;border:2.5px solid #ffffff44;border-top-color:#fff;animation:rot2 .7s linear infinite}
-#obGo.busy .ld{display:block}
 .obFt{text-align:center;color:var(--mut);font-size:11px;line-height:1.5}
 
 /* TRANSFER TOKEN STYLES */
@@ -190,7 +159,6 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 </style>
 </head><body>
 
-<!-- SYSTEM MAINTENANCE / BAN OVERLAY -->
 <div id="maint-screen" style="display:none;position:fixed;inset:0;z-index:90000;background:#05070f;color:#fff;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;">
     <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#ff5c7a" stroke-width="2" style="margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     <h1 style="font-size:24px; margin:0 0 8px">Access Denied</h1>
@@ -242,7 +210,6 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
   <div class="row" style="margin:14px 0 4px"><span>Level <span id="lv1"></span> → Level <span id="lv2"></span></span><span class="lbl" id="cost"></span></div>
   <button class="btn dg" id="upB" onclick="upgrade()" style="margin-top:10px">Upgrade</button></div>
  <div class="g2"><div class="card stat"><div class="lbl">Session</div><b>2 hours</b></div><div class="card stat"><div class="lbl">Session reward</div><b id="sr"></b></div></div>
- <div class="card" style="margin-top:12px"><div class="lbl">How it works</div><p style="margin-top:6px;color:var(--mut)">Watch ads → DOGS mining unlocks → start a 2-hour session → claim your DOGS. Higher power levels mine faster.</p></div>
 </section>
 
 <section class="view" id="v-wallet">
@@ -260,8 +227,6 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
  <div class="card"><div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="t"><b>Watch Ads</b><small id="adS">0 / 10 completed</small></div><button class="btn sm" onclick="watchAd()">Watch</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-3.5 3.2-5 7-5s6.400 1.500 7 5M17 5a3.500 3.500 0 010 7M19 15c1.700.6 2.600 2 3 4"/></svg></div><div class="t"><b>Referral Reward</b><small>Invite friends, earn bonus</small></div><button class="btn sm" onclick="go('v-ref')">Open</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-3 0-4-4-1.500-4S12 8 12 8zM12 8c3 0 4-4 1.500-4S12 8 12 8z"/></svg></div><div class="t"><b>Welcome Bonus</b><small id="bnS">Available once</small></div><button class="btn sm ok" id="bnB" onclick="bonus()">Claim</button></div></div>
- 
- <!-- ADMIN DYNAMIC CUSTOM BONUSES RENDER HERE -->
  <div id="customBonusesContainer" style="display:none"></div>
 </section>
 
@@ -277,60 +242,37 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 
 <!-- PROFESSIONAL TRANSFER TOKEN 2-STEP VIEW -->
 <section class="view" id="v-transfer">
-  <!-- STEP 1: TOKEN SELECTION LIST -->
   <div id="tf-step-list">
     <button class="back" onclick="go('v-profile')">‹ Back to Profile</button>
     <h1>Transfer Token</h1>
     <div class="card" style="background:linear-gradient(135deg,rgba(108,140,255,.12),rgba(56,224,160,.08))">
-      <div class="row">
-        <div>
-          <b>Crypto Transfer Network</b>
-          <small style="display:block;color:var(--mut);margin-top:2px">Minimum 10,000 tokens per transfer</small>
-        </div>
-        <span class="tag" style="background:#38e0a022;color:var(--ok)">ONLINE</span>
-      </div>
+      <div><b>Crypto Transfer Network</b><small style="display:block;color:var(--mut);margin-top:2px">Minimum 10,000 tokens per transfer</small></div>
     </div>
     <div class="lbl" style="margin:14px 4px 8px">Select Token to Transfer</div>
     <div id="tfCoinList"></div>
-    <div class="note">Only tokens with 10,000 or more balance can be transferred.</div>
   </div>
 
-  <!-- STEP 2: DEDICATED TOKEN TRANSFER FORM (SHOWN ON TOKEN TAP) -->
   <div id="tf-step-send" style="display:none">
     <button class="back" onclick="backToTfList()">‹ Back to Tokens</button>
-    
-    <!-- Token Hero Logo & Details -->
     <div style="text-align:center;margin:12px 0 16px">
       <div id="tfHeroIcon" style="display:inline-block"></div>
-      <h2 id="tfHeroSym" style="font-size:22px;margin-top:8px;font-weight:800">DOGS</h2>
-      <div class="lbl" id="tfHeroName" style="color:var(--mut)">DOGS TOKEN</div>
+      <h2 id="tfHeroSym" style="font-size:22px;margin-top:8px">DOGS</h2>
       <div class="amt" style="font-size:20px;margin-top:4px"><span id="tfHeroBal">0.00</span> <small id="tfHeroUnit">DOGS</small></div>
     </div>
-
     <div class="card">
       <div class="lbl">1. Enter Destination Address</div>
       <div style="position:relative;margin:6px 0 12px">
-        <input id="tfAddr" type="text" placeholder="Paste destination wallet address" autocomplete="off" spellcheck="false" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:14px;outline:0">
+        <input id="tfAddr" type="text" placeholder="Paste destination wallet address" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:14px;outline:0">
         <button class="btn sm gray" onclick="pasteTfAddr()" style="position:absolute;right:6px;top:8px;padding:6px 12px;font-size:11px">PASTE</button>
       </div>
 
-      <div class="row">
-        <div class="lbl">2. Transfer Amount</div>
-        <div class="lbl" style="color:var(--ok)">Min: 10,000</div>
-      </div>
+      <div class="lbl">2. Transfer Amount (Min 10,000)</div>
       <div style="position:relative;margin:6px 0 14px">
         <input id="tfAmt" type="number" step="any" min="10000" placeholder="Min. 10,000" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:15px;outline:0">
         <button class="btn sm ok" onclick="setTfMax()" style="position:absolute;right:6px;top:8px;padding:6px 12px;font-size:11px">MAX</button>
       </div>
-
-      <div class="row" style="margin:6px 0 16px;color:var(--mut);font-size:12px">
-        <span>Network Fee:</span>
-        <b style="color:var(--ok)">FREE (0%)</b>
-      </div>
-
       <button class="btn ok" id="tfSubmitBtn" onclick="submitTransfer()">TRANSFER NOW</button>
     </div>
-    <div class="note">Transfers are processed on-chain. Please verify deposit address carefully.</div>
   </div>
 </section>
 
@@ -338,9 +280,8 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
  <button class="back" onclick="go('v-rewards')">‹ Back</button>
  <div class="card" style="text-align:center"><svg width="150" height="90" viewBox="0 0 150 90"><circle cx="75" cy="40" r="16" fill="#ff8a3d33" stroke="#ff8a3d"/><circle cx="30" cy="62" r="11" fill="#9b6cff33" stroke="#9b6cff"/><circle cx="120" cy="62" r="11" fill="#38e0a033" stroke="#38e0a0"/><path d="M62 52L38 58M88 52l24 6" stroke="#ffffff44" stroke-dasharray="3 3"/><circle cx="75" cy="40" r="4" fill="#ffc98a"/></svg>
  <h1 style="margin-top:8px">Invite Friends</h1><p style="color:var(--mut)">Invite friends and earn bonus rewards.</p>
- <div class="lbl" style="margin-top:14px">Your referral code</div><div class="code"><div id="rc"></div><button class="btn sm" style="width:auto" onclick="copyCode()">COPY</button></div>
+ <div class="lbl" style="margin-top:14px">Your referral code</div><div class="code"><div id="rc"></div><button class="btn sm" onclick="copyCode()">COPY</button></div>
  <button class="btn" onclick="shareRef()">Invite Friends</button></div>
- <div class="g2" style="grid-template-columns:repeat(3,1fr)"><div class="card stat"><div class="lbl">Invited</div><b id="rI">0</b></div><div class="card stat"><div class="lbl">Active</div><b id="rA">0</b></div><div class="card stat"><div class="lbl">Earned</div><b id="rE">0</b></div></div>
 </section>
 
 <section class="view" id="v-tx"><button class="back" onclick="go('v-profile')">‹ Back</button><h1>Transactions</h1><div class="card" id="txl"></div></section>
@@ -349,7 +290,9 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <nav id="nav"></nav></div>
 <div id="md"><div class="pop" id="pop"></div></div><div id="toast"></div>
 
-<!-- LOGIN / PROFILE OVERLAY -->
+<!-- ==============================================
+     🔥 RESTORED FULL ANIMATED LOGIN OVERLAY (#ob)
+     ============================================== -->
 <div id="ob" role="dialog" aria-label="Atomix login">
  <div id="obGrid"></div><i class="obBm"></i><i class="obBm b2"></i><div id="obScan"></div><canvas id="obCv"></canvas>
  <div id="obIn">
@@ -367,8 +310,8 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     <h2>ATOMIX</h2><p>CRYPTO MINING NETWORK</p>
     <div class="obOn"><span class="dot"></span>NETWORK ONLINE</div>
    </div>
-   <h1>Welcome</h1>
-   <div class="sub">Register to start mining DOGS on Atomix.</div>
+   <h1 style="font-size:20px;text-align:center;margin:6px 0">Welcome</h1>
+   <div style="color:var(--mut);font-size:12px;text-align:center;margin-bottom:14px">Sign in to start mining DOGS on Atomix.</div>
    
    <!-- GOOGLE SIGN IN BUTTON -->
    <button class="btn" id="obGoogle" type="button" onclick="loginWithGoogle()" style="margin-bottom:12px;background:#ffffff;color:#1a1d2e;--edge:#cbd5e1;box-shadow:0 5px 0 #94a3b8,0 10px 22px rgba(255,255,255,.15);animation:none;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700">
@@ -391,7 +334,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
-import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithCredential, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCHDKJIX2hTnmo9HXaOxIJopFRBjKFGAnI",
@@ -410,30 +353,18 @@ const db = getDatabase(app);
 
 var $ = id => document.getElementById(id);
 
-// 1. DEFAULT USER STATE TEMPLATE
+// 🔥 CRASH-PROOF SAFE SETTER HELPERS (KABHI NULL ERROR NAHI AAYEGA)
+function setTxt(id, val){ var el = $(id); if(el) el.textContent = val; }
+function setHtml(id, val){ var el = $(id); if(el) el.innerHTML = val; }
+
 var def = {
-  dogsBalance: 0,
-  bonkBalance: 0,
-  trxBalance: 0,
-  flokiBalance: 0,
-  walletCoin5Balance: 0,
-  ads: 0,
-  unlocked: false,
-  mining: null,
-  claim: 0,
-  lvl: 1,
+  dogsBalance: 0, bonkBalance: 0, trxBalance: 0, flokiBalance: 0, walletCoin5Balance: 0,
+  ads: 0, unlocked: false, mining: null, claim: 0, lvl: 1,
   ref: { code: "DOGS" + Math.random().toString(36).slice(2,6).toUpperCase(), inv: 0, act: 0, earn: 0 },
-  daily: { day: 0, last: "" },
-  bonus: false,
-  tx: [],
-  sessions: 0,
-  total: 0,
-  banned: false,
-  profile: null
+  daily: { day: 0, last: "" }, bonus: false, tx: [], sessions: 0, total: 0, banned: false, profile: null
 };
 
 window.S = Object.assign({}, def);
-
 var GLOBAL_SET = {
     app: { maintenance: false, maintenanceMsg: "Under maintenance" },
     mining: { enabled: true, session: 7200, baseRate: 0.25, rateStep: 0.15, costBase: 100, adsReq: 10 },
@@ -444,94 +375,97 @@ var GLOBAL_SET = {
 };
 var CUSTOM_BONUSES = {};
 var currentAuthUser = null;
-var lastSeenAlertTime = 0;
 
 function getSES(){ return (GLOBAL_SET.mining && GLOBAL_SET.mining.session) || 7200; }
 function getADS(){ return (GLOBAL_SET.mining && GLOBAL_SET.mining.adsReq) || 10; }
 function getDAILY(){ return (GLOBAL_SET.rewards && GLOBAL_SET.rewards.daily) || [10, 15, 20, 25, 30, 40, 60]; }
 
-// 2. REALTIME DATABASE UPDATE FUNCTION
 window.fbUpdate = function(fields) {
     if(!currentAuthUser) return;
-    update(ref(db, "users/" + currentAuthUser.uid), fields).catch(e => console.warn("Firebase update failed", e));
+    update(ref(db, "users/" + currentAuthUser.uid), fields).catch(e => console.warn(e));
 };
 
-// 3. LISTEN TO AUTHENTICATION & DATABASE
 onAuthStateChanged(auth, user => {
-    if(!user) {
-        signInAnonymously(auth);
-        return;
-    }
+    if(!user) return;
     currentAuthUser = user;
     
-    // Listen to user data from Firebase Realtime Database
     onValue(ref(db, "users/" + user.uid), snap => {
         let val = snap.val();
         if(val) {
             window.S = Object.assign({}, def, val);
-            
-            // Check Ban Status
             if(window.S.banned) {
-                $("maint-screen").style.display = "flex";
-                $("maint-msg").textContent = "Your account has been disabled by the admin.";
+                if($("maint-screen")) $("maint-screen").style.display = "flex";
+                setTxt("maint-msg", "Your account has been disabled by the admin.");
             } else if (!GLOBAL_SET.app || !GLOBAL_SET.app.maintenance) {
-                $("maint-screen").style.display = "none";
+                if($("maint-screen")) $("maint-screen").style.display = "none";
             }
-            
-            // Hide registration modal if profile is setup
             if(window.S.profile && window.S.profile.setupComplete) {
-                window.closeOb();
+                if(typeof window.closeOb === "function") window.closeOb();
             }
             ui();
         } else {
-            // New user, wait for name submission
-            $("ob").classList.remove("out");
+            if($("ob")) $("ob").classList.remove("out");
         }
     });
 
-    // Listen to App Settings from Firebase
     onValue(ref(db, "settings"), snap => {
         let v = snap.val();
         if(v) {
             GLOBAL_SET = Object.assign({}, GLOBAL_SET, v);
             if(GLOBAL_SET.app && GLOBAL_SET.app.maintenance) {
-                $("maint-screen").style.display = "flex";
-                $("maint-msg").textContent = GLOBAL_SET.app.maintenanceMsg || "System under maintenance.";
+                if($("maint-screen")) $("maint-screen").style.display = "flex";
+                setTxt("maint-msg", GLOBAL_SET.app.maintenanceMsg || "System under maintenance.");
             } else if (!window.S.banned) {
-                $("maint-screen").style.display = "none";
+                if($("maint-screen")) $("maint-screen").style.display = "none";
             }
             ui();
         }
     });
 
-    // Listen to Custom Bonuses
     onValue(ref(db, "customBonuses"), snap => {
         CUSTOM_BONUSES = snap.val() || {};
         renderCustomBonuses();
     });
-
-    // Listen to Global Alerts from Admin
-    onValue(ref(db, "settings/globalNotification"), snap => {
-        let notif = snap.val();
-        if(notif && notif.time > lastSeenAlertTime) {
-            lastSeenAlertTime = notif.time;
-            modal('<div class="chk" style="background:#ff5c7a22;color:#ff5c7a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div><div class="lbl" style="margin-top:14px">🔔 ADMIN ALERT</div><div class="big" style="font-size:22px;margin-bottom:10px">' + esc(notif.title) + '</div><p style="color:var(--mut);margin-bottom:16px">' + esc(notif.body) + '</p><button class="btn bad" onclick="closeM()">DISMISS</button>');
-        }
-    });
 });
 
-// GOOGLE AUTH WITH ACCOUNT SELECTOR
+// 🔥 GOOGLE SIGN IN (SOLVES CONNECTING STUCK BUG)
 window.loginWithGoogle = async function() {
-    let provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-        prompt: 'select_account'
-    });
     let btn = $("obGoogle"), txt = $("obGoogleTxt");
+    if(btn) btn.disabled = true;
+    if(txt) txt.textContent = "Connecting...";
+
+    if (typeof Android !== "undefined" && Android && Android.openGoogleLogin) {
+        Android.openGoogleLogin();
+        return;
+    }
+
+    let provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
     try {
-        if(btn) btn.disabled = true;
-        if(txt) txt.textContent = "Connecting...";
         let res = await signInWithPopup(auth, provider);
-        let user = res.user;
+        await handleSuccessfulLogin(res.user);
+    } catch(err) {
+        toast(err.message || "Google sign-in cancelled");
+        if(btn) btn.disabled = false;
+        if(txt) txt.textContent = "Sign in with Google";
+    }
+};
+
+window.onNativeGoogleLoginSuccess = async function(idToken, email, name) {
+    try {
+        const credential = GoogleAuthProvider.credential(idToken);
+        let res = await signInWithCredential(auth, credential);
+        await handleSuccessfulLogin(res.user, name, email);
+    } catch(e) {
+        toast("Firebase error: " + e.message);
+        let btn = $("obGoogle"), txt = $("obGoogleTxt");
+        if(btn) btn.disabled = false;
+        if(txt) txt.textContent = "Sign in with Google";
+    }
+};
+
+async function handleSuccessfulLogin(user, customName, customEmail) {
+    try {
         let snap = await get(ref(db, "users/" + user.uid));
         if(!snap.exists()) {
             let refVal = ($("obRef") ? $("obRef").value.trim().toUpperCase() : "");
@@ -539,8 +473,8 @@ window.loginWithGoogle = async function() {
                 uid: "ID" + Math.floor(100000 + Math.random() * 900000),
                 authUid: user.uid,
                 profile: {
-                    name: user.displayName || "Google User",
-                    email: user.email || "",
+                    name: customName || user.displayName || "Google User",
+                    email: customEmail || user.email || "",
                     photoURL: user.photoURL || "",
                     referralCode: refVal,
                     setupComplete: true,
@@ -550,16 +484,16 @@ window.loginWithGoogle = async function() {
             });
             await set(ref(db, "users/" + user.uid), initialObj);
         }
-        window.closeOb();
-        toast("Logged in with Google!");
+        if(typeof window.closeOb === "function") window.closeOb();
+        toast("Logged in successfully!");
     } catch(err) {
-        console.error("Google login error", err);
-        toast(err.message || "Google sign-in cancelled");
+        toast("Database error: " + err.message);
     } finally {
+        let btn = $("obGoogle"), txt = $("obGoogleTxt");
         if(btn) btn.disabled = false;
         if(txt) txt.textContent = "Sign in with Google";
     }
-};
+}
 
 window.logout = async function() {
     if(confirm("Are you sure you want to log out?")) {
@@ -568,7 +502,6 @@ window.logout = async function() {
     }
 };
 
-// SUBMIT REGISTRATION DIRECTLY TO FIREBASE
 window.submitUserRegister = function(name, refCode) {
     if(!currentAuthUser) return;
     let initialObj = Object.assign({}, def, {
@@ -578,11 +511,27 @@ window.submitUserRegister = function(name, refCode) {
         createdAt: Date.now()
     });
     set(ref(db, "users/" + currentAuthUser.uid), initialObj).then(() => {
-        window.closeOb();
+        if(typeof window.closeOb === "function") window.closeOb();
     });
 };
 
-// ACTIONS UPDATE SPECIFIC FIELDS IN FIREBASE DIRECTLY (NO OVERWRITING)
+// 🔥 ADMOB ADS BRIDGE
+window.adCallback = null;
+function showMiningAd() {
+  return new Promise(resolve => {
+    if (typeof Android !== "undefined" && Android && Android.showAd) {
+      window.adCallback = resolve;
+      Android.showAd();
+    } else {
+      var t=3; modal('<div class="lbl">Sponsored</div><div class="spin"></div><div class="big" id="adc">'+t+'</div><p style="color:var(--mut)">Ad placeholder.</p>');
+      var iv=setInterval(()=>{ t--; if($("adc"))$("adc").textContent=t; if(t<=0){ clearInterval(iv); closeM(); resolve(true); } }, 1000);
+    }
+  });
+}
+window.onAndroidAdFinished = function(success) {
+  if (window.adCallback) { window.adCallback(success); window.adCallback = null; }
+};
+
 window.watchAd = function(){
     if(window.adBusy) return;
     if(window.S.unlocked || window.S.mining){
@@ -606,7 +555,7 @@ window.startMining = function(){
     fbUpdate({ mining: m, unlocked: false, ads: 0 });
 };
 
-window.finishMining = function(){
+function finishMining(){
     let m = window.S.mining;
     if(!m) return;
     let r = m.r * getSES() / 60;
@@ -620,19 +569,22 @@ window.finishMining = function(){
         tx: newTx.slice(0, 50)
     });
     success("Mining complete", r, "DOGS mining session completed.");
-};
+}
 
 window.claim = function(){
     if(window.S.mining || (window.S.claim || 0) <= 0) return;
-    let a = window.S.claim;
-    let newTx = window.S.tx || [];
-    newTx.unshift({ t: "DOGS Reward Claimed", a: a, c: "DOGS", d: Date.now() });
-    fbUpdate({
-        claim: 0,
-        dogsBalance: (window.S.dogsBalance || 0) + a,
-        tx: newTx.slice(0, 50)
+    showMiningAd().then(ok => {
+        if(!ok) return;
+        let a = window.S.claim;
+        let newTx = window.S.tx || [];
+        newTx.unshift({ t: "DOGS Reward Claimed", a: a, c: "DOGS", d: Date.now() });
+        fbUpdate({
+            claim: 0,
+            dogsBalance: (window.S.dogsBalance || 0) + a,
+            tx: newTx.slice(0, 50)
+        });
+        success("Reward claimed", a, "Added to your DOGS balance.");
     });
-    success("Reward claimed", a, "Added to your DOGS balance.");
 };
 
 window.upgrade = function(){
@@ -652,61 +604,34 @@ window.upgrade = function(){
 window.daily = function(){
     let t = today();
     if(window.S.daily && window.S.daily.last === t) return;
-    let day = (window.S.daily ? window.S.daily.day : 0) || 0;
-    let a = getDAILY()[Math.min(day, getDAILY().length - 1)];
-    let newTx = window.S.tx || [];
-    newTx.unshift({ t: "Daily Reward", a: a, c: "DOGS", d: Date.now() });
-    fbUpdate({
-        dogsBalance: (window.S.dogsBalance || 0) + a,
-        daily: { day: (day + 1) % 7, last: t },
-        tx: newTx.slice(0, 50)
+    showMiningAd().then(ok => {
+        if(!ok) return;
+        let day = (window.S.daily ? window.S.daily.day : 0) || 0;
+        let a = getDAILY()[Math.min(day, getDAILY().length - 1)];
+        let newTx = window.S.tx || [];
+        newTx.unshift({ t: "Daily Reward", a: a, c: "DOGS", d: Date.now() });
+        fbUpdate({
+            dogsBalance: (window.S.dogsBalance || 0) + a,
+            daily: { day: (day + 1) % 7, last: t },
+            tx: newTx.slice(0, 50)
+        });
+        success("Daily reward", a, "Come back tomorrow for more.");
     });
-    success("Daily reward", a, "Come back tomorrow for more.");
 };
 
 window.bonus = function(){
     if(window.S.bonus) return;
-    let newTx = window.S.tx || [];
-    newTx.unshift({ t: "Welcome Bonus", a: 25, c: "DOGS", d: Date.now() });
-    fbUpdate({
-        dogsBalance: (window.S.dogsBalance || 0) + 25,
-        bonus: true,
-        tx: newTx.slice(0, 50)
-    });
-    success("Bonus", 25, "Welcome bonus claimed.");
-};
-
-window.claimCustomBonus = function(id, type, reqAds, reward) {
-    if(window.S.claimedBonuses && window.S.claimedBonuses[id]) { toast("Already claimed"); return; }
-    if(type === "ads") {
-        let curBonusAds = (window.S.bonusAds && window.S.bonusAds[id]) || 0;
-        showMiningAd().then(ok => {
-            if(!ok){ toast("Ad not completed"); return; }
-            curBonusAds++;
-            let updates = {};
-            updates[`bonusAds/${id}`] = curBonusAds;
-            if(curBonusAds >= reqAds) {
-                updates[`claimedBonuses/${id}`] = true;
-                updates[`dogsBalance`] = (window.S.dogsBalance || 0) + reward;
-                let newTx = window.S.tx || [];
-                newTx.unshift({ t: "Bonus Reward", a: reward, c: "DOGS", d: Date.now() });
-                updates[`tx`] = newTx.slice(0, 50);
-                success("Bonus Claimed", reward, "You completed the task!");
-            } else {
-                toast("Ad " + curBonusAds + " / " + reqAds + " completed");
-            }
-            fbUpdate(updates);
-        });
-    } else {
-        let updates = {};
-        updates[`claimedBonuses/${id}`] = true;
-        updates[`dogsBalance`] = (window.S.dogsBalance || 0) + reward;
+    showMiningAd().then(ok => {
+        if(!ok) return;
         let newTx = window.S.tx || [];
-        newTx.unshift({ t: "Bonus Reward", a: reward, c: "DOGS", d: Date.now() });
-        updates[`tx`] = newTx.slice(0, 50);
-        fbUpdate(updates);
-        success("Bonus Claimed", reward, "Free bonus claimed!");
-    }
+        newTx.unshift({ t: "Welcome Bonus", a: 25, c: "DOGS", d: Date.now() });
+        fbUpdate({
+            dogsBalance: (window.S.dogsBalance || 0) + 25,
+            bonus: true,
+            tx: newTx.slice(0, 50)
+        });
+        success("Bonus", 25, "Welcome bonus claimed.");
+    });
 };
 
 function renderCustomBonuses() {
@@ -740,9 +665,7 @@ function renderCustomBonuses() {
     h += '</div>';
     container.innerHTML = h;
 }
-window.renderCustomBonuses = renderCustomBonuses;
 
-// UI TICKER & RENDERING
 var COINS=[
  {k:"dogsBalance",sym:"DOGS",name:"DOGS Token",cg:"dogs-2",cls:"dg",icon:"dogs.png",mine:true},
  {k:"bonkBalance",sym:"BONK",name:"BONK",cg:"bonk",cls:"bk",icon:"bonk.png"},
@@ -766,7 +689,9 @@ var IC={
 };
 
 var TABS=[["home","HOME"],["mining","MINING"],["wallet","WALLET"],["rewards","REWARDS"],["profile","PROFILE"]];
-$("nav").innerHTML=TABS.map(t => '<button data-t="v-'+t[0]+'" onclick="go(\'v-'+t[0]+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+IC[t[0]]+'</svg>'+t[1]+'</button>').join("");
+if($("nav")) {
+  $("nav").innerHTML=TABS.map(t => '<button data-t="v-'+t[0]+'" onclick="go(\'v-'+t[0]+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+IC[t[0]]+'</svg>'+t[1]+'</button>').join("");
+}
 
 var cur="v-home", curCoin=0;
 window.go = function(v){
@@ -776,19 +701,16 @@ window.go = function(v){
  document.querySelectorAll(".view").forEach(s => s.classList.toggle("on",s.id===v));
  var tv = v==="v-ref"?"v-rewards":v==="v-tx"||v==="v-transfer"?"v-profile":v==="v-coin"?"v-wallet":v;
  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t===tv));
- $("views").scrollTop=0;
+ if($("views")) $("views").scrollTop=0;
  if(v==="v-tx") txList();
  if(v==="v-transfer") renderTransferView();
  lastW=""; ui();
 };
 window.coinD=function(i){ curCoin=i; go("v-coin"); };
 
-// ================= DEDICATED TRANSFER TOKEN LOGIC =================
 var curTfCoinIdx = 0;
-
 function renderTransferView() {
-    let listDiv = $("tf-step-list");
-    let sendDiv = $("tf-step-send");
+    let listDiv = $("tf-step-list"), sendDiv = $("tf-step-send");
     if(listDiv) listDiv.style.display = "block";
     if(sendDiv) sendDiv.style.display = "none";
 
@@ -825,33 +747,25 @@ window.renderTransferView = renderTransferView;
 window.onCoinCardTap = function(idx) {
     let c = COINS[idx];
     let bal = window.S[c.k] || 0;
-    if(bal < 10000) {
-        toast(`Minimum 10,000 ${c.sym} required to transfer`);
-        return;
-    }
+    if(bal < 10000) { toast(`Minimum 10,000 ${c.sym} required to transfer`); return; }
     curTfCoinIdx = idx;
-    openTokenSendScreen(c, bal);
-};
-
-function openTokenSendScreen(c, bal) {
-    $("tf-step-list").style.display = "none";
-    $("tf-step-send").style.display = "block";
+    if($("tf-step-list")) $("tf-step-list").style.display = "none";
+    if($("tf-step-send")) $("tf-step-send").style.display = "block";
     
-    $("tfHeroIcon").innerHTML = coinIcon(c, "big");
-    $("tfHeroSym").textContent = c.sym;
-    $("tfHeroName").textContent = c.name;
-    $("tfHeroBal").textContent = f(bal);
-    $("tfHeroUnit").textContent = c.sym;
+    if($("tfHeroIcon")) $("tfHeroIcon").innerHTML = coinIcon(c, "big");
+    setTxt("tfHeroSym", c.sym);
+    setTxt("tfHeroBal", f(bal));
+    setTxt("tfHeroUnit", c.sym);
 
     if($("tfAddr")) $("tfAddr").value = "";
     if($("tfAmt")) $("tfAmt").value = "";
-    $("views").scrollTop = 0;
-}
+    if($("views")) $("views").scrollTop = 0;
+};
 
 window.backToTfList = function() {
-    $("tf-step-send").style.display = "none";
-    $("tf-step-list").style.display = "block";
-    $("views").scrollTop = 0;
+    if($("tf-step-send")) $("tf-step-send").style.display = "none";
+    if($("tf-step-list")) $("tf-step-list").style.display = "block";
+    if($("views")) $("views").scrollTop = 0;
 };
 
 window.setTfMax = function() {
@@ -876,22 +790,10 @@ window.submitTransfer = async function() {
     let addr = ($("tfAddr") ? $("tfAddr").value : "").trim();
     let amt = parseFloat($("tfAmt") ? $("tfAmt").value : 0);
 
-    if(bal < 10000) {
-        toast(`Need at least 10,000 ${c.sym}`);
-        return;
-    }
-    if(!addr || addr.length < 8) {
-        toast("Please enter a valid deposit address");
-        return;
-    }
-    if(!amt || isNaN(amt) || amt < 10000) {
-        toast(`Minimum transfer is 10,000 ${c.sym}`);
-        return;
-    }
-    if(amt > bal) {
-        toast("Insufficient token balance");
-        return;
-    }
+    if(bal < 10000) { toast(`Need at least 10,000 ${c.sym}`); return; }
+    if(!addr || addr.length < 8) { toast("Please enter a valid deposit address"); return; }
+    if(!amt || isNaN(amt) || amt < 10000) { toast(`Minimum transfer is 10,000 ${c.sym}`); return; }
+    if(amt > bal) { toast("Insufficient token balance"); return; }
 
     let btn = $("tfSubmitBtn");
     if(btn) { btn.disabled = true; btn.textContent = "PROCESSING..."; }
@@ -936,7 +838,6 @@ window.submitTransfer = async function() {
             <p style="color:var(--ok);font-size:12px;margin-bottom:16px">Transfer queued for processing!</p>
             <button class="btn ok" onclick="closeM();go('v-profile')">CONTINUE</button>`);
     } catch(err) {
-        console.error("Transfer error", err);
         toast("Transfer failed: " + err.message);
     } finally {
         if(btn) { btn.disabled = false; btn.textContent = "TRANSFER NOW"; }
@@ -950,20 +851,14 @@ function cost(){ return (GLOBAL_SET.mining.costBase || 100) * (window.S.lvl||1) 
 function today(){ return new Date().toISOString().slice(0,10); }
 
 window.toast = function(m){
-    var t=$("toast"); t.textContent=m; t.classList.add("on");
+    var t=$("toast"); if(!t) return;
+    t.textContent=m; t.classList.add("on");
     clearTimeout(window.toastT); window.toastT=setTimeout(()=>t.classList.remove("on"),1800);
 };
 
-function modal(h){ $("pop").innerHTML=h; $("md").classList.add("on"); }
-window.closeM = function(){ $("md").classList.remove("on"); };
+function modal(h){ if($("pop")){ $("pop").innerHTML=h; $("md").classList.add("on"); } }
+window.closeM = function(){ if($("md")) $("md").classList.remove("on"); };
 function success(t,a,m){ modal('<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg></div><div class="lbl" style="margin-top:14px">'+t+'</div><div class="big">+'+f(a)+' DOGS</div><p style="color:var(--mut);margin-bottom:16px">'+m+'</p><button class="btn dg" onclick="closeM()">CONTINUE</button>'); }
-
-function showMiningAd(){
- return new Promise(resolve => {
-  var t=3; modal('<div class="lbl">Sponsored</div><div class="spin"></div><div class="big" id="adc">'+t+'</div><p style="color:var(--mut)">Ad placeholder.</p>');
-  var iv=setInterval(()=>{ t--; if($("adc"))$("adc").textContent=t; if(t<=0){ clearInterval(iv); closeM(); resolve(true); } }, 1000);
- });
-}
 
 window.copyCode=function(){ try{ navigator.clipboard.writeText(window.S.ref ? window.S.ref.code : "").then(()=>toast("Code copied"), ()=>toast(window.S.ref.code)); }catch(e){ toast(window.S.ref ? window.S.ref.code : ""); } };
 window.shareRef=function(){ var t="Join me on Atomix Miner. Code: "+(window.S.ref ? window.S.ref.code : ""); if(navigator.share)navigator.share({text:t}).catch(()=>{}); else window.copyCode(); };
@@ -971,7 +866,7 @@ window.shareRef=function(){ var t="Join me on Atomix Miner. Code: "+(window.S.re
 function txRows(list){
     return (list&&list.length)?list.map(x=>'<div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div><div class="t"><b>'+x.t+'</b><small>'+new Date(x.d).toLocaleString()+' · Completed</small></div><span class="'+(x.a>=0?"pos":"")+'">'+(x.a>=0?"+":"")+f(x.a)+' '+x.c+'</span></div>').join(""):'<p class="note">No transactions yet.</p>';
 }
-function txList(){ $("txl").innerHTML=txRows(window.S.tx||[]); }
+function txList(){ if($("txl")) $("txl").innerHTML=txRows(window.S.tx||[]); }
 
 var PX={};
 var pxOk=null;
@@ -990,54 +885,93 @@ var lastW="";
 function renderWallet(){
  if(cur!=="v-wallet"&&cur!=="v-coin")return;
  var tot=0; COINS.forEach(c=>{tot+=val(c)});
- $("tot").textContent="$"+f(tot);
- $("pxSt").className="live"+(pxOk===false?" off":"");
- $("pxSt").textContent=pxOk===false?"Price unavailable — showing estimate":pxOk?"Live prices":"Loading prices…";
+ setTxt("tot", "$"+f(tot));
+ if($("pxSt")){
+   $("pxSt").className="live"+(pxOk===false?" off":"");
+   $("pxSt").textContent=pxOk===false?"Price unavailable — showing estimate":pxOk?"Live prices":"Loading prices…";
+ }
  var h=COINS.map((c,i)=>{
   var p=price(c);
   return '<div class="card wc" onclick="coinD('+i+')">'+coinIcon(c,"sm")+'<div class="m"><b>'+c.sym+(c.mine?'<span class="tag">MINEABLE</span>':'')+'</b><small>'+c.name+'</small><small>'+(p?usd(p.p):(c.cg?"Price unavailable":"Price not set"))+'</small></div><div class="r"><b>'+f(window.S[c.k]||0)+' '+c.sym+'</b>'+chHtml(p)+'<small style="color:var(--mut)">'+(p?"$"+f(val(c)):"$0.00")+'</small></div></div>';
  }).join("");
- if(h!==lastW){lastW=h;$("wl").innerHTML=h;}
+ if(h!==lastW && $("wl")){lastW=h;$("wl").innerHTML=h;}
 }
 
 function pad(n){ return (n<10?"0":"")+n; }
 
+// 🔥 CRASH-PROOF SAFE UI UPDATE FUNCTION
 function ui(){
  var S = window.S;
  var now=Date.now(), m=S.mining, on=!!m;
  if(m&&now>=m.e){ finishMining(); return; }
- $("mach").classList.toggle("on-m",on);
+ if($("mach")) $("mach").classList.toggle("on-m",on);
  var el=on?Math.min(getSES(),(now-m.s)/1000):0, left=on?Math.max(0,Math.ceil((m.e-now)/1000)):0, earn=on?m.r*el/60:0;
- $("liveT").className="live"+(on?"":" off"); $("liveT").textContent=on?"+"+rate().toFixed(2)+" DOGS/min":"Idle";
- $("adCard").style.display=on?"none":"block"; $("tmCard").style.display=on?"block":"none";
- $("adN").textContent=(S.ads||0)+"/"+getADS(); $("adR").style.strokeDashoffset=169.6*(1-(S.ads||0)/getADS()); $("adS").textContent=(S.ads||0)+" / "+getADS()+" completed";
- $("adT").innerHTML=S.unlocked?'<span class="unl">✓ DOGS MINING UNLOCKED</span>':"Watch "+getADS()+" ads to unlock DOGS mining.";
- $("adB").style.display=S.unlocked?"none":"inline-flex";
- $("tm").textContent=pad(Math.floor(left/3600))+":"+pad(Math.floor(left%3600/60))+":"+pad(left%60);
- $("ring").style.strokeDashoffset=414.7*(el/getSES()); $("spd").textContent="+"+(m?m.r:rate()).toFixed(2)+" DOGS/min"; $("ern").textContent="+"+f(earn)+" DOGS";
  
- var b=$("mainB"); b.disabled=on||!S.unlocked;
- b.innerHTML=on?GLOBAL_SET.buttons.mainB.textMin:S.unlocked?GLOBAL_SET.buttons.mainB.textUnl:GLOBAL_SET.buttons.mainB.textAds.replace("{ADS}",getADS());
- $("pend").textContent=f(on?earn:S.claim); $("clB").disabled=on||(S.claim||0)<=0;
+ if($("liveT")){
+   $("liveT").className="live"+(on?"":" off");
+   $("liveT").textContent=on?"+"+rate().toFixed(2)+" DOGS/min":"Idle";
+ }
+ if($("adCard")) $("adCard").style.display=on?"none":"block"; 
+ if($("tmCard")) $("tmCard").style.display=on?"block":"none";
  
- $("bal").textContent = f(S.dogsBalance || 0);
- $("pbal").textContent = f(S.dogsBalance || 0);
+ setTxt("adN", (S.ads||0)+"/"+getADS());
+ if($("adR")) $("adR").style.strokeDashoffset=169.6*(1-(S.ads||0)/getADS());
+ setTxt("adS", (S.ads||0)+" / "+getADS()+" completed");
  
- $("mSt").textContent=on?"Mining":S.unlocked?"Ready":"Idle"; $("mRt").textContent="+"+rate().toFixed(2)+" DOGS/min"; $("mBar").style.width=(el/getSES()*100)+"%";
- $("lv").textContent=S.lvl||1; $("lvR").textContent="+"+rate().toFixed(2)+" DOGS/min"; $("lv1").textContent=S.lvl||1; $("lv2").textContent=(S.lvl||1)+1; $("cost").textContent="Cost "+f(cost())+" DOGS";
- $("lvB").style.width=Math.min(100,(S.dogsBalance||0)/cost()*100)+"%"; $("sr").textContent=f(rate()*(getSES()/60))+" DOGS"; $("upB").disabled=on;
+ setHtml("adT", S.unlocked?'<span class="unl">✓ DOGS MINING UNLOCKED</span>':"Watch "+getADS()+" ads to unlock DOGS mining.");
+ if($("adB")) $("adB").style.display=S.unlocked?"none":"inline-flex";
+ 
+ setTxt("tm", pad(Math.floor(left/3600))+":"+pad(Math.floor(left%3600/60))+":"+pad(left%60));
+ if($("ring")) $("ring").style.strokeDashoffset=414.7*(el/getSES()); 
+ setTxt("spd", "+"+(m?m.r:rate()).toFixed(2)+" DOGS/min"); 
+ setTxt("ern", "+"+f(earn)+" DOGS");
+ 
+ var b=$("mainB"); 
+ if(b){
+   b.disabled=on||!S.unlocked;
+   b.innerHTML=on?GLOBAL_SET.buttons.mainB.textMin:S.unlocked?GLOBAL_SET.buttons.mainB.textUnl:GLOBAL_SET.buttons.mainB.textAds.replace("{ADS}",getADS());
+ }
+ setTxt("pend", f(on?earn:S.claim)); 
+ if($("clB")) $("clB").disabled=on||(S.claim||0)<=0;
+ 
+ setTxt("bal", f(S.dogsBalance || 0));
+ setTxt("pbal", f(S.dogsBalance || 0));
+ 
+ setTxt("mSt", on?"Mining":S.unlocked?"Ready":"Idle"); 
+ setTxt("mRt", "+"+rate().toFixed(2)+" DOGS/min"); 
+ if($("mBar")) $("mBar").style.width=(el/getSES()*100)+"%";
+ 
+ setTxt("lv", S.lvl||1); 
+ setTxt("lvR", "+"+rate().toFixed(2)+" DOGS/min"); 
+ setTxt("lv1", S.lvl||1); 
+ setTxt("lv2", (S.lvl||1)+1); 
+ setTxt("cost", "Cost "+f(cost())+" DOGS");
+ if($("lvB")) $("lvB").style.width=Math.min(100,(S.dogsBalance||0)/cost()*100)+"%"; 
+ setTxt("sr", f(rate()*(getSES()/60))+" DOGS"); 
+ if($("upB")) $("upB").disabled=on;
  
  var t=today(), done=(S.daily&&S.daily.last===t);
- $("dB").disabled=done; $("dB").textContent=done?"Claimed":"Claim";
- $("dtx").textContent=done?"Come back tomorrow":"Day "+(((S.daily?S.daily.day:0))+1)+" · +"+getDAILY()[Math.min((S.daily?S.daily.day:0), getDAILY().length-1)]+" DOGS";
- $("days").innerHTML=getDAILY().map((a,i)=>{
-     var d=i<(S.daily?S.daily.day:0)||(done&&i===(S.daily?S.daily.day:0)-1)||(done&&(S.daily?S.daily.day:0)===0&&i===6);
-     return '<div class="'+(d?"d":i===(S.daily?S.daily.day:0)&&!done?"n":"")+'">'+(d?"✓":a)+'</div>';
- }).join("");
+ if($("dB")){ $("dB").disabled=done; $("dB").textContent=done?"Claimed":"Claim"; }
+ setTxt("dtx", done?"Come back tomorrow":"Day "+(((S.daily?S.daily.day:0))+1)+" · +"+getDAILY()[Math.min((S.daily?S.daily.day:0), getDAILY().length-1)]+" DOGS");
  
- $("bnB").disabled=S.bonus; $("bnB").textContent=S.bonus?"Claimed":"Claim"; $("bnS").textContent=S.bonus?"Already claimed":"Available once";
- $("uid").textContent=S.uid || "Loading..."; $("stM").textContent=f(S.total||0); $("stS").textContent=S.sessions||0; $("stR").textContent=f(S.ref?S.ref.earn:0); $("stL").textContent=S.lvl||1;
- $("rc").textContent=S.ref?S.ref.code:""; $("rI").textContent=S.ref?S.ref.inv:0; $("rA").textContent=S.ref?S.ref.act:0; $("rE").textContent=f(S.ref?S.ref.earn:0);
+ if($("days")) {
+   $("days").innerHTML=getDAILY().map((a,i)=>{
+       var d=i<(S.daily?S.daily.day:0)||(done&&i===(S.daily?S.daily.day:0)-1)||(done&&(S.daily?S.daily.day:0)===0&&i===6);
+       return '<div class="'+(d?"d":i===(S.daily?S.daily.day:0)&&!done?"n":"")+'">'+(d?"✓":a)+'</div>';
+   }).join("");
+ }
+ 
+ if($("bnB")){ $("bnB").disabled=S.bonus; $("bnB").textContent=S.bonus?"Claimed":"Claim"; }
+ setTxt("bnS", S.bonus?"Already claimed":"Available once");
+ setTxt("uid", S.uid || "Loading..."); 
+ setTxt("stM", f(S.total||0)); 
+ setTxt("stS", S.sessions||0); 
+ setTxt("stR", f(S.ref?S.ref.earn:0)); 
+ setTxt("stL", S.lvl||1);
+ setTxt("rc", S.ref?S.ref.code:""); 
+ setTxt("rI", S.ref?S.ref.inv:0); 
+ setTxt("rA", S.ref?S.ref.act:0); 
+ setTxt("rE", f(S.ref?S.ref.earn:0));
  
  var av=$("av"), pn=$("pname"), nm=S.profile && S.profile.name ? S.profile.name : "";
  if(av) av.textContent=nm?nm.charAt(0).toUpperCase():"A";
@@ -1050,23 +984,77 @@ fetchPx();
 setInterval(fetchPx, 60000);
 </script>
 
+<!-- ==============================================
+     🎨 RESTORED CANVAS PARTICLES + SMOOTH OVERLAY ANIMATION
+     ============================================== -->
 <script>
-/* ===== LOGIN / REGISTER POPUP ANIMATION ===== */
 (function(){
-var ob=document.getElementById("ob"); if(!ob)return;
+"use strict";
+var ob=document.getElementById("ob");
 var nm=document.getElementById("obName"), rf=document.getElementById("obRef"), go=document.getElementById("obGo"), goT=document.getElementById("obGoT"), er=document.getElementById("obNameErr");
+
 window.closeOb = function(){
+    if(!ob) return;
     ob.classList.add("out");
-    setTimeout(()=>{ if(ob&&ob.parentNode) ob.parentNode.removeChild(ob); }, 720);
+    setTimeout(()=>{ if(ob && ob.parentNode) ob.parentNode.removeChild(ob); }, 720);
 };
 
-go.addEventListener("click", function(){
-    var v = (nm.value || "").trim();
-    if(v.length < 2){ er.textContent = "Please enter at least 2 characters"; er.classList.add("on"); return; }
-    go.disabled = true; go.classList.add("busy"); goT.textContent = "CREATING ACCOUNT...";
-    window.submitUserRegister(v, rf.value.trim().toUpperCase());
-});
+if(go){
+    go.addEventListener("click", function(){
+        var v = (nm.value || "").trim();
+        if(v.length < 2){ 
+            if(er){ er.textContent = "Please enter at least 2 characters"; er.classList.add("on"); }
+            return; 
+        }
+        go.disabled = true; go.classList.add("busy"); if(goT) goT.textContent = "CREATING ACCOUNT...";
+        window.submitUserRegister(v, rf ? rf.value.trim().toUpperCase() : "");
+    });
+}
+
+// 3D Canvas Cyber Background Animation
+var cv=document.getElementById("obCv"), ctx=cv&&cv.getContext?cv.getContext("2d"):null;
+if(!ctx) return;
+var W=0, H=0, nodes=[], parts=[], paths=[], raf=0, alive=true, COLS=["120,150,255","170,120,255"];
+
+function rnd(a,b){return a+Math.random()*(b-a)}
+function size(){
+    var d=Math.min(window.devicePixelRatio||1,1.5);
+    W=window.innerWidth; H=window.innerHeight;
+    cv.width=W*d; cv.height=H*d;
+    ctx.setTransform(d,0,0,d,0,0);
+}
+function seed(){
+    nodes=[]; parts=[]; paths=[];
+    for(var i=0;i<8;i++) nodes.push({x:rnd(0,W),y:rnd(0,H),vx:rnd(-.14,.14),vy:rnd(-.14,.14),r:rnd(2,3),c:COLS[i%2]});
+    for(var j=0;j<26;j++) parts.push({x:rnd(0,W),y:rnd(0,H),vx:rnd(-.2,.2),vy:-rnd(.2,.5),r:rnd(.8,2),c:COLS[j%2]});
+}
+function draw(){
+    if(!alive||!ctx) return;
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<nodes.length;i++){
+        var a=nodes[i]; a.x+=a.vx; a.y+=a.vy;
+        if(a.x<0) a.x=W; if(a.x>W) a.x=0;
+        if(a.y<0) a.y=H; if(a.y>H) a.y=0;
+        ctx.fillStyle="rgba("+a.c+",.6)";
+        ctx.beginPath(); ctx.arc(a.x,a.y,a.r,0,6.28); ctx.fill();
+        for(var j=i+1;j<nodes.length;j++){
+            var b=nodes[j], dx=a.x-b.x, dy=a.y-b.y, d=dx*dx+dy*dy;
+            if(d<60000){
+                ctx.strokeStyle="rgba(120,150,255,"+(1-d/60000)*.25+")";
+                ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+            }
+        }
+    }
+    for(var k=0;k<parts.length;k++){
+        var p=parts[k]; p.x+=p.vx; p.y+=p.vy;
+        if(p.y<0) p.y=H;
+        ctx.fillStyle="rgba("+p.c+",.45)";
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.28); ctx.fill();
+    }
+    raf=requestAnimationFrame(draw);
+}
+size(); seed(); draw();
+window.addEventListener("resize", function(){ size(); seed(); });
 })();
 </script>
-</body>
-</html>
+</body></html>
