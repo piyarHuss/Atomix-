@@ -69,7 +69,7 @@ h1{font-size:20px;margin:4px 0 12px}
 .ringw .c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
 .ringw b{font:700 24px ui-monospace,Menlo,monospace;letter-spacing:.02em}
 .trk{stroke:#ffffff12}.prg{stroke:url(#gr);stroke-linecap:round;transition:stroke-dashoffset 1s linear}
-.btn{position:relative;overflow:hidden;width:100%;border:0;border-radius:16px;padding:16px;font:700 15px inherit;letter-spacing:.06em;color:#fff;background:linear-gradient(120deg,var(--c1),var(--c2),var(--c1));background-size:200% 100%;animation:sh 4s linear infinite;display:flex;align-items:center;justify-content:center;gap:8px;--edge:#3a49b8;box-shadow:0 6px 0 var(--edge),0 12px 22px #6c8cff55,inset 0 2px 0 #ffffff55,inset 0 -2px 0 #0003;transform:translateY(0);transition:transform .09s ease,box-shadow .09s ease,opacity .3s,filter .3s}
+.btn{position:relative;overflow:hidden;width:100%;border:0;border-radius:16px;padding:16px;font:700 15px inherit;letter-spacing:.06em;color:#fff;background:linear-gradient(120deg,var(--c1),var(--c2),var(--c1));background-size:200% 100%;animation:sh 4s linear infinite;display:flex;align-items:center;justify-content:center;gap:8px;--edge:#3a49b8;box-shadow:0 6px 0 var(--edge),0 12px 22px #6c8cff55,inset 0 2px 0 #ffffff55,inset 0 -2px 0 #0003;transform:translateY(0);transition:transform .09s ease,box-shadow .09s ease,opacity .3s,filter .3s;cursor:pointer}
 @keyframes sh{to{background-position:200% 0}}
 .btn:active:not([disabled]){transform:translateY(5px) scale(.985);box-shadow:0 1px 0 var(--edge),0 3px 8px #6c8cff44,inset 0 2px 0 #ffffff33}
 .btn[disabled]{opacity:.45;animation:none;filter:grayscale(.5);--edge:#2a2f55;box-shadow:0 5px 0 var(--edge),inset 0 1px 0 #fff2}
@@ -92,7 +92,7 @@ h1{font-size:20px;margin:4px 0 12px}
 .days .d{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;border:0}.days .n{border-color:var(--c1);color:#fff;animation:bl 1.6s infinite}
 .code{display:flex;gap:8px;margin:10px 0}.code div{flex:1;padding:13px;border-radius:14px;background:#0008;border:1px dashed #6c8cff88;text-align:center;font:700 18px ui-monospace,monospace;letter-spacing:.2em}
 .av{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--c2));display:grid;place-items:center;margin:0 auto 8px;box-shadow:0 0 30px #6c8cff66;font:700 26px system-ui}
-.stat b{display:block;font-size:20px;margin-top:4px}.back{background:0;border:0;color:#a9b7ff;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.stat b{display:block;font-size:20px;margin-top:4px}.back{background:0;border:0;color:#a9b7ff;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:4px;cursor:pointer}
 .note{font-size:11px;color:var(--mut);text-align:center;margin:8px 0}
 .wc,#cd .card{backdrop-filter:none;-webkit-backdrop-filter:none;animation:none;box-shadow:0 4px 12px #0005}
 .tot{text-align:center;background:linear-gradient(160deg,#1a2050aa,#2a1550aa)}.tot .amt{font-size:36px}
@@ -101,7 +101,7 @@ h1{font-size:20px;margin:4px 0 12px}
 .wc .r{text-align:right}.wc .r b{display:block}.ch{font-size:12px;font-weight:700}.ch.u{color:var(--ok)}.ch.d{color:var(--bad)}.ch.x{color:var(--mut)}
 .tag{font-size:9px;letter-spacing:.08em;padding:2px 6px;border-radius:6px;background:#ff8a3d33;color:#ffc98a;margin-left:6px;vertical-align:middle}
 nav{display:flex;padding:8px 6px calc(var(--sab) + 8px);background:#0a0e1cd9;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--bd);position:relative}
-nav button{flex:1;background:0;border:0;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:9.5px;letter-spacing:.06em;padding:6px 0;position:relative;transition:transform .12s,color .3s}
+nav button{flex:1;background:0;border:0;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:9.5px;letter-spacing:.06em;padding:6px 0;position:relative;transition:transform .12s,color .3s;cursor:pointer}
 nav button:active{transform:translateY(3px) scale(.9)}
 nav svg{width:22px;height:22px;transition:.3s}nav button.on{color:#fff}nav button.on svg{color:var(--c1);filter:drop-shadow(0 0 6px var(--c1));transform:translateY(-2px);animation:tab3d .6s cubic-bezier(.3,1.5,.5,1)}
 @keyframes tab3d{0%{transform:translateY(4px) rotateY(0) scale(.7)}100%{transform:translateY(-2px) rotateY(360deg) scale(1)}}
@@ -182,6 +182,11 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 #obGo .ld{display:none;width:18px;height:18px;border-radius:50%;border:2.5px solid #ffffff44;border-top-color:#fff;animation:rot2 .7s linear infinite}
 #obGo.busy .ld{display:block}
 .obFt{text-align:center;color:var(--mut);font-size:11px;line-height:1.5}
+
+/* TRANSFER TOKEN STYLES */
+.tf-coin-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--glass);border:1px solid var(--bd);margin-bottom:8px;cursor:pointer;transition:all .2s;position:relative}
+.tf-coin-card:active{transform:scale(.98)}
+.tf-coin-card.locked{opacity:.5}
 </style>
 </head><body>
 
@@ -264,8 +269,69 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
  <div class="card" style="text-align:center"><div class="av" id="av">A</div><div id="pname" style="font-weight:700;font-size:17px;margin-bottom:2px;display:none"></div><b id="uid"></b><div class="lbl" style="margin-top:4px">DOGS Balance</div><div class="amt" style="font-size:22px"><span id="pbal">0.00</span><small>DOGS</small></div></div>
  <div class="g2"><div class="card stat"><div class="lbl">Total mined</div><b id="stM">0</b></div><div class="card stat"><div class="lbl">Sessions</div><b id="stS">0</b></div><div class="card stat"><div class="lbl">Referral earnings</div><b id="stR">0</b></div><div class="card stat"><div class="lbl">Level</div><b id="stL">1</b></div></div>
  <div class="card" style="margin-top:12px">
+  <div class="it" onclick="go('v-transfer')" style="cursor:pointer"><div class="ico" style="background:rgba(56,224,160,.15);color:var(--ok)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"/></svg></div><div class="t"><b>Transfer Token</b><small style="color:var(--ok)">Send tokens to external wallet</small></div>›</div>
   <div class="it" onclick="go('v-tx')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></div><div class="t"><b>Transaction History</b></div>›</div>
-  <div class="it" onclick="toast('support@atomix.network')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.500 9a2.500 2.500 0 115 0c0 1.500-2.500 2-2.500 4M12 17h.01"/></svg></div><div class="t"><b>Help &amp; Support</b></div>›</div></div>
+  <div class="it" onclick="toast('support@atomix.network')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.500 9a2.500 2.500 0 115 0c0 1.500-2.500 2-2.500 4M12 17h.01"/></svg></div><div class="t"><b>Help &amp; Support</b></div>›</div>
+  <div class="it" onclick="logout()" style="cursor:pointer;color:var(--bad)"><div class="ico" style="background:rgba(255,92,122,.15);color:var(--bad)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="t"><b>Log Out</b></div>›</div></div>
+</section>
+
+<!-- PROFESSIONAL TRANSFER TOKEN 2-STEP VIEW -->
+<section class="view" id="v-transfer">
+  <!-- STEP 1: TOKEN SELECTION LIST -->
+  <div id="tf-step-list">
+    <button class="back" onclick="go('v-profile')">‹ Back to Profile</button>
+    <h1>Transfer Token</h1>
+    <div class="card" style="background:linear-gradient(135deg,rgba(108,140,255,.12),rgba(56,224,160,.08))">
+      <div class="row">
+        <div>
+          <b>Crypto Transfer Network</b>
+          <small style="display:block;color:var(--mut);margin-top:2px">Minimum 10,000 tokens per transfer</small>
+        </div>
+        <span class="tag" style="background:#38e0a022;color:var(--ok)">ONLINE</span>
+      </div>
+    </div>
+    <div class="lbl" style="margin:14px 4px 8px">Select Token to Transfer</div>
+    <div id="tfCoinList"></div>
+    <div class="note">Only tokens with 10,000 or more balance can be transferred.</div>
+  </div>
+
+  <!-- STEP 2: DEDICATED TOKEN TRANSFER FORM (SHOWN ON TOKEN TAP) -->
+  <div id="tf-step-send" style="display:none">
+    <button class="back" onclick="backToTfList()">‹ Back to Tokens</button>
+    
+    <!-- Token Hero Logo & Details -->
+    <div style="text-align:center;margin:12px 0 16px">
+      <div id="tfHeroIcon" style="display:inline-block"></div>
+      <h2 id="tfHeroSym" style="font-size:22px;margin-top:8px;font-weight:800">DOGS</h2>
+      <div class="lbl" id="tfHeroName" style="color:var(--mut)">DOGS TOKEN</div>
+      <div class="amt" style="font-size:20px;margin-top:4px"><span id="tfHeroBal">0.00</span> <small id="tfHeroUnit">DOGS</small></div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">1. Enter Destination Address</div>
+      <div style="position:relative;margin:6px 0 12px">
+        <input id="tfAddr" type="text" placeholder="Paste destination wallet address" autocomplete="off" spellcheck="false" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:14px;outline:0">
+        <button class="btn sm gray" onclick="pasteTfAddr()" style="position:absolute;right:6px;top:8px;padding:6px 12px;font-size:11px">PASTE</button>
+      </div>
+
+      <div class="row">
+        <div class="lbl">2. Transfer Amount</div>
+        <div class="lbl" style="color:var(--ok)">Min: 10,000</div>
+      </div>
+      <div style="position:relative;margin:6px 0 14px">
+        <input id="tfAmt" type="number" step="any" min="10000" placeholder="Min. 10,000" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:15px;outline:0">
+        <button class="btn sm ok" onclick="setTfMax()" style="position:absolute;right:6px;top:8px;padding:6px 12px;font-size:11px">MAX</button>
+      </div>
+
+      <div class="row" style="margin:6px 0 16px;color:var(--mut);font-size:12px">
+        <span>Network Fee:</span>
+        <b style="color:var(--ok)">FREE (0%)</b>
+      </div>
+
+      <button class="btn ok" id="tfSubmitBtn" onclick="submitTransfer()">TRANSFER NOW</button>
+    </div>
+    <div class="note">Transfers are processed on-chain. Please verify deposit address carefully.</div>
+  </div>
 </section>
 
 <section class="view" id="v-ref">
@@ -283,7 +349,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <nav id="nav"></nav></div>
 <div id="md"><div class="pop" id="pop"></div></div><div id="toast"></div>
 
-<!-- LOGIN / PROFILE OVERLAY -->
+<!-- LOGIN / PROFILE OVERLAY (100% ORIGINAL WITH ALL ANIMATIONS) -->
 <div id="ob" role="dialog" aria-label="Atomix login">
  <div id="obGrid"></div><i class="obBm"></i><i class="obBm b2"></i><div id="obScan"></div><canvas id="obCv"></canvas>
  <div id="obIn">
@@ -301,7 +367,16 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     <h2>ATOMIX</h2><p>CRYPTO MINING NETWORK</p>
     <div class="obOn"><span class="dot"></span>NETWORK ONLINE</div>
    </div>
-   <h1>Welcome</h1><div class="sub">Register to start mining DOGS on Atomix.</div>
+   <h1>Welcome</h1>
+   <div class="sub">Register to start mining DOGS on Atomix.</div>
+   
+   <!-- GOOGLE SIGN IN BUTTON -->
+   <button class="btn" id="obGoogle" type="button" onclick="loginWithGoogle()" style="margin-bottom:12px;background:#ffffff;color:#1a1d2e;--edge:#cbd5e1;box-shadow:0 5px 0 #94a3b8,0 10px 22px rgba(255,255,255,.15);animation:none;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700">
+    <svg viewBox="0 0 24 24" style="width:20px;height:20px;flex-shrink:0"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+    <span id="obGoogleTxt">Sign in with Google</span>
+   </button>
+   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;color:var(--mut);font-size:11px"><span style="flex:1;height:1px;background:var(--bd)"></span>OR WITH USERNAME<span style="flex:1;height:1px;background:var(--bd)"></span></div>
+
    <div class="obF"><label for="obName">Username / Name</label><input id="obName" type="text" maxlength="24" placeholder="Enter your name" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="next"><div class="obErr" id="obNameErr"></div></div>
    <div class="obF"><label for="obRef">Referral Code <em>Optional</em></label><input id="obRef" type="text" maxlength="12" placeholder="Enter referral code" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go"></div>
    <button class="btn" id="obGo" type="button"><span id="obGoT">CONTINUE TO MINER</span><i class="ld"></i></button>
@@ -311,12 +386,12 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 </div>
 
 <!-- ==============================================
-     FIREBASE 100% REALTIME SCRIPT (NO LOCALSTORAGE)
+     FIREBASE 100% REALTIME SCRIPT
      ============================================== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCHDKJIX2hTnmo9HXaOxIJopFRBjKFGAnI",
@@ -444,6 +519,51 @@ onAuthStateChanged(auth, user => {
         }
     });
 });
+
+// GOOGLE AUTH & LOGOUT
+window.loginWithGoogle = async function() {
+    let provider = new GoogleAuthProvider();
+    let btn = $("obGoogle"), txt = $("obGoogleTxt");
+    try {
+        if(btn) btn.disabled = true;
+        if(txt) txt.textContent = "Connecting...";
+        let res = await signInWithPopup(auth, provider);
+        let user = res.user;
+        let snap = await get(ref(db, "users/" + user.uid));
+        if(!snap.exists()) {
+            let refVal = ($("obRef") ? $("obRef").value.trim().toUpperCase() : "");
+            let initialObj = Object.assign({}, def, {
+                uid: "ID" + Math.floor(100000 + Math.random() * 900000),
+                authUid: user.uid,
+                profile: {
+                    name: user.displayName || "Google User",
+                    email: user.email || "",
+                    photoURL: user.photoURL || "",
+                    referralCode: refVal,
+                    setupComplete: true,
+                    createdAt: Date.now()
+                },
+                createdAt: Date.now()
+            });
+            await set(ref(db, "users/" + user.uid), initialObj);
+        }
+        window.closeOb();
+        toast("Logged in with Google!");
+    } catch(err) {
+        console.error("Google login error", err);
+        toast(err.message || "Google sign-in cancelled");
+    } finally {
+        if(btn) btn.disabled = false;
+        if(txt) txt.textContent = "Sign in with Google";
+    }
+};
+
+window.logout = async function() {
+    if(confirm("Are you sure you want to log out?")) {
+        await signOut(auth);
+        window.location.reload();
+    }
+};
 
 // SUBMIT REGISTRATION DIRECTLY TO FIREBASE
 window.submitUserRegister = function(name, refCode) {
@@ -586,7 +706,7 @@ window.claimCustomBonus = function(id, type, reqAds, reward) {
     }
 };
 
-window.renderCustomBonuses = function() {
+function renderCustomBonuses() {
     let container = $("customBonusesContainer");
     if(!container) return;
     let keys = Object.keys(CUSTOM_BONUSES);
@@ -616,7 +736,8 @@ window.renderCustomBonuses = function() {
     });
     h += '</div>';
     container.innerHTML = h;
-};
+}
+window.renderCustomBonuses = renderCustomBonuses;
 
 // UI TICKER & RENDERING
 var COINS=[
@@ -646,17 +767,178 @@ $("nav").innerHTML=TABS.map(t => '<button data-t="v-'+t[0]+'" onclick="go(\'v-'+
 
 var cur="v-home", curCoin=0;
 window.go = function(v){
- let pKey = v==="v-ref"?"rewards":v==="v-tx"?"profile":v==="v-coin"?"wallet":v.replace("v-","");
+ let pKey = v==="v-ref"?"rewards":v==="v-tx"||v==="v-transfer"?"profile":v==="v-coin"?"wallet":v.replace("v-","");
  if(GLOBAL_SET.pages && GLOBAL_SET.pages[pKey] === false){ toast("This section is temporarily unavailable."); return; } 
  cur=v;
  document.querySelectorAll(".view").forEach(s => s.classList.toggle("on",s.id===v));
- var tv = v==="v-ref"?"v-rewards":v==="v-tx"?"v-profile":v==="v-coin"?"v-wallet":v;
+ var tv = v==="v-ref"?"v-rewards":v==="v-tx"||v==="v-transfer"?"v-profile":v==="v-coin"?"v-wallet":v;
  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t===tv));
  $("views").scrollTop=0;
  if(v==="v-tx") txList();
+ if(v==="v-transfer") renderTransferView();
  lastW=""; ui();
 };
 window.coinD=function(i){ curCoin=i; go("v-coin"); };
+
+// ================= DEDICATED TRANSFER TOKEN LOGIC =================
+var curTfCoinIdx = 0;
+
+function renderTransferView() {
+    let listDiv = $("tf-step-list");
+    let sendDiv = $("tf-step-send");
+    if(listDiv) listDiv.style.display = "block";
+    if(sendDiv) sendDiv.style.display = "none";
+
+    let container = $("tfCoinList");
+    if(!container) return;
+
+    let h = "";
+    COINS.forEach((c, idx) => {
+        let bal = window.S[c.k] || 0;
+        let eligible = bal >= 10000;
+        let badge = eligible 
+            ? '<span class="tag" style="background:#38e0a022;color:var(--ok)">Eligible ›</span>' 
+            : '<span class="tag" style="background:#ff5c7a22;color:var(--bad)">Min 10,000 Req</span>';
+
+        h += `<div class="tf-coin-card ${!eligible ? 'locked' : ''}" onclick="onCoinCardTap(${idx})">
+            ${coinIcon(c, "sm")}
+            <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:6px">
+                    <b style="font-size:15px">${c.sym}</b>
+                    ${badge}
+                </div>
+                <small style="display:block;color:var(--mut);margin-top:2px">${c.name}</small>
+            </div>
+            <div style="text-align:right">
+                <b style="font-size:15px;color:#ffc98a">${f(bal)}</b>
+                <small style="display:block;color:var(--mut)">${c.sym}</small>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = h;
+}
+window.renderTransferView = renderTransferView;
+
+window.onCoinCardTap = function(idx) {
+    let c = COINS[idx];
+    let bal = window.S[c.k] || 0;
+    if(bal < 10000) {
+        toast(`Minimum 10,000 ${c.sym} required to transfer`);
+        return;
+    }
+    curTfCoinIdx = idx;
+    openTokenSendScreen(c, bal);
+};
+
+function openTokenSendScreen(c, bal) {
+    $("tf-step-list").style.display = "none";
+    $("tf-step-send").style.display = "block";
+    
+    $("tfHeroIcon").innerHTML = coinIcon(c, "big");
+    $("tfHeroSym").textContent = c.sym;
+    $("tfHeroName").textContent = c.name;
+    $("tfHeroBal").textContent = f(bal);
+    $("tfHeroUnit").textContent = c.sym;
+
+    if($("tfAddr")) $("tfAddr").value = "";
+    if($("tfAmt")) $("tfAmt").value = "";
+    $("views").scrollTop = 0;
+}
+
+window.backToTfList = function() {
+    $("tf-step-send").style.display = "none";
+    $("tf-step-list").style.display = "block";
+    $("views").scrollTop = 0;
+};
+
+window.setTfMax = function() {
+    let c = COINS[curTfCoinIdx];
+    let bal = window.S[c.k] || 0;
+    if($("tfAmt")) $("tfAmt").value = bal >= 10000 ? bal : "";
+};
+
+window.pasteTfAddr = async function() {
+    try {
+        let t = await navigator.clipboard.readText();
+        if(t && $("tfAddr")) $("tfAddr").value = t.trim();
+        toast("Address pasted");
+    } catch(e) {
+        toast("Please paste address manually");
+    }
+};
+
+window.submitTransfer = async function() {
+    let c = COINS[curTfCoinIdx];
+    let bal = window.S[c.k] || 0;
+    let addr = ($("tfAddr") ? $("tfAddr").value : "").trim();
+    let amt = parseFloat($("tfAmt") ? $("tfAmt").value : 0);
+
+    if(bal < 10000) {
+        toast(`Need at least 10,000 ${c.sym}`);
+        return;
+    }
+    if(!addr || addr.length < 8) {
+        toast("Please enter a valid deposit address");
+        return;
+    }
+    if(!amt || isNaN(amt) || amt < 10000) {
+        toast(`Minimum transfer is 10,000 ${c.sym}`);
+        return;
+    }
+    if(amt > bal) {
+        toast("Insufficient token balance");
+        return;
+    }
+
+    let btn = $("tfSubmitBtn");
+    if(btn) { btn.disabled = true; btn.textContent = "PROCESSING..."; }
+
+    try {
+        let wId = "tf_" + Date.now();
+        let tfData = {
+            id: wId,
+            uid: window.S.uid || (currentAuthUser ? currentAuthUser.uid : ""),
+            userName: (window.S.profile && window.S.profile.name) ? window.S.profile.name : "User",
+            coin: c.sym,
+            amount: amt,
+            address: addr,
+            time: Date.now(),
+            status: "Pending"
+        };
+
+        let newBal = bal - amt;
+        let newTx = window.S.tx || [];
+        newTx.unshift({
+            t: `Transfer (${c.sym})`,
+            a: -amt,
+            c: c.sym,
+            d: Date.now(),
+            addr: addr.slice(0,6) + "..." + addr.slice(-4)
+        });
+
+        let updates = {};
+        updates[c.k] = newBal;
+        updates["tx"] = newTx.slice(0, 50);
+
+        await set(ref(db, "withdrawals/" + wId), tfData);
+        await fbUpdate(updates);
+
+        if($("tfAddr")) $("tfAddr").value = "";
+        if($("tfAmt")) $("tfAmt").value = "";
+
+        modal(`<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-10"/></svg></div>
+            <div class="lbl" style="margin-top:14px">TRANSFER SUBMITTED</div>
+            <div class="big" style="color:var(--ok);font-size:26px">-${f(amt)} ${c.sym}</div>
+            <p style="color:var(--mut);margin-bottom:12px;font-size:12px">Destination:<br><b style="color:var(--tx)">${addr}</b></p>
+            <p style="color:var(--ok);font-size:12px;margin-bottom:16px">Transfer queued for processing!</p>
+            <button class="btn ok" onclick="closeM();go('v-profile')">CONTINUE</button>`);
+    } catch(err) {
+        console.error("Transfer error", err);
+        toast("Transfer failed: " + err.message);
+    } finally {
+        if(btn) { btn.disabled = false; btn.textContent = "TRANSFER NOW"; }
+    }
+};
 
 function f(n){ return (n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function usd(n){ return (n||0)>=1 ? "$"+f(n) : "$"+(n||0).toFixed((n||0)>=.01?4:8).replace(/0+$/,"0"); }
