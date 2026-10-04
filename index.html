@@ -719,7 +719,7 @@ var $ = id => document.getElementById(id);
 function setTxt(id, val){ var el = $(id); if(el) el.textContent = val; }
 
 var def = {
-  dogsBalance: 0, bonkBalance: 0, trxBalance: 0, flokiBalance: 0, walletCoin5Balance: 0,
+  dogsBalance: 0, bonkBalance: 0, trxBalance: 0, flokiBalance: 0, pepeBalance: 0, walletCoin5Balance: 0,
   ads: 0, unlocked: false, mining: null, claim: 0, lvl: 1,
   ref: { code: "DOGS" + Math.random().toString(36).slice(2,6).toUpperCase(), inv: 0, act: 0, earn: 0 },
   daily: { day: 0, last: "" }, bonus: false, tx: [], sessions: 0, total: 0, banned: false, profile: null
@@ -1012,6 +1012,9 @@ onAuthStateChanged(auth, user => {
         let val = snap.val();
         if(val) {
             window.S = Object.assign({}, def, val);
+            if(window.S.walletCoin5Balance && !window.S.pepeBalance) {
+                window.S.pepeBalance = window.S.walletCoin5Balance;
+            }
             if(window.S.banned) {
                 if($("maint-screen")) $("maint-screen").style.display = "flex";
                 setTxt("maint-msg", "Your account has been disabled by the admin.");
@@ -1252,7 +1255,7 @@ var COINS=[
  {k:"bonkBalance",sym:"BONK",name:"BONK",cg:"bonk",cls:"bk",icon:"bonk.png"},
  {k:"trxBalance",sym:"TRX",name:"TRON",cg:"tron",cls:"tr",icon:"trx.png"},
  {k:"flokiBalance",sym:"FLOKI",name:"FLOKI",cg:"floki",cls:"fl",icon:"floki.png"},
- {k:"walletCoin5Balance",sym:"CUSTOM",name:"WALLET COIN",cg:null,manualPrice:0,cls:"gen",icon:"custom.png"}
+ {k:"pepeBalance",sym:"PEPE",name:"Pepe",cg:"pepe",cls:"pe",icon:"pepe.png"}
 ];
 
 function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
@@ -1404,6 +1407,7 @@ window.submitTransfer = async function() {
 
         let updates = {};
         updates[c.k] = newBal;
+        if(c.k === "pepeBalance") updates["walletCoin5Balance"] = newBal;
         updates["tx"] = newTx.slice(0, 50);
 
         await set(ref(db, "withdrawals/" + wId), tfData);
