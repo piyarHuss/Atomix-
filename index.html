@@ -231,6 +231,29 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 .ppBody ul{padding-left:18px;margin-bottom:10px}
 .ppBody li{margin-bottom:6px}
 .ppFoot{padding:14px 20px 18px;border-top:1px solid var(--bd)}
+
+/* GAME TASKS (BELOW GIG) */
+.task-card{position:relative;display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:18px;background:linear-gradient(175deg,rgba(18,24,54,.85) 0%,rgba(8,11,26,.95) 100%);border:1px solid rgba(255,255,255,.1);margin-bottom:10px;cursor:pointer;transition:transform .15s,border-color .2s;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+.task-card:active{transform:scale(.98)}
+.task-thumb{width:54px;height:54px;border-radius:15px;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.05)}
+.task-body{flex:1;min-width:0}
+.task-badge-multi{display:inline-block;background:#a9ff82;color:#0b1a05;font-size:9.5px;font-weight:900;letter-spacing:.04em;padding:2px 7px;border-radius:6px;text-transform:uppercase;margin-bottom:4px}
+.task-title{font-size:14.5px;font-weight:700;color:#fff;line-height:1.25;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-sub{font-size:11px;color:var(--mut);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.task-pills-row{display:flex;align-items:center;gap:7px;margin-top:8px}
+.pill-tokens{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);border-radius:20px;padding:3px 9px;font-size:11.5px;font-weight:800;color:#fff}
+.pill-usd{background:rgba(255,255,255,.05);border-radius:20px;padding:3px 8px;font-size:10.5px;font-weight:600;color:#8f9dc4}
+#taskDetailModal{position:fixed;inset:0;z-index:999999;background:rgba(4,7,18,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:none;place-items:center;padding:16px}
+#taskDetailModal.on{display:grid;animation:pg .3s ease}
+.task-modal-card{width:100%;max-width:410px;max-height:88vh;display:flex;flex-direction:column;background:linear-gradient(175deg,#131938 0%,#090d22 100%);border:1px solid rgba(255,255,255,.16);border-radius:26px;box-shadow:0 25px 70px rgba(0,0,0,.9);overflow:hidden}
+.task-modal-head{padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.task-modal-body{padding:14px 18px;overflow-y:auto;flex:1}
+.subtask-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.subtask-item:last-child{border-bottom:0}
+.subtask-chk{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.22);display:grid;place-items:center;font-size:11px;font-weight:900;color:transparent;flex-shrink:0}
+.subtask-chk.done{background:#2fe08e;border-color:#2fe08e;color:#05140d}
+.task-modal-foot{padding:12px 18px calc(var(--sab) + 16px);border-top:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.95)}
+
 </style>
 </head><body>
 
@@ -262,6 +285,42 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     </div>
     <div class="ppFoot">
       <button class="btn ok" onclick="acceptPrivacyFromModal()">I AGREE &amp; ACCEPT</button>
+    </div>
+  </div>
+</div>
+
+<!-- JUMPTASK STYLE MULTI-TASK DETAILS MODAL -->
+<div id="taskDetailModal">
+  <div class="task-modal-card">
+    <div class="task-modal-head">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img id="mTaskImg" src="dogs.png" style="width:46px;height:46px;border-radius:14px;object-fit:cover" onerror="this.onerror=null;this.src='dogs.png'">
+        <div>
+          <small style="color:#a9ff82;font-weight:900;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Atomix Offers</small>
+          <h3 id="mTaskTitle" style="font-size:16px;font-weight:700;line-height:1.25;margin-top:2px">Game Task</h3>
+        </div>
+      </div>
+      <button class="ib" onclick="closeTaskModal()" style="width:30px;height:30px;border-radius:10px">✕</button>
+    </div>
+    <div class="task-modal-body">
+      <div style="background:rgba(255,255,255,0.04);padding:12px 14px;border-radius:14px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:12.5px;font-weight:800;color:#ffc98a;margin-bottom:3px">📄 Instructions</div>
+        <div id="mTaskRules" style="font-size:11.5px;color:#9aa7cf;line-height:1.45">Complete multiple levels and grab instant rewards as you play!</div>
+      </div>
+      <div class="lbl" style="margin-bottom:8px">Level Milestones &amp; Rewards</div>
+      <div id="mTaskLevelsContainer"></div>
+    </div>
+    <div class="task-modal-foot">
+      <div class="row" style="margin-bottom:6px">
+        <span class="lbl" id="mTaskProgressLbl">0 of 0 Completed</span>
+        <b style="color:var(--ok);font-size:14px" id="mTaskTotalReward">+0 DOGS</b>
+      </div>
+      <div class="bar" style="margin-bottom:12px;height:7px"><i id="mTaskProgressBar" style="width:0%"></i></div>
+      <label class="privacy-chk-wrap" style="margin:2px 0 10px">
+        <input type="checkbox" id="mTaskTermsChk" checked>
+        <span style="font-size:11px">I have read and agree to the <a href="javascript:void(0)" onclick="openPrivacyModal('terms')">Terms &amp; Conditions</a></span>
+      </label>
+      <button class="btn ok" id="mTaskStartBtn" onclick="startCurrentGameTask()">START TASK</button>
     </div>
   </div>
 </div>
@@ -447,13 +506,24 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
   <div id="cd"></div>
 </section>
 
+<!-- REWARDS VIEW (GAMES SECTION RIGHT BELOW GIG) -->
 <section class="view" id="v-rewards">
  <h1>Rewards</h1>
  <div class="card"><div class="row"><div class="row" style="gap:12px;justify-content:flex-start"><span data-coin="DOGS" data-size="sm"></span><div><b>Daily Reward</b><div class="lbl" id="dtx"></div></div></div><button class="btn sm ok" id="dB" onclick="daily()">Claim</button></div><div class="days" id="days"></div></div>
  <div class="card"><div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="t"><b>Watch Ads</b><small id="adS">0 / 10 completed</small></div><button class="btn sm" onclick="watchAd()">Watch</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-3.5 3.2-5 7-5s6.400 1.500 7 5M17 5a3.500 3.500 0 010 7M19 15c1.700.6 2.600 2 3 4"/></svg></div><div class="t"><b>Referral Reward</b><small>Invite friends, earn bonus</small></div><button class="btn sm" onclick="go('v-ref')">Open</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-3 0-4-4-1.500-4S12 8 12 8zM12 8c3 0 4-4 1.500-4S12 8 12 8z"/></svg></div><div class="t"><b>Welcome Bonus</b><small id="bnS">Available once</small></div><button class="btn sm ok" id="bnB" onclick="bonus()">Claim</button></div></div>
+ 
  <div id="customBonusesContainer" style="display:none"></div>
+ <div id="gameTasksSection" style="margin-top:16px">
+   <div class="row" style="margin-bottom:8px">
+     <div class="lbl" style="font-size:11px;font-weight:800;letter-spacing:.08em;color:#ffc98a;margin:0">
+       🎮 PLAY &amp; EARN GAME TASKS
+     </div>
+     <span class="tag" style="background:rgba(47,224,142,.15);color:var(--ok);font-size:9.5px">MULTI-REWARD</span>
+   </div>
+   <div id="gameTasksContainer"></div>
+ </div>
 </section>
 
 <section class="view" id="v-profile">
@@ -735,6 +805,8 @@ var GLOBAL_SET = {
     buttons: { mainB: { textUnl: "START DOGS MINING", textAds: "WATCH {ADS} ADS", textMin: "MINING ACTIVE" } }
 };
 var CUSTOM_BONUSES = {};
+var ADMIN_TASKS = {};
+var currentModalGameId = null;
 var currentAuthUser = null;
 var lastSeenAlertTime = 0;
 var latestAdminNotification = null;
@@ -1021,6 +1093,7 @@ onAuthStateChanged(auth, user => {
             } else if (!GLOBAL_SET.app || !GLOBAL_SET.app.maintenance) {
                 if($("maint-screen")) $("maint-screen").style.display = "none";
             }
+            renderAdminTaskCards();
             if(window.S.profile && window.S.profile.setupComplete) {
                 closeAuthSheet();
                 if(typeof window.closeOb === "function") window.closeOb();
@@ -1043,6 +1116,11 @@ onAuthStateChanged(auth, user => {
             }
             ui();
         }
+    });
+
+    onValue(ref(db, "adminTasks"), snap => {
+        ADMIN_TASKS = snap.val() || {};
+        renderAdminTaskCards();
     });
 
     onValue(ref(db, "customBonuses"), snap => {
@@ -1217,6 +1295,153 @@ window.claimCustomBonus = function(id, type, reqAds, reward) {
         success("Bonus Claimed", reward, "Free bonus claimed!");
     }
 };
+
+function renderAdminTaskCards() {
+    let container = $("gameTasksContainer");
+    if(!container) return;
+    let keys = Object.keys(ADMIN_TASKS);
+    if(keys.length === 0) {
+        container.innerHTML = '<div class="note" style="color:var(--mut);text-align:center;padding:12px 0">No game tasks available right now. Check back soon!</div>';
+        return;
+    }
+    let h = "";
+    keys.sort((a,b) => (ADMIN_TASKS[b].updatedAt || 0) - (ADMIN_TASKS[a].updatedAt || 0)).forEach(k => {
+        let task = ADMIN_TASKS[k];
+        if(task.active === false) return;
+        let totalReward = 0;
+        if(task.levels && Array.isArray(task.levels)) {
+            task.levels.forEach(l => totalReward += Number(l.reward || 0));
+        }
+        let userCompleted = (window.S.gameTasks && window.S.gameTasks[k]) || [];
+        let completedCount = userCompleted.length;
+        let totalLevelsCount = (task.levels && Array.isArray(task.levels)) ? task.levels.length : 0;
+        let isAllDone = totalLevelsCount > 0 && completedCount >= totalLevelsCount;
+        let badgeHtml = isAllDone 
+            ? '<span class="tag" style="background:#2fe08e22;color:var(--ok);font-size:9.5px;margin:0 0 4px">✔ COMPLETED</span>'
+            : '<span class="task-badge-multi">Multi-Task</span>';
+        h += `
+        <div class="task-card" onclick="openTaskModal('${k}')">
+          <img src="${esc(task.logo || 'dogs.png')}" class="task-thumb" alt="${esc(task.title)}" onerror="this.onerror=null;this.src='dogs.png'">
+          <div class="task-body">
+            <div>${badgeHtml}</div>
+            <div class="task-title">${esc(task.title)}</div>
+            <div class="task-sub">${esc(task.subtitle || 'Complete multiple levels and grab instant rewards!')}</div>
+            <div class="task-pills-row">
+              <span class="pill-tokens">✦ ${f(totalReward)} DOGS</span>
+              <span class="pill-usd">${totalLevelsCount} Levels (${completedCount}/${totalLevelsCount})</span>
+            </div>
+          </div>
+        </div>`;
+    });
+    container.innerHTML = h || '<div class="note" style="color:var(--mut);text-align:center;padding:12px 0">No active game tasks.</div>';
+}
+
+window.openTaskModal = function(taskId) {
+    currentModalGameId = taskId;
+    let task = ADMIN_TASKS[taskId];
+    if(!task) return;
+    if($("mTaskTitle")) $("mTaskTitle").textContent = task.title;
+    if($("mTaskImg")) $("mTaskImg").src = task.logo || 'dogs.png';
+    if($("mTaskRules")) $("mTaskRules").textContent = task.rules || 'Complete multiple levels and grab instant rewards as you play!';
+    let userCompleted = (window.S.gameTasks && window.S.gameTasks[taskId]) || [];
+    let levels = Array.isArray(task.levels) ? task.levels : [];
+    let h = "";
+    let totalRewardSum = 0;
+    levels.forEach(item => {
+        totalRewardSum += Number(item.reward || 0);
+        let isDone = userCompleted.includes(Number(item.lvl));
+        h += `
+        <div class="subtask-item">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="subtask-chk ${isDone ? 'done' : ''}">${isDone ? '✔' : ''}</div>
+            <div>
+              <b style="font-size:13.5px;display:block">Complete Level ${item.lvl}</b>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+                <span style="font-weight:800;color:#ffc98a;font-size:12px">+${f(item.reward)} DOGS</span>
+                <span style="color:var(--mut);font-size:11px">${esc(item.usd || '')}</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            ${isDone 
+              ? '<span class="tag" style="background:#2fe08e22;color:var(--ok)">CLAIMED</span>' 
+              : '<span class="tag" style="background:rgba(255,255,255,.06);color:var(--mut)">LOCKED</span>'}
+          </div>
+        </div>`;
+    });
+    if($("mTaskLevelsContainer")) $("mTaskLevelsContainer").innerHTML = h || '<div class="note">No levels configured.</div>';
+    let pct = levels.length > 0 ? (userCompleted.length / levels.length) * 100 : 0;
+    if($("mTaskProgressLbl")) setTxt("mTaskProgressLbl", `${userCompleted.length} of ${levels.length} Completed`);
+    if($("mTaskTotalReward")) setTxt("mTaskTotalReward", `+${f(totalRewardSum)} DOGS`);
+    if($("mTaskProgressBar")) $("mTaskProgressBar").style.width = `${pct}%`;
+    let modal = $("taskDetailModal");
+    if(modal) modal.classList.add("on");
+};
+
+window.closeTaskModal = function() {
+    let modal = $("taskDetailModal");
+    if(modal) modal.classList.remove("on");
+    currentModalGameId = null;
+};
+
+window.startCurrentGameTask = function() {
+    let task = ADMIN_TASKS[currentModalGameId];
+    if(!task) return;
+    let chk = $("mTaskTermsChk");
+    if(chk && !chk.checked) {
+        toast("Please accept the Terms & Conditions");
+        return;
+    }
+    closeTaskModal();
+    let userUid = currentAuthUser ? currentAuthUser.uid : (window.S.uid || "");
+    let gameUrl = (task.gameUrl || "").trim();
+    if(!gameUrl) {
+        toast("Game link not set by admin");
+        return;
+    }
+    let finalUrl = gameUrl;
+    if(gameUrl.includes("startapp=")) {
+        finalUrl = gameUrl.endsWith("startapp=") ? (gameUrl + userUid) : gameUrl;
+    } else if(gameUrl.includes("?")) {
+        finalUrl = `${gameUrl}&uid=${userUid}`;
+    } else {
+        finalUrl = `${gameUrl}?uid=${userUid}`;
+    }
+    window.open(finalUrl, "_blank");
+};
+
+window.addEventListener("message", function(event) {
+    if(event.data && event.data.type === "LEVEL_COMPLETE") {
+        let gameId = event.data.gameId;
+        let level = Number(event.data.level);
+        if(!gameId || !level) return;
+        let task = ADMIN_TASKS[gameId];
+        if(!task) return;
+        let targetLevel = (task.levels || []).find(l => Number(l.lvl) === level);
+        if(!targetLevel) return;
+        let userTasks = window.S.gameTasks || {};
+        let completed = userTasks[gameId] || [];
+        if(!completed.includes(level)) {
+            completed.push(level);
+            userTasks[gameId] = completed;
+            let rew = Number(targetLevel.reward || 0);
+            let newTx = window.S.tx || [];
+            newTx.unshift({
+                t: `${task.title} - Level ${level}`,
+                a: rew,
+                c: "DOGS",
+                d: Date.now()
+            });
+            fbUpdate({
+                dogsBalance: (window.S.dogsBalance || 0) + rew,
+                gameTasks: userTasks,
+                tx: newTx.slice(0, 50)
+            });
+            success("Level Completed!", rew, `You passed Level ${level} in ${task.title}!`);
+            if(currentModalGameId === gameId) openTaskModal(gameId);
+        }
+    }
+});
 
 function renderCustomBonuses() {
     let container = $("customBonusesContainer");
