@@ -1413,6 +1413,9 @@ window.closeTaskModal = function() {
     currentModalGameId = null;
 };
 
+/* ==========================================================
+   ⭐ FIXED ANDROID-SAFE TASK LAUNCHER (NO WEBVIEW CRASH) ⭐
+   ========================================================== */
 window.startCurrentGameTask = function() {
     let task = ADMIN_TASKS[currentModalGameId];
     if(!task) return;
@@ -1422,12 +1425,14 @@ window.startCurrentGameTask = function() {
         return;
     }
     closeTaskModal();
+
     let userUid = currentAuthUser ? currentAuthUser.uid : (window.S.uid || "");
     let gameUrl = (task.gameUrl || "").trim();
     if(!gameUrl) {
         toast("Game link not set by admin");
         return;
     }
+
     let finalUrl = gameUrl;
     if(gameUrl.includes("startapp=")) {
         finalUrl = gameUrl.endsWith("startapp=") ? (gameUrl + userUid) : gameUrl;
@@ -1436,7 +1441,35 @@ window.startCurrentGameTask = function() {
     } else {
         finalUrl = `${gameUrl}?uid=${userUid}`;
     }
-    window.open(finalUrl, "_blank");
+
+    // Android WebViews crash on t.me internal redirects (ERR_UNKNOWN_URL_SCHEME)
+    // We launch externally via Android Bridge or simulated native anchor click
+    try {
+        if (typeof Android !== "undefined" && Android) {
+            if (typeof Android.openBrowser === "function") {
+                Android.openBrowser(finalUrl);
+                return;
+            }
+            if (typeof Android.openUrl === "function") {
+                Android.openUrl(finalUrl);
+                return;
+            }
+            if (typeof Android.openCustomTab === "function") {
+                Android.openCustomTab(finalUrl);
+                return;
+            }
+        }
+
+        let a = document.createElement("a");
+        a.href = finalUrl;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 150);
+    } catch(err) {
+        window.open(finalUrl, "_blank");
+    }
 };
 
 /* ===== SMART MULTI-TOKEN POSTMESSAGE LISTENER ===== */
