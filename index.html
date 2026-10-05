@@ -305,9 +305,9 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     <div class="task-modal-body">
       <div style="background:rgba(255,255,255,0.04);padding:12px 14px;border-radius:14px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.06)">
         <div style="font-size:12.5px;font-weight:800;color:#ffc98a;margin-bottom:3px">📄 Instructions</div>
-        <div id="mTaskRules" style="font-size:11.5px;color:#9aa7cf;line-height:1.45">Complete multiple levels and grab instant rewards as you play!</div>
+        <div id="mTaskRules" style="font-size:11.5px;color:#9aa7cf;line-height:1.45">Complete targets and grab instant token rewards as you play!</div>
       </div>
-      <div class="lbl" style="margin-bottom:8px">Level Milestones &amp; Rewards</div>
+      <div class="lbl" id="mTaskMilestoneHeader" style="margin-bottom:8px">Milestones &amp; Rewards</div>
       <div id="mTaskLevelsContainer"></div>
     </div>
     <div class="task-modal-foot">
@@ -1296,6 +1296,7 @@ window.claimCustomBonus = function(id, type, reqAds, reward) {
     }
 };
 
+/* ===== UPGRADED MULTI-TOKEN & DYNAMIC MILESTONE TASK RENDERING ===== */
 function renderAdminTaskCards() {
     let container = $("gameTasksContainer");
     if(!container) return;
@@ -1308,6 +1309,10 @@ function renderAdminTaskCards() {
     keys.sort((a,b) => (ADMIN_TASKS[b].updatedAt || 0) - (ADMIN_TASKS[a].updatedAt || 0)).forEach(k => {
         let task = ADMIN_TASKS[k];
         if(task.active === false) return;
+
+        let rewardToken = task.rewardToken || "DOGS";
+        let milestoneType = task.milestoneType || "score";
+
         let totalReward = 0;
         if(task.levels && Array.isArray(task.levels)) {
             task.levels.forEach(l => totalReward += Number(l.reward || 0));
@@ -1316,19 +1321,26 @@ function renderAdminTaskCards() {
         let completedCount = userCompleted.length;
         let totalLevelsCount = (task.levels && Array.isArray(task.levels)) ? task.levels.length : 0;
         let isAllDone = totalLevelsCount > 0 && completedCount >= totalLevelsCount;
+
+        let typeBadgeText = (milestoneType === "coins") ? "🪙 Coins" : (milestoneType === "level") ? "🏆 Level" : "🎯 Score";
+        let typeBadgeHtml = `<span style="background:rgba(255,255,255,.08);color:#d0d7ee;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:6px">${typeBadgeText}</span>`;
+
         let badgeHtml = isAllDone 
             ? '<span class="tag" style="background:#2fe08e22;color:var(--ok);font-size:9.5px;margin:0 0 4px">✔ COMPLETED</span>'
-            : '<span class="task-badge-multi">Multi-Task</span>';
+            : `<span class="task-badge-multi">Multi-Task</span>${typeBadgeHtml}`;
+
+        let unitLabel = (milestoneType === "coins") ? "Coins Targets" : (milestoneType === "level") ? "Levels" : "Score Targets";
+
         h += `
         <div class="task-card" onclick="openTaskModal('${k}')">
           <img src="${esc(task.logo || 'dogs.png')}" class="task-thumb" alt="${esc(task.title)}" onerror="this.onerror=null;this.src='dogs.png'">
           <div class="task-body">
             <div>${badgeHtml}</div>
             <div class="task-title">${esc(task.title)}</div>
-            <div class="task-sub">${esc(task.subtitle || 'Complete multiple levels and grab instant rewards!')}</div>
+            <div class="task-sub">${esc(task.subtitle || 'Complete targets and grab instant token rewards!')}</div>
             <div class="task-pills-row">
-              <span class="pill-tokens">✦ ${f(totalReward)} DOGS</span>
-              <span class="pill-usd">${totalLevelsCount} Levels (${completedCount}/${totalLevelsCount})</span>
+              <span class="pill-tokens">✦ ${f(totalReward)} ${rewardToken}</span>
+              <span class="pill-usd">${totalLevelsCount} ${unitLabel} (${completedCount}/${totalLevelsCount})</span>
             </div>
           </div>
         </div>`;
@@ -1340,24 +1352,41 @@ window.openTaskModal = function(taskId) {
     currentModalGameId = taskId;
     let task = ADMIN_TASKS[taskId];
     if(!task) return;
+
+    let rewardToken = task.rewardToken || "DOGS";
+    let milestoneType = task.milestoneType || "score";
+
     if($("mTaskTitle")) $("mTaskTitle").textContent = task.title;
     if($("mTaskImg")) $("mTaskImg").src = task.logo || 'dogs.png';
-    if($("mTaskRules")) $("mTaskRules").textContent = task.rules || 'Complete multiple levels and grab instant rewards as you play!';
+    if($("mTaskRules")) $("mTaskRules").textContent = task.rules || 'Complete targets and grab instant token rewards as you play!';
+
+    if($("mTaskMilestoneHeader")) {
+        let mTitle = (milestoneType === "coins") ? "🪙 Coins Milestones & Rewards" :
+                     (milestoneType === "level") ? "🏆 Level Milestones & Rewards" : "🎯 Score Milestones & Rewards";
+        $("mTaskMilestoneHeader").textContent = mTitle;
+    }
+
     let userCompleted = (window.S.gameTasks && window.S.gameTasks[taskId]) || [];
     let levels = Array.isArray(task.levels) ? task.levels : [];
     let h = "";
     let totalRewardSum = 0;
     levels.forEach(item => {
         totalRewardSum += Number(item.reward || 0);
-        let isDone = userCompleted.includes(Number(item.lvl));
+        let targetVal = Number(item.lvl ?? item.target);
+        let isDone = userCompleted.includes(targetVal);
+
+        let targetLabel = (milestoneType === "coins") ? `Collect ${targetVal.toLocaleString()} Coins` :
+                          (milestoneType === "level") ? `Complete Level ${targetVal}` :
+                          `Reach ${targetVal.toLocaleString()} Score`;
+
         h += `
         <div class="subtask-item">
           <div style="display:flex;align-items:center;gap:12px">
             <div class="subtask-chk ${isDone ? 'done' : ''}">${isDone ? '✔' : ''}</div>
             <div>
-              <b style="font-size:13.5px;display:block">Complete Level ${item.lvl}</b>
+              <b style="font-size:13.5px;display:block">${targetLabel}</b>
               <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
-                <span style="font-weight:800;color:#ffc98a;font-size:12px">+${f(item.reward)} DOGS</span>
+                <span style="font-weight:800;color:#ffc98a;font-size:12px">+${f(item.reward)} ${rewardToken}</span>
                 <span style="color:var(--mut);font-size:11px">${esc(item.usd || '')}</span>
               </div>
             </div>
@@ -1369,10 +1398,10 @@ window.openTaskModal = function(taskId) {
           </div>
         </div>`;
     });
-    if($("mTaskLevelsContainer")) $("mTaskLevelsContainer").innerHTML = h || '<div class="note">No levels configured.</div>';
+    if($("mTaskLevelsContainer")) $("mTaskLevelsContainer").innerHTML = h || '<div class="note">No milestones configured.</div>';
     let pct = levels.length > 0 ? (userCompleted.length / levels.length) * 100 : 0;
     if($("mTaskProgressLbl")) setTxt("mTaskProgressLbl", `${userCompleted.length} of ${levels.length} Completed`);
-    if($("mTaskTotalReward")) setTxt("mTaskTotalReward", `+${f(totalRewardSum)} DOGS`);
+    if($("mTaskTotalReward")) setTxt("mTaskTotalReward", `+${f(totalRewardSum)} ${rewardToken}`);
     if($("mTaskProgressBar")) $("mTaskProgressBar").style.width = `${pct}%`;
     let modal = $("taskDetailModal");
     if(modal) modal.classList.add("on");
@@ -1410,34 +1439,61 @@ window.startCurrentGameTask = function() {
     window.open(finalUrl, "_blank");
 };
 
+/* ===== SMART MULTI-TOKEN POSTMESSAGE LISTENER ===== */
 window.addEventListener("message", function(event) {
-    if(event.data && event.data.type === "LEVEL_COMPLETE") {
+    if(event.data && (event.data.type === "LEVEL_COMPLETE" || event.data.type === "TASK_REWARD")) {
         let gameId = event.data.gameId;
-        let level = Number(event.data.level);
-        if(!gameId || !level) return;
+        let target = Number(event.data.level ?? event.data.target);
+        if(!gameId || isNaN(target)) return;
         let task = ADMIN_TASKS[gameId];
         if(!task) return;
-        let targetLevel = (task.levels || []).find(l => Number(l.lvl) === level);
-        if(!targetLevel) return;
+
+        let targetObj = (task.levels || []).find(l => Number(l.lvl ?? l.target) === target);
+        if(!targetObj) return;
+
+        let rewardToken = task.rewardToken || "DOGS";
+        let milestoneType = task.milestoneType || "score";
+
+        let tokenKeyMap = {
+            "DOGS": "dogsBalance",
+            "BONK": "bonkBalance",
+            "TRX": "trxBalance",
+            "FLOKI": "flokiBalance",
+            "PEPE": "pepeBalance"
+        };
+        let tokenKey = tokenKeyMap[rewardToken] || "dogsBalance";
+
         let userTasks = window.S.gameTasks || {};
         let completed = userTasks[gameId] || [];
-        if(!completed.includes(level)) {
-            completed.push(level);
+        if(!completed.includes(target)) {
+            completed.push(target);
             userTasks[gameId] = completed;
-            let rew = Number(targetLevel.reward || 0);
+
+            let rew = Number(targetObj.reward || 0);
+            let label = (milestoneType === "coins") ? `${target} Coins` :
+                        (milestoneType === "level") ? `Level ${target}` :
+                        `${target} Score`;
+
             let newTx = window.S.tx || [];
             newTx.unshift({
-                t: `${task.title} - Level ${level}`,
+                t: `${task.title} (${label})`,
                 a: rew,
-                c: "DOGS",
+                c: rewardToken,
                 d: Date.now()
             });
-            fbUpdate({
-                dogsBalance: (window.S.dogsBalance || 0) + rew,
+
+            let currentBal = Number(window.S[tokenKey] || 0);
+            let updates = {
+                [tokenKey]: currentBal + rew,
                 gameTasks: userTasks,
                 tx: newTx.slice(0, 50)
-            });
-            success("Level Completed!", rew, `You passed Level ${level} in ${task.title}!`);
+            };
+            if(rewardToken === "PEPE") {
+                updates["walletCoin5Balance"] = currentBal + rew;
+            }
+
+            fbUpdate(updates);
+            success("Milestone Reached!", rew, `You unlocked ${label} in ${task.title}!`, rewardToken);
             if(currentModalGameId === gameId) openTaskModal(gameId);
         }
     }
@@ -1668,7 +1724,7 @@ window.toast = function(m){
 
 function modal(h){ if($("pop")){ $("pop").innerHTML=h; $("md").classList.add("on"); } }
 window.closeM = function(){ if($("md")) $("md").classList.remove("on"); };
-function success(t,a,m){ modal(`<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-10"/></svg></div><div class="lbl" style="margin-top:14px">${t}</div><div class="big">+${f(a)} DOGS</div><p style="color:var(--mut);margin-bottom:16px">${m}</p><button class="btn dg" onclick="closeM()">CONTINUE</button>`); }
+function success(t,a,m,coin){ coin = coin || "DOGS"; modal(`<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-10"/></svg></div><div class="lbl" style="margin-top:14px">${t}</div><div class="big">+${f(a)} ${coin}</div><p style="color:var(--mut);margin-bottom:16px">${m}</p><button class="btn dg" onclick="closeM()">CONTINUE</button>`); }
 
 window.copyCode=function(){ try{ navigator.clipboard.writeText(window.S.ref ? window.S.ref.code : "").then(()=>toast("Code copied"), ()=>toast(window.S.ref.code)); }catch(e){ toast(window.S.ref ? window.S.ref.code : ""); } };
 window.shareRef=function(){ var t="Join me on Atomix Miner. Code: "+(window.S.ref ? window.S.ref.code : ""); if(navigator.share)navigator.share({text:t}).catch(()=>{}); else window.copyCode(); };
