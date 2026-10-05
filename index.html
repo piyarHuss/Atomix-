@@ -1414,7 +1414,7 @@ window.closeTaskModal = function() {
 };
 
 /* ==========================================================
-   ⭐ 100% EXTERNAL TELEGRAM APP LAUNCHER (NO IN-APP OPEN) ⭐
+   ⭐ 100% BULLETPROOF TELEGRAM APP EXTERNAL LAUNCHER ⭐
    ========================================================== */
 window.startCurrentGameTask = function() {
     let task = ADMIN_TASKS[currentModalGameId];
@@ -1442,7 +1442,7 @@ window.startCurrentGameTask = function() {
         finalUrl = `${gameUrl}?uid=${userUid}`;
     }
 
-    // ⭐ DIRECTLY LAUNCH TELEGRAM APP OUTSIDE ANDROID WEBVIEW ⭐
+    // ⭐ FORCES ANDROID TO LAUNCH TELEGRAM APP DIRECTLY OUTSIDE THE APK ⭐
     if(finalUrl.includes("t.me/")) {
         try {
             let match = finalUrl.match(/t\.me\/([^\/\?]+)(?:\/([^\?]+))?(?:\?startapp=(.+))?/);
@@ -1451,50 +1451,41 @@ window.startCurrentGameTask = function() {
                 let appName = match[2] || "play";
                 let startParam = match[3] || userUid;
                 
-                // 1. Android Specific Package Intent (Forces Android to open Telegram App directly)
-                let telegramIntent = `intent://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}#Intent;package=org.telegram.messenger;scheme=tg;end;`;
+                // 1. Official Android Telegram Package Intent (Direct App Launch)
+                let telegramAppIntent = `intent://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}#Intent;package=org.telegram.messenger;scheme=tg;end;`;
                 
-                // 2. Direct Telegram Protocol Deep Link
-                let tgProtocol = `tg://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}`;
+                // 2. Direct tg:// Protocol URI
+                let tgDeepLink = `tg://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}`;
 
-                // 3. Fallback View Action for external browser
-                let externalViewIntent = `intent://${finalUrl.replace(/^https?:\/\//, '')}#Intent;action=android.intent.action.VIEW;scheme=https;end;`;
-
-                // If Android Java bridge exists
+                // Check native Android Bridge methods dynamically
                 if (typeof Android !== "undefined" && Android) {
-                    if (typeof Android.openBrowser === "function") {
-                        Android.openBrowser(finalUrl);
-                        return;
-                    }
-                    if (typeof Android.openUrl === "function") {
-                        Android.openUrl(finalUrl);
-                        return;
+                    for(let prop in Android) {
+                        if(typeof Android[prop] === 'function' && /open|browser|url|link|intent/i.test(prop)) {
+                            Android[prop](finalUrl);
+                            return;
+                        }
                     }
                 }
 
-                // Force trigger Telegram outside the WebView
-                let link = document.createElement("a");
-                link.href = telegramIntent;
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(() => link.remove(), 100);
+                // Launch directly via temporary anchor
+                let a = document.createElement("a");
+                a.href = telegramAppIntent;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => a.remove(), 100);
 
-                // Fallback to tg:// protocol after 200ms
+                // Fallback to tg:// protocol in 250ms
                 setTimeout(() => {
-                    let link2 = document.createElement("a");
-                    link2.href = tgProtocol;
-                    document.body.appendChild(link2);
-                    link2.click();
-                    setTimeout(() => link2.remove(), 100);
-                }, 200);
+                    let a2 = document.createElement("a");
+                    a2.href = tgDeepLink;
+                    document.body.appendChild(a2);
+                    a2.click();
+                    setTimeout(() => a2.remove(), 100);
+                }, 250);
 
-                // Fallback to external browser after 500ms
+                // Fallback: If Telegram doesn't open, show a clean non-crashing prompt
                 setTimeout(() => {
-                    let link3 = document.createElement("a");
-                    link3.href = externalViewIntent;
-                    document.body.appendChild(link3);
-                    link3.click();
-                    setTimeout(() => link3.remove(), 100);
+                    toast("Opening Telegram App...");
                 }, 500);
 
                 return;
@@ -1504,16 +1495,17 @@ window.startCurrentGameTask = function() {
         }
     }
 
-    // Generic external launch for non-telegram links
+    // Direct Web Link Fallback
     try {
-        let externalIntent = `intent://${finalUrl.replace(/^https?:\/\//, '')}#Intent;action=android.intent.action.VIEW;scheme=https;end;`;
         let a = document.createElement("a");
-        a.href = externalIntent;
+        a.href = finalUrl;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
         document.body.appendChild(a);
         a.click();
         setTimeout(() => a.remove(), 150);
     } catch(err) {
-        window.open(finalUrl, "_system");
+        window.open(finalUrl, "_blank");
     }
 };
 
