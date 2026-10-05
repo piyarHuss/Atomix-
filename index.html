@@ -1414,7 +1414,7 @@ window.closeTaskModal = function() {
 };
 
 /* ==========================================================
-   ⭐ FIXED ANDROID-SAFE TASK LAUNCHER (NO WEBVIEW CRASH) ⭐
+   ⭐ 100% EXTERNAL TELEGRAM APP LAUNCHER (NO IN-APP OPEN) ⭐
    ========================================================== */
 window.startCurrentGameTask = function() {
     let task = ADMIN_TASKS[currentModalGameId];
@@ -1442,33 +1442,78 @@ window.startCurrentGameTask = function() {
         finalUrl = `${gameUrl}?uid=${userUid}`;
     }
 
-    // Android WebViews crash on t.me internal redirects (ERR_UNKNOWN_URL_SCHEME)
-    // We launch externally via Android Bridge or simulated native anchor click
-    try {
-        if (typeof Android !== "undefined" && Android) {
-            if (typeof Android.openBrowser === "function") {
-                Android.openBrowser(finalUrl);
-                return;
-            }
-            if (typeof Android.openUrl === "function") {
-                Android.openUrl(finalUrl);
-                return;
-            }
-            if (typeof Android.openCustomTab === "function") {
-                Android.openCustomTab(finalUrl);
-                return;
-            }
-        }
+    // ⭐ DIRECTLY LAUNCH TELEGRAM APP OUTSIDE ANDROID WEBVIEW ⭐
+    if(finalUrl.includes("t.me/")) {
+        try {
+            let match = finalUrl.match(/t\.me\/([^\/\?]+)(?:\/([^\?]+))?(?:\?startapp=(.+))?/);
+            if (match) {
+                let botUser = match[1];
+                let appName = match[2] || "play";
+                let startParam = match[3] || userUid;
+                
+                // 1. Android Specific Package Intent (Forces Android to open Telegram App directly)
+                let telegramIntent = `intent://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}#Intent;package=org.telegram.messenger;scheme=tg;end;`;
+                
+                // 2. Direct Telegram Protocol Deep Link
+                let tgProtocol = `tg://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}`;
 
+                // 3. Fallback View Action for external browser
+                let externalViewIntent = `intent://${finalUrl.replace(/^https?:\/\//, '')}#Intent;action=android.intent.action.VIEW;scheme=https;end;`;
+
+                // If Android Java bridge exists
+                if (typeof Android !== "undefined" && Android) {
+                    if (typeof Android.openBrowser === "function") {
+                        Android.openBrowser(finalUrl);
+                        return;
+                    }
+                    if (typeof Android.openUrl === "function") {
+                        Android.openUrl(finalUrl);
+                        return;
+                    }
+                }
+
+                // Force trigger Telegram outside the WebView
+                let link = document.createElement("a");
+                link.href = telegramIntent;
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => link.remove(), 100);
+
+                // Fallback to tg:// protocol after 200ms
+                setTimeout(() => {
+                    let link2 = document.createElement("a");
+                    link2.href = tgProtocol;
+                    document.body.appendChild(link2);
+                    link2.click();
+                    setTimeout(() => link2.remove(), 100);
+                }, 200);
+
+                // Fallback to external browser after 500ms
+                setTimeout(() => {
+                    let link3 = document.createElement("a");
+                    link3.href = externalViewIntent;
+                    document.body.appendChild(link3);
+                    link3.click();
+                    setTimeout(() => link3.remove(), 100);
+                }, 500);
+
+                return;
+            }
+        } catch(e) {
+            console.error("External Telegram launch error:", e);
+        }
+    }
+
+    // Generic external launch for non-telegram links
+    try {
+        let externalIntent = `intent://${finalUrl.replace(/^https?:\/\//, '')}#Intent;action=android.intent.action.VIEW;scheme=https;end;`;
         let a = document.createElement("a");
-        a.href = finalUrl;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
+        a.href = externalIntent;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => a.remove(), 150);
     } catch(err) {
-        window.open(finalUrl, "_blank");
+        window.open(finalUrl, "_system");
     }
 };
 
