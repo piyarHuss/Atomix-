@@ -282,6 +282,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
         <li><b>Data Privacy:</b> We never sell or distribute your private email or phone numbers to third parties.</li>
       </ul>
       <p style="color:var(--ok)">Click <b>"I AGREE &amp; ACCEPT"</b> to confirm agreement and activate your miner node.</p>
+      <p style="margin-top:10px;text-align:center"><a href="https://atomix-privacy-policy.vercel.app/" target="_blank" onclick="openPrivacyPolicy(event)" style="color:#ffc98a;text-decoration:underline;font-weight:700">Open Official Privacy Policy Webpage ↗</a></p>
     </div>
     <div class="ppFoot">
       <button class="btn ok" onclick="acceptPrivacyFromModal()">I AGREE &amp; ACCEPT</button>
@@ -318,7 +319,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
       <div class="bar" style="margin-bottom:12px;height:7px"><i id="mTaskProgressBar" style="width:0%"></i></div>
       <label class="privacy-chk-wrap" style="margin:2px 0 10px">
         <input type="checkbox" id="mTaskTermsChk" checked>
-        <span style="font-size:11px">I have read and agree to the <a href="javascript:void(0)" onclick="openPrivacyModal('terms')">Terms &amp; Conditions</a></span>
+        <span style="font-size:11px">I have read and agree to the <a href="https://atomix-privacy-policy.vercel.app/" target="_blank" onclick="openPrivacyPolicy(event)">Terms &amp; Conditions</a></span>
       </label>
       <button class="btn ok" id="mTaskStartBtn" onclick="startCurrentGameTask()">START TASK</button>
     </div>
@@ -366,7 +367,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
         <linearGradient id="fanBlade" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#ffc98a"/>
           <stop offset="100%" stop-color="#ff8a3d"/>
-        </linearGradient>
+        </radialGradient>
         <radialGradient id="fanCenterGlow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="#ffc25c"/>
           <stop offset="70%" stop-color="#ff8a3d"/>
@@ -533,6 +534,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
   <div class="it" onclick="go('v-transfer')" style="cursor:pointer"><div class="ico" style="background:rgba(56,224,160,.15);color:var(--ok)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"/></svg></div><div class="t"><b>Transfer Token</b><small style="color:var(--ok)">Send tokens to external wallet</small></div>›</div>
   <div class="it" onclick="go('v-tx')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></div><div class="t"><b>Transaction History</b></div>›</div>
   <div class="it" onclick="toast('support@atomix.network')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.500 9a2.500 2.500 0 115 0c0 1.500-2.500 2-2.500 4M12 17h.01"/></svg></div><div class="t"><b>Help &amp; Support</b></div>›</div>
+  <div class="it" onclick="openPrivacyPolicy(event)" style="cursor:pointer"><div class="ico" style="background:rgba(108,140,255,.15);color:var(--c1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="t"><b>Privacy Policy &amp; Terms</b><small style="color:var(--c1)">Online terms &amp; conditions</small></div>›</div>
   <div class="it" onclick="logout()" style="cursor:pointer;color:var(--bad)"><div class="ico" style="background:rgba(255,92,122,.15);color:var(--bad)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="t"><b>Log Out</b></div>›</div></div>
 </section>
 
@@ -660,7 +662,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     </button>
 
     <div class="ob-legal-text">
-      By continuing, you agree to Atomix's <a href="javascript:void(0)" onclick="openPrivacyModal('terms')">Terms &amp; Conditions</a> and <a href="javascript:void(0)" onclick="openPrivacyModal('privacy')">Privacy Policy</a>.
+      By continuing, you agree to Atomix's <a href="https://atomix-privacy-policy.vercel.app/" target="_blank" onclick="openPrivacyPolicy(event)">Terms &amp; Conditions</a> and <a href="https://atomix-privacy-policy.vercel.app/" target="_blank" onclick="openPrivacyPolicy(event)">Privacy Policy</a>.
     </div>
   </div>
 
@@ -701,7 +703,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 
     <label class="privacy-chk-wrap">
       <input type="checkbox" id="emailPrivacyChk">
-      <span>I agree to Atomix's <a href="javascript:void(0)" onclick="openPrivacyModal('terms')">Terms of Service</a> &amp; <a href="javascript:void(0)" onclick="openPrivacyModal('privacy')">Privacy Policy</a>.</span>
+      <span>I agree to Atomix's <a href="https://atomix-privacy-policy.vercel.app/" target="_blank" onclick="openPrivacyPolicy(event)">Terms of Service</a> &amp; <a href="https://atomix-privacy-policy.vercel.app/" target="_blank" onclick="openPrivacyPolicy(event)">Privacy Policy</a>.</span>
     </label>
 
     <button class="btn" id="emailSubmitBtn" onclick="submitEmailAuth()">
@@ -729,7 +731,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 
       <label class="privacy-chk-wrap">
         <input type="checkbox" id="phonePrivacyChk">
-        <span>I agree to Atomix's <a href="javascript:void(0)" onclick="openPrivacyModal('terms')">Terms of Service</a> &amp; <a href="javascript:void(0)" onclick="openPrivacyModal('privacy')">Privacy Policy</a>.</span>
+        <span>I agree to Atomix's <a href="https://atomix-privacy-policy.vercel.app/" target="_blank" onclick="openPrivacyPolicy(event)">Terms of Service</a> &amp; <a href="https://atomix-privacy-policy.vercel.app/" target="_blank" onclick="openPrivacyPolicy(event)">Privacy Policy</a>.</span>
       </label>
 
       <button class="btn dg" id="phoneSendOtpBtn" onclick="sendPhoneOtp()">
@@ -824,14 +826,33 @@ window.fbUpdate = function(fields) {
     update(ref(db, "users/" + currentAuthUser.uid), fields).catch(e => console.warn(e));
 };
 
-/* ===== PRIVACY POLICY MODAL CONTROLS ===== */
-window.openPrivacyModal = function(type){
-  var m = $("ppModal"); 
-  if(m) {
-    if(type === 'terms') setTxt("ppTitle", "Terms & Conditions");
-    else setTxt("ppTitle", "Privacy Policy");
-    m.classList.add("on");
+/* ===== EXTERNAL PRIVACY POLICY & TERMS OPENER ===== */
+window.openPrivacyPolicy = function(e){
+  if(e && e.preventDefault) e.preventDefault();
+  var url = "https://atomix-privacy-policy.vercel.app/";
+  if (typeof Android !== "undefined" && Android) {
+    for(let prop in Android) {
+      if(typeof Android[prop] === 'function' && /open|browser|url|link|intent/i.test(prop)) {
+        Android[prop](url);
+        return;
+      }
+    }
   }
+  try {
+    var a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 200);
+  } catch(err) {
+    window.open(url, "_blank");
+  }
+};
+
+window.openPrivacyModal = function(type){
+  window.openPrivacyPolicy();
 };
 window.closePrivacyModal = function(){
   var m = $("ppModal"); if(m) m.classList.remove("on");
