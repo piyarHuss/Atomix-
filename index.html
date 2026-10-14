@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+// SAFELY FIX 'sendBeacon' ERROR IN ANDROID WEBVIEW / LOCAL ASSETS
+(function() {
+  if (typeof window !== "undefined" && window.navigator) {
+    var origBeacon = window.navigator.sendBeacon;
+    window.navigator.sendBeacon = function(url, data) {
+      try {
+        if (typeof url === "string" && !url.startsWith("http://") && !url.startsWith("https://")) {
+          return false;
+        }
+        if (origBeacon) {
+          return origBeacon.call(window.navigator, url, data);
+        }
+      } catch (e) {
+        return false;
+      }
+      return false;
+    };
+  }
+})();
+</script>
 <meta name="monetag" content="6c2cce59c8d9495f201a172a9df79dc2">
 <script>(function(s){s.dataset.zone='11984536',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 <script>(function(s){s.dataset.zone='11989369',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
@@ -238,7 +259,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 .ppBody li{margin-bottom:6px}
 .ppFoot{padding:14px 20px 18px;border-top:1px solid var(--bd)}
 
-/* GAME TASKS (BELOW GIG) */
+/* GAME TASKS */
 .task-card{position:relative;display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:18px;background:linear-gradient(175deg,rgba(18,24,54,.85) 0%,rgba(8,11,26,.95) 100%);border:1px solid rgba(255,255,255,.1);margin-bottom:10px;cursor:pointer;transition:transform .15s,border-color .2s;box-shadow:0 6px 20px rgba(0,0,0,.45)}
 .task-card:active{transform:scale(.98)}
 .task-thumb{width:54px;height:54px;border-radius:15px;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.05)}
@@ -343,9 +364,6 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <section class="view on" id="v-home">
  <div class="card"><div class="bal"><span data-coin="DOGS" data-size="float"></span><div><div class="lbl">DOGS Balance</div><div class="amt"><span id="bal">0.00</span><small>DOGS</small></div><div class="live off" id="liveT">Idle</div></div></div></div>
  
- <!-- ==============================================================
-      ⭐ REDESIGNED 100% FULL-WIDTH CYBERNETIC RIG CARD ⭐
-      ============================================================== -->
  <div class="card rig-card" id="mach">
   <!-- Top Rig Header & Status -->
   <div class="rig-header">
@@ -373,7 +391,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
         <linearGradient id="fanBlade" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#ffc98a"/>
           <stop offset="100%" stop-color="#ff8a3d"/>
-        </radialGradient>
+        </linearGradient>
         <radialGradient id="fanCenterGlow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="#ffc25c"/>
           <stop offset="70%" stop-color="#ff8a3d"/>
@@ -550,11 +568,11 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     <button class="back" onclick="go('v-profile')">‹ Back to Profile</button>
     <h1>Transfer Token</h1>
     <div class="card" style="background:linear-gradient(135deg,rgba(108,140,255,.12),rgba(56,224,160,.08))">
-      <div><b>Crypto Transfer Network</b><small style="display:block;color:var(--mut);margin-top:2px">Minimum 10,000 tokens per transfer</small></div>
+      <div><b>Crypto Transfer Network</b><small id="tfNetworkHint" style="display:block;color:var(--mut);margin-top:2px">Minimum transfer limit applies</small></div>
     </div>
     <div class="lbl" style="margin:14px 4px 8px">Select Token to Transfer</div>
     <div id="tfCoinList"></div>
-    <div class="note">Only tokens with 10,000 or more balance can be transferred.</div>
+    <div class="note">Only tokens with eligible minimum balance can be transferred.</div>
   </div>
 
   <div id="tf-step-send" style="display:none">
@@ -574,10 +592,10 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 
       <div class="row">
         <div class="lbl">2. Transfer Amount</div>
-        <div class="lbl" style="color:var(--ok)">Min: 10,000</div>
+        <div class="lbl" style="color:var(--ok)" id="tfMinHint">Min: 10,000</div>
       </div>
       <div style="position:relative;margin:6px 0 14px">
-        <input id="tfAmt" type="number" step="any" min="10000" placeholder="Min. 10,000" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:15px;outline:0">
+        <input id="tfAmt" type="number" step="any" placeholder="Enter amount" style="display:block;width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.65);color:var(--tx);padding:0 70px 0 14px;font-family:inherit;font-size:15px;outline:0">
         <button class="btn sm ok" onclick="setTfMax()" style="position:absolute;right:6px;top:8px;padding:6px 12px;font-size:11px">MAX</button>
       </div>
       <button class="btn ok" id="tfSubmitBtn" onclick="submitTransfer()">TRANSFER NOW</button>
@@ -785,8 +803,7 @@ const firebaseConfig = {
   projectId: "atomic-app-55e9b",
   storageBucket: "atomic-app-55e9b.firebasestorage.app",
   messagingSenderId: "268858397066",
-  appId: "1:268858397066:web:5cb1229793da6e36d2b873",
-  measurementId: "G-WZP3L8LVPH"
+  appId: "1:268858397066:web:5cb1229793da6e36d2b873"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -795,6 +812,63 @@ const db = getDatabase(app);
 
 var $ = id => document.getElementById(id);
 function setTxt(id, val){ var el = $(id); if(el) el.textContent = val; }
+
+/* ===== GEO TIER & ANTI-VPN SHIELD ===== */
+window.USER_GEO = {
+  isTier1: false,
+  country: "IN",
+  minDogsWithdraw: 10000 // India me purana 10,000 rahega
+};
+
+const TIER1_LIST = ["US", "AU", "GB", "CA", "DE", "FR", "NZ", "NL", "CH", "SE", "NO"];
+
+async function detectGeoAndBlockVpn() {
+  if (typeof Android !== "undefined" && Android && typeof Android.isVpnActive === "function") {
+    if (Android.isVpnActive()) {
+      showVpnLock();
+      return;
+    }
+  }
+
+  try {
+    const res = await fetch("https://ipapi.co/json/");
+    const data = await res.json();
+
+    if (data.security && (data.security.vpn || data.security.proxy || data.security.tor)) {
+      showVpnLock();
+      return;
+    }
+
+    const cCode = (data.country_code || "IN").toUpperCase();
+    if (TIER1_LIST.includes(cCode)) {
+      window.USER_GEO = {
+        isTier1: true,
+        country: cCode,
+        minDogsWithdraw: 125100 // Bahar ke countries ke liye 125,100
+      };
+    } else {
+      window.USER_GEO = {
+        isTier1: false,
+        country: cCode,
+        minDogsWithdraw: 10000 // India me sab same 10,000
+      };
+    }
+  } catch(e) {
+    window.USER_GEO = { isTier1: false, country: "IN", minDogsWithdraw: 10000 };
+  }
+}
+
+function showVpnLock() {
+  document.body.innerHTML = `
+    <div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#050711;color:#ff5c7a;text-align:center;padding:24px;font-family:sans-serif">
+      <h1 style="font-size:26px">⛔ VPN / Proxy Detected</h1>
+      <p style="color:#a5b1d9;max-width:320px;margin:12px 0 20px">Please turn off VPN or Proxy to use Atomix safely.</p>
+      <button onclick="location.reload()" style="padding:12px 24px;background:#2fe08e;color:#05140d;border:none;border-radius:12px;font-weight:700;cursor:pointer">RETRY</button>
+    </div>`;
+  throw new Error("VPN_PROHIBITED");
+}
+
+detectGeoAndBlockVpn();
 
 var def = {
   dogsBalance: 0, bonkBalance: 0, trxBalance: 0, flokiBalance: 0, pepeBalance: 0, walletCoin5Balance: 0,
@@ -821,7 +895,26 @@ var latestAdminNotification = null;
 
 function getSES(){ return (GLOBAL_SET.mining && GLOBAL_SET.mining.session) || 7200; }
 function getADS(){ return (GLOBAL_SET.mining && GLOBAL_SET.mining.adsReq) || 10; }
-function getDAILY(){ return (GLOBAL_SET.rewards && GLOBAL_SET.rewards.daily) || [10, 15, 20, 25, 30, 40, 60]; }
+
+// India me original daily reward, Tier-1 me High Daily Reward
+function getDAILY(){ 
+  if(window.USER_GEO && window.USER_GEO.isTier1) {
+    return [2000, 2400, 2800, 3200, 3600, 4200, 5000];
+  }
+  return (GLOBAL_SET.rewards && GLOBAL_SET.rewards.daily) || [10, 15, 20, 25, 30, 40, 60]; 
+}
+
+// India me original mining rate, Tier-1 me High Mining Rate taaki 10+ din me 125,100 DOGS achieve ho
+function rate(){ 
+  if(window.USER_GEO && window.USER_GEO.isTier1) {
+    return 18.0 + (3.5 * ((window.S.lvl || 1) - 1));
+  }
+  return (GLOBAL_SET.mining.baseRate || 0.25) + (GLOBAL_SET.mining.rateStep || 0.15)*((window.S.lvl||1)-1); 
+}
+
+function getWelcomeBonusAmount() {
+  return (window.USER_GEO && window.USER_GEO.isTier1) ? 500 : 25;
+}
 
 window.fbUpdate = function(fields) {
     if(fields && typeof fields === "object") {
@@ -1071,6 +1164,7 @@ async function handleSuccessfulLogin(user, customName, customEmail, customPhone,
             let initialObj = Object.assign({}, def, {
                 uid: "ID" + Math.floor(100000 + Math.random() * 900000),
                 authUid: user.uid,
+                country: window.USER_GEO.country,
                 profile: {
                     name: customName || user.displayName || (customPhone ? "User " + customPhone.slice(-4) : "Atomix Miner"),
                     email: customEmail || user.email || "",
@@ -1264,7 +1358,8 @@ window.daily = function(){
         return;
     }
     let day = (window.S.daily ? window.S.daily.day : 0) || 0;
-    let a = getDAILY()[Math.min(day, getDAILY().length - 1)];
+    let dailyList = getDAILY();
+    let a = dailyList[Math.min(day, dailyList.length - 1)];
     let newTx = window.S.tx || [];
     newTx.unshift({ t: "Daily Reward", a: a, c: "DOGS", d: Date.now() });
     fbUpdate({
@@ -1280,14 +1375,15 @@ window.bonus = function(){
         toast("Welcome bonus already claimed");
         return;
     }
+    let rew = getWelcomeBonusAmount();
     let newTx = window.S.tx || [];
-    newTx.unshift({ t: "Welcome Bonus", a: 25, c: "DOGS", d: Date.now() });
+    newTx.unshift({ t: "Welcome Bonus", a: rew, c: "DOGS", d: Date.now() });
     fbUpdate({
-        dogsBalance: (window.S.dogsBalance || 0) + 25,
+        dogsBalance: (window.S.dogsBalance || 0) + rew,
         bonus: true,
         tx: newTx.slice(0, 50)
     });
-    success("Bonus", 25, "Welcome bonus claimed.");
+    success("Bonus", rew, "Welcome bonus claimed.");
 };
 
 window.claimCustomBonus = function(id, type, reqAds, reward) {
@@ -1323,7 +1419,7 @@ window.claimCustomBonus = function(id, type, reqAds, reward) {
     }
 };
 
-/* ===== UPGRADED MULTI-TOKEN & DYNAMIC MILESTONE TASK RENDERING ===== */
+/* ===== TASK RENDERING ===== */
 function renderAdminTaskCards() {
     let container = $("gameTasksContainer");
     if(!container) return;
@@ -1440,9 +1536,6 @@ window.closeTaskModal = function() {
     currentModalGameId = null;
 };
 
-/* ==========================================================
-   ⭐ 100% BULLETPROOF TELEGRAM APP EXTERNAL LAUNCHER ⭐
-   ========================================================== */
 window.startCurrentGameTask = function() {
     let task = ADMIN_TASKS[currentModalGameId];
     if(!task) return;
@@ -1469,7 +1562,6 @@ window.startCurrentGameTask = function() {
         finalUrl = `${gameUrl}?uid=${userUid}`;
     }
 
-    // ⭐ FORCES ANDROID TO LAUNCH TELEGRAM APP DIRECTLY OUTSIDE THE APK ⭐
     if(finalUrl.includes("t.me/")) {
         try {
             let match = finalUrl.match(/t\.me\/([^\/\?]+)(?:\/([^\?]+))?(?:\?startapp=(.+))?/);
@@ -1478,13 +1570,9 @@ window.startCurrentGameTask = function() {
                 let appName = match[2] || "play";
                 let startParam = match[3] || userUid;
                 
-                // 1. Official Android Telegram Package Intent (Direct App Launch)
                 let telegramAppIntent = `intent://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}#Intent;package=org.telegram.messenger;scheme=tg;end;`;
-                
-                // 2. Direct tg:// Protocol URI
                 let tgDeepLink = `tg://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}`;
 
-                // Check native Android Bridge methods dynamically
                 if (typeof Android !== "undefined" && Android) {
                     for(let prop in Android) {
                         if(typeof Android[prop] === 'function' && /open|browser|url|link|intent/i.test(prop)) {
@@ -1494,14 +1582,12 @@ window.startCurrentGameTask = function() {
                     }
                 }
 
-                // Launch directly via temporary anchor
                 let a = document.createElement("a");
                 a.href = telegramAppIntent;
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(() => a.remove(), 100);
 
-                // Fallback to tg:// protocol in 250ms
                 setTimeout(() => {
                     let a2 = document.createElement("a");
                     a2.href = tgDeepLink;
@@ -1510,7 +1596,6 @@ window.startCurrentGameTask = function() {
                     setTimeout(() => a2.remove(), 100);
                 }, 250);
 
-                // Fallback: If Telegram doesn't open, show a clean non-crashing prompt
                 setTimeout(() => {
                     toast("Opening Telegram App...");
                 }, 500);
@@ -1522,7 +1607,6 @@ window.startCurrentGameTask = function() {
         }
     }
 
-    // Direct Web Link Fallback
     try {
         let a = document.createElement("a");
         a.href = finalUrl;
@@ -1536,7 +1620,6 @@ window.startCurrentGameTask = function() {
     }
 };
 
-/* ===== SMART MULTI-TOKEN POSTMESSAGE LISTENER ===== */
 window.addEventListener("message", function(event) {
     if(event.data && (event.data.type === "LEVEL_COMPLETE" || event.data.type === "TASK_REWARD")) {
         let gameId = event.data.gameId;
@@ -1670,6 +1753,16 @@ window.go = function(v){
 };
 window.coinD=function(i){ curCoin=i; go("v-coin"); };
 
+/* ==========================================================
+   DYNAMIC TRANSFER VIEW
+   ========================================================== */
+function getMinTransferForCoin(coinSym) {
+  if(coinSym === "DOGS") {
+    return window.USER_GEO.minDogsWithdraw;
+  }
+  return 10000;
+}
+
 var curTfCoinIdx = 0;
 function renderTransferView() {
     let listDiv = $("tf-step-list"), sendDiv = $("tf-step-send");
@@ -1679,13 +1772,19 @@ function renderTransferView() {
     let container = $("tfCoinList");
     if(!container) return;
 
+    if($("tfNetworkHint")) {
+      let minD = getMinTransferForCoin("DOGS");
+      $("tfNetworkHint").textContent = `Minimum ${minD.toLocaleString()} DOGS per transfer`;
+    }
+
     let h = "";
     COINS.forEach((c, idx) => {
         let bal = window.S[c.k] || 0;
-        let eligible = bal >= 10000;
+        let minReq = getMinTransferForCoin(c.sym);
+        let eligible = bal >= minReq;
         let badge = eligible 
             ? '<span class="tag" style="background:#38e0a022;color:var(--ok)">Eligible ›</span>' 
-            : '<span class="tag" style="background:#ff5c7a22;color:var(--bad)">Min 10,000 Req</span>';
+            : `<span class="tag" style="background:#ff5c7a22;color:var(--bad)">Min ${minReq.toLocaleString()} Req</span>`;
 
         h += `<div class="tf-coin-card ${!eligible ? 'locked' : ''}" onclick="onCoinCardTap(${idx})">
             ${coinIcon(c, "sm")}
@@ -1709,7 +1808,8 @@ window.renderTransferView = renderTransferView;
 window.onCoinCardTap = function(idx) {
     let c = COINS[idx];
     let bal = window.S[c.k] || 0;
-    if(bal < 10000) { toast(`Minimum 10,000 ${c.sym} required to transfer`); return; }
+    let minReq = getMinTransferForCoin(c.sym);
+    if(bal < minReq) { toast(`Minimum ${minReq.toLocaleString()} ${c.sym} required to transfer`); return; }
     curTfCoinIdx = idx;
     if($("tf-step-list")) $("tf-step-list").style.display = "none";
     if($("tf-step-send")) $("tf-step-send").style.display = "block";
@@ -1718,6 +1818,9 @@ window.onCoinCardTap = function(idx) {
     setTxt("tfHeroSym", c.sym);
     setTxt("tfHeroBal", f(bal));
     setTxt("tfHeroUnit", c.sym);
+
+    if($("tfMinHint")) $("tfMinHint").textContent = `Min: ${minReq.toLocaleString()}`;
+    if($("tfAmt")) $("tfAmt").placeholder = `Min. ${minReq.toLocaleString()}`;
 
     if($("tfAddr")) $("tfAddr").value = "";
     if($("tfAmt")) $("tfAmt").value = "";
@@ -1733,7 +1836,8 @@ window.backToTfList = function() {
 window.setTfMax = function() {
     let c = COINS[curTfCoinIdx];
     let bal = window.S[c.k] || 0;
-    if($("tfAmt")) $("tfAmt").value = bal >= 10000 ? bal : "";
+    let minReq = getMinTransferForCoin(c.sym);
+    if($("tfAmt")) $("tfAmt").value = bal >= minReq ? bal : "";
 };
 
 window.pasteTfAddr = async function() {
@@ -1749,12 +1853,13 @@ window.pasteTfAddr = async function() {
 window.submitTransfer = async function() {
     let c = COINS[curTfCoinIdx];
     let bal = window.S[c.k] || 0;
+    let minReq = getMinTransferForCoin(c.sym);
     let addr = ($("tfAddr") ? $("tfAddr").value : "").trim();
     let amt = parseFloat($("tfAmt") ? $("tfAmt").value : 0);
 
-    if(bal < 10000) { toast(`Need at least 10,000 ${c.sym}`); return; }
+    if(bal < minReq) { toast(`Need at least ${minReq.toLocaleString()} ${c.sym}`); return; }
     if(!addr || addr.length < 8) { toast("Please enter a valid deposit address"); return; }
-    if(!amt || isNaN(amt) || amt < 10000) { toast(`Minimum transfer is 10,000 ${c.sym}`); return; }
+    if(!amt || isNaN(amt) || amt < minReq) { toast(`Minimum transfer is ${minReq.toLocaleString()} ${c.sym}`); return; }
     if(amt > bal) { toast("Insufficient token balance"); return; }
 
     let btn = $("tfSubmitBtn");
@@ -1769,6 +1874,7 @@ window.submitTransfer = async function() {
             coin: c.sym,
             amount: amt,
             address: addr,
+            country: window.USER_GEO.country,
             time: Date.now(),
             status: "Pending"
         };
@@ -1809,7 +1915,6 @@ window.submitTransfer = async function() {
 
 function f(n){ return (n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function usd(n){ return (n||0)>=1 ? "$"+f(n) : "$"+(n||0).toFixed((n||0)>=.01?4:8).replace(/0+$/,"0"); }
-function rate(){ return (GLOBAL_SET.mining.baseRate || 0.25) + (GLOBAL_SET.mining.rateStep || 0.15)*((window.S.lvl||1)-1); }
 function cost(){ return (GLOBAL_SET.mining.costBase || 100) * (window.S.lvl||1) * (window.S.lvl||1); }
 function today(){ return new Date().toISOString().slice(0,10); }
 
@@ -1904,7 +2009,6 @@ function ui(){
  var now=Date.now(), m=S.mining, on=!!m;
  if(m&&now>=m.e){ finishMining(); return; }
  
- /* RIG CARD CLASS & TELEMETRY LIVE UPDATES */
  if($("mach")) $("mach").classList.toggle("on-m",on);
  
  if($("rigStatus")) {
