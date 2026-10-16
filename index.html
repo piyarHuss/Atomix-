@@ -28,7 +28,7 @@
 <meta name="theme-color" content="#070a16">
 <title>Atomix Miner</title>
 <style>
-:root{--bg:#070a14;--c1:#6c8cff;--c2:#9b6cff;--ok:#2fe08e;--bad:#ff5c7a;--tx:#eef1fb;--mut:#8590b5;--glass:rgba(255,255,255,.05);--bd:rgba(255,255,255,.09);--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
+:root{--bg:#070a14;--c1:#6c8cff;--c2:#9b6cff;--ok:#2fe08e;--bad:#ff5c7a;--warn:#ffb84d;--tx:#eef1fb;--mut:#8590b5;--glass:rgba(255,255,255,.05);--bd:rgba(255,255,255,.09);--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font:14px/1.4 -apple-system,"Segoe UI",Roboto,sans-serif}
 body:before{content:"";position:fixed;inset:0;background:radial-gradient(400px 300px at 20% -5%,#3a3fa066,transparent),radial-gradient(360px 300px at 100% 40%,#6a2fa055,transparent);pointer-events:none}
@@ -179,10 +179,19 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 .coinImg.big{width:84px;height:84px;margin:0 auto}
 .coinFallback{width:100%;height:100%;display:grid;place-items:center;font:800 11px system-ui;color:#dfe6ff;background:linear-gradient(135deg,#2a3272,#4a2a86)}
 
-/* TRANSFER TOKEN STYLES */
+/* TRANSFER TOKEN & WITHDRAWAL STYLES */
 .tf-coin-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--glass);border:1px solid var(--bd);margin-bottom:8px;cursor:pointer;transition:all .2s;position:relative}
 .tf-coin-card:active{transform:scale(.98)}
 .tf-coin-card.locked{opacity:.5}
+
+/* WITHDRAWAL HISTORY CARDS */
+.wd-item{display:flex;flex-direction:column;gap:8px;padding:13px 14px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);margin-bottom:10px}
+.wd-head{display:flex;align-items:center;justify-content:space-between}
+.wd-status{font-size:10px;font-weight:800;letter-spacing:.05em;padding:3px 8px;border-radius:20px;text-transform:uppercase}
+.wd-status.pending{background:rgba(255,184,77,.15);color:var(--warn);border:1px solid rgba(255,184,77,.3)}
+.wd-status.approved,.wd-status.completed{background:rgba(47,224,142,.15);color:var(--ok);border:1px solid rgba(47,224,142,.3)}
+.wd-status.rejected{background:rgba(255,92,122,.15);color:var(--bad);border:1px solid rgba(255,92,122,.3)}
+.wd-addr{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#9aa7cf;background:rgba(0,0,0,.35);padding:5px 8px;border-radius:8px;word-break:break-all}
 
 /* ==========================================================
    ⭐ ULTRA-PROFESSIONAL ONBOARDING SCREEN ⭐
@@ -289,6 +298,21 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     <p style="color:#7f89a8;line-height:1.5" id="maint-msg">App is undergoing maintenance.</p>
 </div>
 
+<!-- ==============================================
+     ⭐ IN-APP AUTO UPDATE POPUP MODAL ⭐
+     ============================================== -->
+<div id="updateModal" style="display:none;position:fixed;inset:0;background:rgba(4,7,18,0.92);z-index:99999999;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);place-items:center;padding:20px;">
+  <div style="background:linear-gradient(170deg,#141c42,#0a0e24);border:1px solid rgba(108,140,255,0.35);border-radius:28px;max-width:340px;width:100%;padding:28px 22px;text-align:center;box-shadow:0 0 60px rgba(108,140,255,0.3)">
+    <div style="width:68px;height:68px;border-radius:50%;background:rgba(47,224,142,0.15);color:#2fe08e;display:grid;place-items:center;margin:0 auto 16px;box-shadow:0 0 25px rgba(47,224,142,0.25)">
+      <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </div>
+    <div style="font-size:11px;font-weight:800;color:#ffc98a;letter-spacing:1px;text-transform:uppercase">New Version Released</div>
+    <div style="font-size:22px;font-weight:800;margin:6px 0;color:#fff" id="updVerTitle">Update Available</div>
+    <p style="font-size:12.5px;color:#9aa7cf;line-height:1.5;margin-bottom:20px" id="updChangelog">A brand new version is available with stability improvements and rewards!</p>
+    <button class="btn ok" id="updBtn" onclick="startAppDownload()" style="width:100%;font-size:15px;padding:15px">UPDATE NOW</button>
+  </div>
+</div>
+
 <!-- TERMS & PRIVACY POLICY MODAL -->
 <div id="ppModal">
   <div class="ppCard">
@@ -303,7 +327,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
         <li><b>Fair Mining Policy:</b> One account per miner. Creating multi-accounts, using automated bot scripts, or emulator hacks will trigger immediate automated bans and forfeiture of pending claims.</li>
         <li><b>Account Ownership:</b> You hold full custody of your account credentials (Google, Email, Phone number).</li>
         <li><b>Decentralized Cloud Architecture:</b> Mining speed, levels, daily bonuses, and DOGS balances are secured by real-time cloud synchronisation.</li>
-        <li><b>Transfers &amp; Withdrawals:</b> A minimum threshold of 10,000 tokens is enforced to preserve liquidity pool safety.</li>
+        <li><b>Transfers &amp; Withdrawals:</b> A minimum threshold is enforced to preserve liquidity pool safety.</li>
         <li><b>Data Privacy:</b> We never sell or distribute your private email or phone numbers to third parties.</li>
       </ul>
       <p style="color:var(--ok)">Click <b>"I AGREE &amp; ACCEPT"</b> to confirm agreement and activate your miner node.</p>
@@ -529,7 +553,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
   <div id="cd"></div>
 </section>
 
-<!-- REWARDS VIEW (GAMES SECTION RIGHT BELOW GIG) -->
+<!-- REWARDS VIEW -->
 <section class="view" id="v-rewards">
  <h1>Rewards</h1>
  <div class="card"><div class="row"><div class="row" style="gap:12px;justify-content:flex-start"><span data-coin="DOGS" data-size="sm"></span><div><b>Daily Reward</b><div class="lbl" id="dtx"></div></div></div><button class="btn sm ok" id="dB" onclick="daily()">Claim</button></div><div class="days" id="days"></div></div>
@@ -554,7 +578,8 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
  <div class="g2"><div class="card stat"><div class="lbl">Total mined</div><b id="stM">0</b></div><div class="card stat"><div class="lbl">Sessions</div><b id="stS">0</b></div><div class="card stat"><div class="lbl">Referral earnings</div><b id="stR">0</b></div><div class="card stat"><div class="lbl">Level</div><b id="stL">1</b></div></div>
  <div class="card" style="margin-top:12px">
   <div class="it" onclick="go('v-transfer')" style="cursor:pointer"><div class="ico" style="background:rgba(56,224,160,.15);color:var(--ok)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"/></svg></div><div class="t"><b>Transfer Token</b><small style="color:var(--ok)">Send tokens to external wallet</small></div>›</div>
-  <div class="it" onclick="go('v-tx')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></div><div class="t"><b>Transaction History</b></div>›</div>
+  <div class="it" onclick="goTxTab('withdrawals')" style="cursor:pointer"><div class="ico" style="background:rgba(255,184,77,.15);color:var(--warn)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="t"><b>Transfer / Withdrawal History</b><small style="color:var(--warn)">Check transfer status &amp; addresses</small></div>›</div>
+  <div class="it" onclick="goTxTab('all')" style="cursor:pointer"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></div><div class="t"><b>All Transactions</b></div>›</div>
   <div class="it" onclick="toast('support@atomix.network')"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.500 9a2.500 2.500 0 115 0c0 1.500-2.500 2-2.500 4M12 17h.01"/></svg></div><div class="t"><b>Help &amp; Support</b></div>›</div>
   <div class="it" onclick="openPrivacyPolicy(event)" style="cursor:pointer"><div class="ico" style="background:rgba(108,140,255,.15);color:var(--c1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="t"><b>Privacy Policy &amp; Terms</b><small style="color:var(--c1)">Online terms &amp; conditions</small></div>›</div>
   <div class="it" onclick="logout()" style="cursor:pointer;color:var(--bad)"><div class="ico" style="background:rgba(255,92,122,.15);color:var(--bad)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="t"><b>Log Out</b></div>›</div></div>
@@ -563,7 +588,10 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <!-- PROFESSIONAL TRANSFER TOKEN 2-STEP VIEW -->
 <section class="view" id="v-transfer">
   <div id="tf-step-list">
-    <button class="back" onclick="go('v-profile')">‹ Back to Profile</button>
+    <div class="row" style="margin-bottom:6px">
+      <button class="back" onclick="go('v-profile')">‹ Back to Profile</button>
+      <button class="btn sm gray" onclick="goTxTab('withdrawals')" style="width:auto;padding:6px 12px;font-size:11px">📜 Transfer History</button>
+    </div>
     <h1>Transfer Token</h1>
     <div class="card" style="background:linear-gradient(135deg,rgba(108,140,255,.12),rgba(56,224,160,.08))">
       <div><b>Crypto Transfer Network</b><small id="tfNetworkHint" style="display:block;color:var(--mut);margin-top:2px">Minimum transfer limit applies</small></div>
@@ -612,7 +640,26 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
  <div class="note">Verified referral tracking requires a server backend.</div>
 </section>
 
-<section class="view" id="v-tx"><button class="back" onclick="go('v-profile')">‹ Back</button><h1>Transactions</h1><div class="card" id="txl"></div></section>
+<!-- ==============================================
+     ⭐ TRANSACTIONS & WITHDRAWAL HISTORY VIEW ⭐
+     ============================================== -->
+<section class="view" id="v-tx">
+  <button class="back" onclick="go('v-profile')">‹ Back</button>
+  <h1>History &amp; Activity</h1>
+
+  <div class="form-nav" style="margin-bottom:14px">
+    <button class="form-tab active" id="tabTxAll" onclick="switchTxTab('all')">All Activity</button>
+    <button class="form-tab" id="tabTxWd" onclick="switchTxTab('withdrawals')">Withdrawals / Transfers</button>
+  </div>
+
+  <div id="txContentAll">
+    <div class="card" id="txl"></div>
+  </div>
+
+  <div id="txContentWd" style="display:none">
+    <div id="wdList"></div>
+  </div>
+</section>
 </div>
 
 <nav id="nav"></nav></div>
@@ -811,11 +858,64 @@ const db = getDatabase(app);
 var $ = id => document.getElementById(id);
 function setTxt(id, val){ var el = $(id); if(el) el.textContent = val; }
 
+/* ===== APP CURRENT VERSION & IN-APP UPDATE SYSTEM ===== */
+const CURRENT_APP_VERSION = 1; // Naya build banate waqt ise 2, 3 kar sakte hain
+window.latestApkDownloadUrl = "";
+
+onValue(ref(db, "settings/appUpdate"), snap => {
+    let updateData = snap.val();
+    if(updateData && Number(updateData.versionCode) > CURRENT_APP_VERSION) {
+        window.latestApkDownloadUrl = updateData.apkUrl || "";
+        if($("updVerTitle")) $("updVerTitle").textContent = "Version " + (updateData.versionName || updateData.versionCode);
+        if($("updChangelog")) $("updChangelog").textContent = updateData.changelog || "New update is available. Please update to continue.";
+        
+        let modal = $("updateModal");
+        if(modal) modal.style.display = "grid";
+    }
+});
+
+window.startAppDownload = function() {
+    if(!window.latestApkDownloadUrl) {
+        toast("Download URL not set!");
+        return;
+    }
+    toast("Starting download...");
+
+    // Android WebView Interface method call
+    if (typeof Android !== "undefined" && Android && typeof Android.downloadAndInstallApk === "function") {
+        Android.downloadAndInstallApk(window.latestApkDownloadUrl);
+        return;
+    }
+
+    // Fallback: Agar Android object me browser open function ho
+    if (typeof Android !== "undefined" && Android) {
+        for(let prop in Android) {
+            if(typeof Android[prop] === 'function' && /open|browser|url|link|intent/i.test(prop)) {
+                Android[prop](window.latestApkDownloadUrl);
+                return;
+            }
+        }
+    }
+
+    // Default Browser fallback
+    try {
+        var a = document.createElement("a");
+        a.href = window.latestApkDownloadUrl;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 200);
+    } catch(e) {
+        window.open(window.latestApkDownloadUrl, "_blank");
+    }
+};
+
 /* ===== GEO TIER & ANTI-VPN SHIELD ===== */
 window.USER_GEO = {
   isTier1: false,
   country: "IN",
-  minDogsWithdraw: 10000 // India me purana 10,000 rahega
+  minDogsWithdraw: 10000
 };
 
 const TIER1_LIST = ["US", "AU", "GB", "CA", "DE", "FR", "NZ", "NL", "CH", "SE", "NO"];
@@ -842,13 +942,13 @@ async function detectGeoAndBlockVpn() {
       window.USER_GEO = {
         isTier1: true,
         country: cCode,
-        minDogsWithdraw: 125100 // Bahar ke countries ke liye 125,100
+        minDogsWithdraw: 125100
       };
     } else {
       window.USER_GEO = {
         isTier1: false,
         country: cCode,
-        minDogsWithdraw: 10000 // India me sab same 10,000
+        minDogsWithdraw: 10000
       };
     }
   } catch(e) {
@@ -872,7 +972,7 @@ var def = {
   dogsBalance: 0, bonkBalance: 0, trxBalance: 0, flokiBalance: 0, pepeBalance: 0, walletCoin5Balance: 0,
   ads: 0, unlocked: false, mining: null, claim: 0, lvl: 1,
   ref: { code: "DOGS" + Math.random().toString(36).slice(2,6).toUpperCase(), inv: 0, act: 0, earn: 0 },
-  daily: { day: 0, last: "" }, bonus: false, tx: [], sessions: 0, total: 0, banned: false, profile: null
+  daily: { day: 0, last: "" }, bonus: false, tx: [], withdrawals: {}, sessions: 0, total: 0, banned: false, profile: null
 };
 
 window.S = Object.assign({}, def);
@@ -886,6 +986,7 @@ var GLOBAL_SET = {
 };
 var CUSTOM_BONUSES = {};
 var ADMIN_TASKS = {};
+var USER_WITHDRAWALS = {};
 var currentModalGameId = null;
 var currentAuthUser = null;
 var lastSeenAlertTime = 0;
@@ -894,7 +995,6 @@ var latestAdminNotification = null;
 function getSES(){ return (GLOBAL_SET.mining && GLOBAL_SET.mining.session) || 7200; }
 function getADS(){ return (GLOBAL_SET.mining && GLOBAL_SET.mining.adsReq) || 10; }
 
-// India me original daily reward, Tier-1 me High Daily Reward
 function getDAILY(){ 
   if(window.USER_GEO && window.USER_GEO.isTier1) {
     return [2000, 2400, 2800, 3200, 3600, 4200, 5000];
@@ -902,7 +1002,6 @@ function getDAILY(){
   return (GLOBAL_SET.rewards && GLOBAL_SET.rewards.daily) || [10, 15, 20, 25, 30, 40, 60]; 
 }
 
-// India me original mining rate, Tier-1 me High Mining Rate taaki 10+ din me 125,100 DOGS achieve ho
 function rate(){ 
   if(window.USER_GEO && window.USER_GEO.isTier1) {
     return 18.0 + (3.5 * ((window.S.lvl || 1) - 1));
@@ -1199,6 +1298,7 @@ onAuthStateChanged(auth, user => {
     }
     currentAuthUser = user;
     
+    // User Node Listener
     onValue(ref(db, "users/" + user.uid), snap => {
         let val = snap.val();
         if(val) {
@@ -1218,9 +1318,16 @@ onAuthStateChanged(auth, user => {
                 if(typeof window.closeOb === "function") window.closeOb();
             }
             ui();
+            renderWithdrawalList();
         } else {
             if($("ob")) $("ob").classList.remove("out");
         }
+    });
+
+    // Dedicated Realtime User Withdrawals Listener
+    onValue(ref(db, "users/" + user.uid + "/withdrawals"), snap => {
+        USER_WITHDRAWALS = snap.val() || {};
+        renderWithdrawalList();
     });
 
     onValue(ref(db, "settings"), snap => {
@@ -1745,11 +1852,108 @@ window.go = function(v){
  var tv = v==="v-ref"?"v-rewards":v==="v-tx"||v==="v-transfer"?"v-profile":v==="v-coin"?"v-wallet":v;
  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t===tv));
  if($("views")) $("views").scrollTop=0;
- if(v==="v-tx") txList();
+ if(v==="v-tx") { txList(); renderWithdrawalList(); }
  if(v==="v-transfer") renderTransferView();
  lastW=""; ui();
 };
 window.coinD=function(i){ curCoin=i; go("v-coin"); };
+
+/* ==========================================================
+   ⭐ TRANSACTION TABS & REAL-TIME WITHDRAWAL HISTORY ⭐
+   ========================================================== */
+var activeTxTab = "all";
+window.switchTxTab = function(tab) {
+  activeTxTab = tab;
+  let tabAll = $("tabTxAll"), tabWd = $("tabTxWd");
+  let contentAll = $("txContentAll"), contentWd = $("txContentWd");
+
+  if(tab === "withdrawals") {
+    if(tabWd) tabWd.classList.add("active");
+    if(tabAll) tabAll.classList.remove("active");
+    if(contentWd) contentWd.style.display = "block";
+    if(contentAll) contentAll.style.display = "none";
+    renderWithdrawalList();
+  } else {
+    if(tabAll) tabAll.classList.add("active");
+    if(tabWd) tabWd.classList.remove("active");
+    if(contentAll) contentAll.style.display = "block";
+    if(contentWd) contentWd.style.display = "none";
+    txList();
+  }
+};
+
+window.goTxTab = function(tab) {
+  go("v-tx");
+  switchTxTab(tab);
+};
+
+function renderWithdrawalList() {
+    let container = $("wdList");
+    if(!container) return;
+
+    // Combine both RTDB user withdrawals and local/fallback tx items
+    let list = [];
+    if(USER_WITHDRAWALS && typeof USER_WITHDRAWALS === "object") {
+        Object.keys(USER_WITHDRAWALS).forEach(k => {
+            list.push(USER_WITHDRAWALS[k]);
+        });
+    }
+
+    // Also check tx array if any withdrawal wasn't synced
+    if(window.S.tx && Array.isArray(window.S.tx)) {
+        window.S.tx.forEach(x => {
+            if(/Transfer/i.test(x.t) && !list.some(item => Math.abs(item.time - x.d) < 3000)) {
+                list.push({
+                    id: "tx_" + x.d,
+                    coin: x.c,
+                    amount: Math.abs(x.a),
+                    address: x.addr || "Wallet Address",
+                    time: x.d,
+                    status: "Completed"
+                });
+            }
+        });
+    }
+
+    if(list.length === 0) {
+        container.innerHTML = '<div class="card" style="text-align:center;padding:24px 16px"><p style="color:var(--mut);font-size:13px">No withdrawal transfers yet.</p></div>';
+        return;
+    }
+
+    list.sort((a,b) => (b.time || 0) - (a.time || 0));
+
+    let h = "";
+    list.forEach(item => {
+        let status = item.status || "Pending";
+        let statusCls = status.toLowerCase();
+        let statusIcon = (statusCls === "approved" || statusCls === "completed") ? "✔ " : (statusCls === "rejected") ? "✖ " : "⏳ ";
+
+        let c = coinBySym(item.coin) || { sym: item.coin, name: item.coin };
+        let dateStr = new Date(item.time || Date.now()).toLocaleString();
+
+        h += `
+        <div class="wd-item">
+          <div class="wd-head">
+            <div style="display:flex;align-items:center;gap:10px">
+              ${coinIcon(c, "sm")}
+              <div>
+                <b style="font-size:15px;display:block">${esc(item.coin)} Transfer</b>
+                <small style="color:var(--mut);font-size:11px">${dateStr}</small>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <b style="font-size:15px;color:var(--bad)">-${f(item.amount)} ${esc(item.coin)}</b>
+              <div style="margin-top:2px"><span class="wd-status ${statusCls}">${statusIcon}${esc(status)}</span></div>
+            </div>
+          </div>
+          <div class="wd-addr">
+            <span style="color:var(--mut)">To: </span>${esc(item.address || "External Address")}
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = h;
+}
 
 /* ==========================================================
    DYNAMIC TRANSFER VIEW
@@ -1865,9 +2069,11 @@ window.submitTransfer = async function() {
 
     try {
         let wId = "tf_" + Date.now();
+        let userUid = window.S.uid || (currentAuthUser ? currentAuthUser.uid : "");
         let tfData = {
             id: wId,
-            uid: window.S.uid || (currentAuthUser ? currentAuthUser.uid : ""),
+            uid: userUid,
+            authUid: currentAuthUser ? currentAuthUser.uid : "",
             userName: (window.S.profile && window.S.profile.name) ? window.S.profile.name : "User",
             coin: c.sym,
             amount: amt,
@@ -1884,7 +2090,7 @@ window.submitTransfer = async function() {
             a: -amt,
             c: c.sym,
             d: Date.now(),
-            addr: addr.slice(0,6) + "..." + addr.slice(-4)
+            addr: addr
         });
 
         let updates = {};
@@ -1892,7 +2098,14 @@ window.submitTransfer = async function() {
         if(c.k === "pepeBalance") updates["walletCoin5Balance"] = newBal;
         updates["tx"] = newTx.slice(0, 50);
 
+        // 1. Global admin withdrawals me save hoga
         await set(ref(db, "withdrawals/" + wId), tfData);
+
+        // 2. User ke private node me bhi save hoga taaki realtime history dikhe
+        if(currentAuthUser) {
+            await set(ref(db, "users/" + currentAuthUser.uid + "/withdrawals/" + wId), tfData);
+        }
+
         await fbUpdate(updates);
 
         if($("tfAddr")) $("tfAddr").value = "";
@@ -1901,9 +2114,9 @@ window.submitTransfer = async function() {
         modal(`<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-10"/></svg></div>
             <div class="lbl" style="margin-top:14px">TRANSFER SUBMITTED</div>
             <div class="big" style="color:var(--ok);font-size:26px">-${f(amt)} ${c.sym}</div>
-            <p style="color:var(--mut);margin-bottom:12px;font-size:12px">Destination:<br><b style="color:var(--tx)">${addr}</b></p>
-            <p style="color:var(--ok);font-size:12px;margin-bottom:16px">Transfer queued for processing!</p>
-            <button class="btn ok" onclick="closeM();go('v-profile')">CONTINUE</button>`);
+            <p style="color:var(--mut);margin-bottom:8px;font-size:12px">Destination:<br><b style="color:var(--tx);word-break:break-all">${addr}</b></p>
+            <p style="color:var(--ok);font-size:12px;margin-bottom:16px">Status: ⏳ Pending Processing</p>
+            <button class="btn ok" onclick="closeM();goTxTab('withdrawals')">VIEW STATUS IN HISTORY</button>`);
     } catch(err) {
         toast("Transfer failed: " + err.message);
     } finally {
