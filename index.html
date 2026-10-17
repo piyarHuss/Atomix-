@@ -193,9 +193,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 .wd-status.rejected{background:rgba(255,92,122,.15);color:var(--bad);border:1px solid rgba(255,92,122,.3)}
 .wd-addr{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#9aa7cf;background:rgba(0,0,0,.35);padding:5px 8px;border-radius:8px;word-break:break-all}
 
-/* ==========================================================
-   ⭐ ULTRA-PROFESSIONAL ONBOARDING SCREEN ⭐
-   ========================================================== */
+/* ONBOARDING SCREEN */
 #ob{position:fixed;inset:0;z-index:9999;height:100vh;height:100dvh;background:#060814;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
 #ob.out{opacity:0;transform:scale(1.05);pointer-events:none}
 
@@ -298,9 +296,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     <p style="color:#7f89a8;line-height:1.5" id="maint-msg">App is undergoing maintenance.</p>
 </div>
 
-<!-- ==============================================
-     ⭐ IN-APP AUTO UPDATE POPUP MODAL ⭐
-     ============================================== -->
+<!-- IN-APP AUTO UPDATE POPUP MODAL -->
 <div id="updateModal" style="display:none;position:fixed;inset:0;background:rgba(4,7,18,0.92);z-index:99999999;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);place-items:center;padding:20px;">
   <div style="background:linear-gradient(170deg,#141c42,#0a0e24);border:1px solid rgba(108,140,255,0.35);border-radius:28px;max-width:340px;width:100%;padding:28px 22px;text-align:center;box-shadow:0 0 60px rgba(108,140,255,0.3)">
     <div style="width:68px;height:68px;border-radius:50%;background:rgba(47,224,142,0.15);color:#2fe08e;display:grid;place-items:center;margin:0 auto 16px;box-shadow:0 0 25px rgba(47,224,142,0.25)">
@@ -339,7 +335,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
   </div>
 </div>
 
-<!-- JUMPTASK STYLE MULTI-TASK DETAILS MODAL -->
+<!-- TASK DETAILS MODAL -->
 <div id="taskDetailModal">
   <div class="task-modal-card">
     <div class="task-modal-head">
@@ -629,20 +625,37 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
   </div>
 </section>
 
-<!-- INVITE FRIENDS VIEW -->
+<!-- ⭐ UPGRADED INVITE FRIENDS VIEW (DIRECT APK LINK + NAME-MATCHED CODE) ⭐ -->
 <section class="view" id="v-ref">
  <button class="back" onclick="go('v-rewards')">‹ Back</button>
- <div class="card" style="text-align:center"><svg width="150" height="90" viewBox="0 0 150 90"><circle cx="75" cy="40" r="16" fill="#ff8a3d33" stroke="#ff8a3d"/><circle cx="30" cy="62" r="11" fill="#9b6cff33" stroke="#9b6cff"/><circle cx="120" cy="62" r="11" fill="#38e0a033" stroke="#38e0a0"/><path d="M62 52L38 58M88 52l24 6" stroke="#ffffff44" stroke-dasharray="3 3"/><circle cx="75" cy="40" r="4" fill="#ffc98a"/></svg>
- <h1 style="margin-top:8px">Invite Friends</h1><p style="color:var(--mut)">Invite friends and earn bonus rewards.</p>
- <div class="lbl" style="margin-top:14px">Your referral code</div><div class="code"><div id="rc"></div><button class="btn sm" style="width:auto" onclick="copyCode()">COPY</button></div>
- <button class="btn" onclick="shareRef()">Invite Friends</button></div>
+ <div class="card" style="text-align:center">
+   <svg width="150" height="90" viewBox="0 0 150 90"><circle cx="75" cy="40" r="16" fill="#ff8a3d33" stroke="#ff8a3d"/><circle cx="30" cy="62" r="11" fill="#9b6cff33" stroke="#9b6cff"/><circle cx="120" cy="62" r="11" fill="#38e0a033" stroke="#38e0a0"/><path d="M62 52L38 58M88 52l24 6" stroke="#ffffff44" stroke-dasharray="3 3"/><circle cx="75" cy="40" r="4" fill="#ffc98a"/></svg>
+   <h1 style="margin-top:8px">Invite Friends</h1>
+   <p style="color:var(--mut);font-size:12.5px;max-width:320px;margin:0 auto">Share your name referral code with friends and earn bonus DOGS tokens!</p>
+   
+   <div class="lbl" style="margin-top:16px">Your Name Referral Code</div>
+   <div class="code">
+     <div id="rc" style="color:#ffc98a">LOADING...</div>
+     <button class="btn sm" style="width:auto;padding:0 18px" onclick="copyCodeOnly()">COPY CODE</button>
+   </div>
+
+   <div class="lbl" style="margin-top:10px">Official App Download Link</div>
+   <div style="background:rgba(0,0,0,.35);padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);margin:6px 0 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+     <span style="font-size:11px;color:#9aa7cf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,Menlo,monospace">Atomix_v1.0_app-debug.apk</span>
+     <button class="btn sm gray" onclick="copyDirectApkLink()" style="padding:5px 12px;font-size:11px;flex-shrink:0">COPY LINK</button>
+   </div>
+
+   <button class="btn ok" onclick="shareRef()" style="font-size:15px;padding:15px">
+     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+     INVITE &amp; SHARE APK LINK
+   </button>
+ </div>
+
  <div class="g2" style="grid-template-columns:repeat(3,1fr)"><div class="card stat"><div class="lbl">Invited</div><b id="rI">0</b></div><div class="card stat"><div class="lbl">Active</div><b id="rA">0</b></div><div class="card stat"><div class="lbl">Earned</div><b id="rE">0</b></div></div>
- <div class="note">Verified referral tracking requires a server backend.</div>
+ <div class="note">Friends who register with your code will give you instant DOGS rewards.</div>
 </section>
 
-<!-- ==============================================
-     ⭐ TRANSACTIONS & WITHDRAWAL HISTORY VIEW ⭐
-     ============================================== -->
+<!-- TRANSACTIONS & WITHDRAWAL HISTORY VIEW -->
 <section class="view" id="v-tx">
   <button class="back" onclick="go('v-profile')">‹ Back</button>
   <h1>History &amp; Activity</h1>
@@ -665,9 +678,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <nav id="nav"></nav></div>
 <div id="md"><div class="pop" id="pop"></div></div><div id="toast"></div>
 
-<!-- ==============================================================
-     ⭐ CUSTOMIZED ONBOARDING SCREEN ⭐
-     ============================================================== -->
+<!-- ONBOARDING SCREEN -->
 <div id="ob" role="dialog" aria-label="Atomix Authentication">
   <div class="ob-space-glow"></div>
   <div class="ob-aurora-glow"></div>
@@ -735,7 +746,6 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
     </div>
   </div>
 
-  <!-- BOTTOM SHEETS (EMAIL & PHONE) -->
   <div class="ob-sheet-backdrop" id="sheetBackdrop" onclick="closeAuthSheet()"></div>
 
   <div class="ob-sheet" id="emailSheet">
@@ -858,8 +868,20 @@ const db = getDatabase(app);
 var $ = id => document.getElementById(id);
 function setTxt(id, val){ var el = $(id); if(el) el.textContent = val; }
 
+// ⭐ DIRECT APP DOWNLOAD LINK ⭐
+const APP_DOWNLOAD_LINK = "https://github.com/piyarHuss/Atomix-buiad-apk/releases/download/v1.0/app-debug.apk";
+
+// ⭐ HELPER: USER KE NAME SE REFERRAL CODE BANANA ⭐
+function generateNameRefCode(name) {
+  let clean = (name || "MINER").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  if(clean.length < 3) clean = "ATOM";
+  clean = clean.slice(0, 6);
+  let rand = Math.floor(100 + Math.random() * 900); // 3-digit random suffix
+  return clean + rand;
+}
+
 /* ===== APP CURRENT VERSION & IN-APP UPDATE SYSTEM ===== */
-const CURRENT_APP_VERSION = 1; // Naya build banate waqt ise 2, 3 kar sakte hain
+const CURRENT_APP_VERSION = 1;
 window.latestApkDownloadUrl = "";
 
 onValue(ref(db, "settings/appUpdate"), snap => {
@@ -881,13 +903,11 @@ window.startAppDownload = function() {
     }
     toast("Starting download...");
 
-    // Android WebView Interface method call
     if (typeof Android !== "undefined" && Android && typeof Android.downloadAndInstallApk === "function") {
         Android.downloadAndInstallApk(window.latestApkDownloadUrl);
         return;
     }
 
-    // Fallback: Agar Android object me browser open function ho
     if (typeof Android !== "undefined" && Android) {
         for(let prop in Android) {
             if(typeof Android[prop] === 'function' && /open|browser|url|link|intent/i.test(prop)) {
@@ -897,7 +917,6 @@ window.startAppDownload = function() {
         }
     }
 
-    // Default Browser fallback
     try {
         var a = document.createElement("a");
         a.href = window.latestApkDownloadUrl;
@@ -971,7 +990,7 @@ detectGeoAndBlockVpn();
 var def = {
   dogsBalance: 0, bonkBalance: 0, trxBalance: 0, flokiBalance: 0, pepeBalance: 0, walletCoin5Balance: 0,
   ads: 0, unlocked: false, mining: null, claim: 0, lvl: 1,
-  ref: { code: "DOGS" + Math.random().toString(36).slice(2,6).toUpperCase(), inv: 0, act: 0, earn: 0 },
+  ref: { code: "ATOMIX" + Math.floor(100 + Math.random()*900), inv: 0, act: 0, earn: 0 },
   daily: { day: 0, last: "" }, bonus: false, tx: [], withdrawals: {}, sessions: 0, total: 0, banned: false, profile: null
 };
 
@@ -1022,7 +1041,7 @@ window.fbUpdate = function(fields) {
     update(ref(db, "users/" + currentAuthUser.uid), fields).catch(e => console.warn(e));
 };
 
-/* ===== EXTERNAL PRIVACY POLICY & TERMS OPENER ===== */
+/* ===== PRIVACY POLICY MODALS ===== */
 window.openPrivacyPolicy = function(e){
   if(e && e.preventDefault) e.preventDefault();
   var url = "https://atomix-privacy-policy.vercel.app/";
@@ -1060,7 +1079,7 @@ window.acceptPrivacyFromModal = function(){
   toast("Terms & Privacy Policy Accepted");
 };
 
-/* ===== BOTTOM SHEETS INTERACTIVITY ===== */
+/* ===== AUTH SHEETS ===== */
 window.openAuthSheet = function(type){
   var backdrop = $("sheetBackdrop");
   var emailSheet = $("emailSheet");
@@ -1082,7 +1101,6 @@ window.closeAuthSheet = function(){
   if($("phoneSheet")) $("phoneSheet").classList.remove("on");
 };
 
-/* ===== EMAIL FORM MODE TOGGLE ===== */
 var isEmailSignUp = false;
 window.setEmailFormMode = function(mode){
   isEmailSignUp = (mode === 'signup');
@@ -1103,7 +1121,6 @@ window.setEmailFormMode = function(mode){
   }
 };
 
-/* ===== EMAIL / PASSWORD AUTH SUBMIT ===== */
 window.submitEmailAuth = async function(){
   var email = ($("obEmail") ? $("obEmail").value : "").trim();
   var pass = ($("obPass") ? $("obPass").value : "").trim();
@@ -1147,7 +1164,6 @@ window.submitEmailAuth = async function(){
   }
 };
 
-/* ===== PHONE NUMBER + SMS OTP AUTH ===== */
 var phoneConfirmationResult = null;
 window.sendPhoneOtp = async function(){
   var phone = ($("obPhone") ? $("obPhone").value : "").trim();
@@ -1220,7 +1236,6 @@ window.verifyPhoneOtp = async function(){
   }
 };
 
-/* ===== GOOGLE AUTH HANDLER ===== */
 window.loginWithGoogle = async function() {
     let btn = $("obGoogle"), txt = $("obGoogleTxt");
     if(btn) btn.disabled = true;
@@ -1254,16 +1269,26 @@ window.onNativeGoogleLoginSuccess = async function(idToken, email, name) {
     }
 };
 
+// ⭐ LOGIN & USER NAME-MATCHED REFERRAL CODE SYSTEM ⭐
 async function handleSuccessfulLogin(user, customName, customEmail, customPhone, customRef) {
     try {
         let snap = await get(ref(db, "users/" + user.uid));
+        let resolvedName = customName || user.displayName || (customPhone ? "User " + customPhone.slice(-4) : "Miner User");
+        let nameReferralCode = generateNameRefCode(resolvedName);
+
         if(!snap.exists()) {
             let initialObj = Object.assign({}, def, {
                 uid: "ID" + Math.floor(100000 + Math.random() * 900000),
                 authUid: user.uid,
                 country: window.USER_GEO.country,
+                ref: {
+                    code: nameReferralCode, // User ke name se match code
+                    inv: 0,
+                    act: 0,
+                    earn: 0
+                },
                 profile: {
-                    name: customName || user.displayName || (customPhone ? "User " + customPhone.slice(-4) : "Atomix Miner"),
+                    name: resolvedName,
                     email: customEmail || user.email || "",
                     phone: customPhone || user.phoneNumber || "",
                     photoURL: user.photoURL || "",
@@ -1274,6 +1299,14 @@ async function handleSuccessfulLogin(user, customName, customEmail, customPhone,
                 createdAt: Date.now()
             });
             await set(ref(db, "users/" + user.uid), initialObj);
+        } else {
+            // Agar purane user ka code generic DOGS wala hai to use user ke name se update karein
+            let existingData = snap.val();
+            if(existingData && (!existingData.ref || !existingData.ref.code || existingData.ref.code.startsWith("DOGS"))) {
+                let actualName = (existingData.profile && existingData.profile.name) ? existingData.profile.name : resolvedName;
+                let newCode = generateNameRefCode(actualName);
+                await update(ref(db, "users/" + user.uid + "/ref"), { code: newCode });
+            }
         }
         closeAuthSheet();
         if(typeof window.closeOb === "function") window.closeOb();
@@ -1298,11 +1331,20 @@ onAuthStateChanged(auth, user => {
     }
     currentAuthUser = user;
     
-    // User Node Listener
     onValue(ref(db, "users/" + user.uid), snap => {
         let val = snap.val();
         if(val) {
             window.S = Object.assign({}, def, val);
+
+            // Agar code purana generic hai to auto-upgrade to name code
+            if(val.profile && val.profile.name && (!val.ref || !val.ref.code || val.ref.code.startsWith("DOGS"))) {
+                let upgradedCode = generateNameRefCode(val.profile.name);
+                val.ref = val.ref || {};
+                val.ref.code = upgradedCode;
+                window.S.ref.code = upgradedCode;
+                update(ref(db, "users/" + user.uid + "/ref"), { code: upgradedCode }).catch(()=>{});
+            }
+
             if(window.S.walletCoin5Balance && !window.S.pepeBalance) {
                 window.S.pepeBalance = window.S.walletCoin5Balance;
             }
@@ -1324,7 +1366,6 @@ onAuthStateChanged(auth, user => {
         }
     });
 
-    // Dedicated Realtime User Withdrawals Listener
     onValue(ref(db, "users/" + user.uid + "/withdrawals"), snap => {
         USER_WITHDRAWALS = snap.val() || {};
         renderWithdrawalList();
@@ -1891,7 +1932,6 @@ function renderWithdrawalList() {
     let container = $("wdList");
     if(!container) return;
 
-    // Combine both RTDB user withdrawals and local/fallback tx items
     let list = [];
     if(USER_WITHDRAWALS && typeof USER_WITHDRAWALS === "object") {
         Object.keys(USER_WITHDRAWALS).forEach(k => {
@@ -1899,7 +1939,6 @@ function renderWithdrawalList() {
         });
     }
 
-    // Also check tx array if any withdrawal wasn't synced
     if(window.S.tx && Array.isArray(window.S.tx)) {
         window.S.tx.forEach(x => {
             if(/Transfer/i.test(x.t) && !list.some(item => Math.abs(item.time - x.d) < 3000)) {
@@ -1955,9 +1994,6 @@ function renderWithdrawalList() {
     container.innerHTML = h;
 }
 
-/* ==========================================================
-   DYNAMIC TRANSFER VIEW
-   ========================================================== */
 function getMinTransferForCoin(coinSym) {
   if(coinSym === "DOGS") {
     return window.USER_GEO.minDogsWithdraw;
@@ -2098,10 +2134,8 @@ window.submitTransfer = async function() {
         if(c.k === "pepeBalance") updates["walletCoin5Balance"] = newBal;
         updates["tx"] = newTx.slice(0, 50);
 
-        // 1. Global admin withdrawals me save hoga
         await set(ref(db, "withdrawals/" + wId), tfData);
 
-        // 2. User ke private node me bhi save hoga taaki realtime history dikhe
         if(currentAuthUser) {
             await set(ref(db, "users/" + currentAuthUser.uid + "/withdrawals/" + wId), tfData);
         }
@@ -2139,8 +2173,55 @@ function modal(h){ if($("pop")){ $("pop").innerHTML=h; $("md").classList.add("on
 window.closeM = function(){ if($("md")) $("md").classList.remove("on"); };
 function success(t,a,m,coin){ coin = coin || "DOGS"; modal(`<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-10"/></svg></div><div class="lbl" style="margin-top:14px">${t}</div><div class="big">+${f(a)} ${coin}</div><p style="color:var(--mut);margin-bottom:16px">${m}</p><button class="btn dg" onclick="closeM()">CONTINUE</button>`); }
 
-window.copyCode=function(){ try{ navigator.clipboard.writeText(window.S.ref ? window.S.ref.code : "").then(()=>toast("Code copied"), ()=>toast(window.S.ref.code)); }catch(e){ toast(window.S.ref ? window.S.ref.code : ""); } };
-window.shareRef=function(){ var t="Join me on Atomix Miner. Code: "+(window.S.ref ? window.S.ref.code : ""); if(navigator.share)navigator.share({text:t}).catch(()=>{}); else window.copyCode(); };
+// ============================================================
+// ⭐ INVITE FRIENDS: NAME REFERRAL CODE & DIRECT APK LINK ⭐
+// ============================================================
+window.copyCodeOnly = function(){
+    let code = (window.S.ref && window.S.ref.code) ? window.S.ref.code : "ATOMIX";
+    try {
+        navigator.clipboard.writeText(code).then(() => toast("Referral Code Copied: " + code), () => toast("Code: " + code));
+    } catch(e) {
+        toast("Code: " + code);
+    }
+};
+
+window.copyDirectApkLink = function(){
+    try {
+        navigator.clipboard.writeText(APP_DOWNLOAD_LINK).then(() => toast("App APK Download Link Copied!"), () => toast("Link copied!"));
+    } catch(e) {
+        toast("Link: " + APP_DOWNLOAD_LINK);
+    }
+};
+
+window.shareRef = function(){
+    let code = (window.S.ref && window.S.ref.code) ? window.S.ref.code : "ATOMIX";
+    let shareText = `🚀 Join me on Atomix Miner to mine free DOGS crypto!\n\n🎁 My Referral Code: ${code}\n\n📥 Download App APK:\n${APP_DOWNLOAD_LINK}`;
+
+    if(navigator.share) {
+        navigator.share({
+            title: "Atomix Miner - Free DOGS Crypto",
+            text: shareText
+        }).catch(() => {
+            window.copyInvitePackage();
+        });
+    } else {
+        window.copyInvitePackage();
+    }
+};
+
+window.copyInvitePackage = function(){
+    let code = (window.S.ref && window.S.ref.code) ? window.S.ref.code : "ATOMIX";
+    let shareText = `🚀 Join me on Atomix Miner to mine free DOGS crypto!\n\n🎁 My Referral Code: ${code}\n\n📥 Download App APK:\n${APP_DOWNLOAD_LINK}`;
+    try {
+        navigator.clipboard.writeText(shareText).then(() => {
+            toast("Invite Link & Code Copied to Clipboard!");
+        }).catch(() => {
+            toast("Referral Code: " + code);
+        });
+    } catch(e) {
+        toast("Referral Code: " + code);
+    }
+};
 
 function txRows(list){
     return (list&&list.length)?list.map(x=>'<div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div><div class="t"><b>'+x.t+'</b><small>'+new Date(x.d).toLocaleString()+' · Completed</small></div><span class="'+(x.a>=0?"pos":"")+'">'+(x.a>=0?"+":"")+f(x.a)+' '+x.c+'</span></div>').join(""):'<p class="note">No transactions yet.</p>';
@@ -2301,7 +2382,9 @@ function ui(){
  setTxt("stS", S.sessions||0); 
  setTxt("stR", f(S.ref?S.ref.earn:0)); 
  setTxt("stL", S.lvl||1);
- setTxt("rc", S.ref?S.ref.code:""); 
+
+ // Name Referral Code Display
+ setTxt("rc", S.ref?S.ref.code:"LOADING..."); 
  setTxt("rI", S.ref?S.ref.inv:0); 
  setTxt("rA", S.ref?S.ref.act:0); 
  setTxt("rE", f(S.ref?S.ref.earn:0));
@@ -2318,7 +2401,6 @@ setInterval(fetchPx, 60000);
 </script>
 
 <script>
-/* ===== DISMISS ONBOARDING TRANSITION ===== */
 window.closeOb = function(){
     var ob = document.getElementById("ob");
     if(ob){
