@@ -26,7 +26,6 @@
   
 <!-- HilltopAds Revenue Booster Meta Tag -->
 <meta name="referrer" content="no-referrer-when-downgrade" />
-
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#070a16">
@@ -290,38 +289,43 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 .subtask-chk.done{background:#2fe08e;border-color:#2fe08e;color:#05140d}
 .task-modal-foot{padding:12px 18px calc(var(--sab) + 16px);border-top:1px solid rgba(255,255,255,.08);background:rgba(5,8,22,.95)}
 
+/* HilltopAds High-Priority Overlay & Banner Visibility */
+iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
+  z-index: 99999999 !important;
+  position: fixed !important;
+}
 </style>
+
+<!-- Monetag Vignette Ad Tag (Already Working) -->
 <script>(function(s){s.dataset.zone='11989369',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 
 <!-- ==============================================
-     HILLTOPADS AD TAGS
+     HILLTOPADS AD TAGS (HTTPS & WEBVIEW SAFE)
      ============================================== -->
 <!-- HilltopAds Zone #7544625 (Video slider - MULTITAG VAST) -->
 <script>
 (function(rse){
-var d = document,
-    s = d.createElement('script'),
-    l = d.currentScript || d.scripts[d.scripts.length - 1];
-s.settings = rse || {};
-s.src = "\/\/conventionalresponse.com\/bPX.V_szdnGxl\/0iYBW\/c0\/Ke\/mQ9TuVZCUP1Pk\/PgTec\/1aNEDMQP2fM1j\/Ubt\/Naz-UZ0\/NnDBYyM0WQU";
-s.async = true;
-s.referrerPolicy = 'no-referrer-when-downgrade';
-l.parentNode.insertBefore(s, l);
-})({})
+  var d = document,
+      s = d.createElement('script');
+  s.settings = rse || {};
+  s.src = "https://conventionalresponse.com/bPX.V_szdnGxl/0iYBW/c0/Ke/mQ9TuVZCUP1Pk/PgTec/1aNEDMQP2fM1j/Ubt/Naz-UZ0/NnDBYyM0WQU";
+  s.async = true;
+  s.referrerPolicy = 'no-referrer-when-downgrade';
+  (d.head || d.documentElement || d.body).appendChild(s);
+})({});
 </script>
 
 <!-- HilltopAds Zone #7544641 (Benar - MULTITAG BANNER) -->
 <script>
 (function(kdoho){
-var d = document,
-    s = d.createElement('script'),
-    l = d.currentScript || d.scripts[d.scripts.length - 1];
-s.settings = kdoho || {};
-s.src = "\/\/conventionalresponse.com\/bzXBVfsBd.Ghl\/0_Y\/WZcj\/se\/mg9quYZ-UL1KkUP\/TQc\/1\/NqDPQi2INrDjE\/tvNmzMUk0jN\/DEYT0oNuQC";
-s.async = true;
-s.referrerPolicy = 'no-referrer-when-downgrade';
-l.parentNode.insertBefore(s, l);
-})({})
+  var d = document,
+      s = d.createElement('script');
+  s.settings = kdoho || {};
+  s.src = "https://conventionalresponse.com/bzXBVfsBd.Ghl/0_Y/WZcj/se/mg9quYZ-UL1KkUP/TQc/1/NqDPQi2INrDjE/tvNmzMUk0jN/DEYT0oNuQC";
+  s.async = true;
+  s.referrerPolicy = 'no-referrer-when-downgrade';
+  (d.head || d.documentElement || d.body).appendChild(s);
+})({});
 </script>
 </head><body>
 
@@ -1456,7 +1460,7 @@ function showMiningAd() {
       window.adCallback = resolve;
       Android.showAd();
     } else {
-      var t=3; modal('<div class="lbl">Sponsored</div><div class="spin"></div><div class="big" id="adc">'+t+'</div><p style="color:var(--mut)">Ad placeholder.</p>');
+      var t=4; modal('<div class="lbl">Sponsored Ad</div><div class="spin"></div><div class="big" id="adc">'+t+'</div><p style="color:var(--mut)">Ad is playing... Please wait</p>');
       var iv=setInterval(()=>{ t--; if($("adc"))$("adc").textContent=t; if(t<=0){ clearInterval(iv); closeM(); resolve(true); } }, 1000);
     }
   });
