@@ -24,6 +24,9 @@
 </script>
 <meta name="c3fca7e2364ca0da905601f50dfb129093f8634d" content="c3fca7e2364ca0da905601f50dfb129093f8634d" />
   
+<!-- HilltopAds Revenue Booster Meta Tag -->
+<meta name="referrer" content="no-referrer-when-downgrade" />
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#070a16">
@@ -289,6 +292,37 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 
 </style>
 <script>(function(s){s.dataset.zone='11989369',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<!-- ==============================================
+     HILLTOPADS AD TAGS
+     ============================================== -->
+<!-- HilltopAds Zone #7544625 (Video slider - MULTITAG VAST) -->
+<script>
+(function(rse){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = rse || {};
+s.src = "\/\/conventionalresponse.com\/bPX.V_szdnGxl\/0iYBW\/c0\/Ke\/mQ9TuVZCUP1Pk\/PgTec\/1aNEDMQP2fM1j\/Ubt\/Naz-UZ0\/NnDBYyM0WQU";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
+
+<!-- HilltopAds Zone #7544641 (Benar - MULTITAG BANNER) -->
+<script>
+(function(kdoho){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = kdoho || {};
+s.src = "\/\/conventionalresponse.com\/bzXBVfsBd.Ghl\/0_Y\/WZcj\/se\/mg9quYZ-UL1KkUP\/TQc\/1\/NqDPQi2INrDjE\/tvNmzMUk0jN\/DEYT0oNuQC";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
 </head><body>
 
 <!-- SYSTEM MAINTENANCE / BAN OVERLAY -->
@@ -1284,7 +1318,7 @@ async function handleSuccessfulLogin(user, customName, customEmail, customPhone,
                 authUid: user.uid,
                 country: window.USER_GEO.country,
                 ref: {
-                    code: nameReferralCode, // User ke name se match code
+                    code: nameReferralCode,
                     inv: 0,
                     act: 0,
                     earn: 0
@@ -1302,7 +1336,6 @@ async function handleSuccessfulLogin(user, customName, customEmail, customPhone,
             });
             await set(ref(db, "users/" + user.uid), initialObj);
         } else {
-            // Agar purane user ka code generic DOGS wala hai to use user ke name se update karein
             let existingData = snap.val();
             if(existingData && (!existingData.ref || !existingData.ref.code || existingData.ref.code.startsWith("DOGS"))) {
                 let actualName = (existingData.profile && existingData.profile.name) ? existingData.profile.name : resolvedName;
@@ -1338,7 +1371,6 @@ onAuthStateChanged(auth, user => {
         if(val) {
             window.S = Object.assign({}, def, val);
 
-            // Agar code purana generic hai to auto-upgrade to name code
             if(val.profile && val.profile.name && (!val.ref || !val.ref.code || val.ref.code.startsWith("DOGS"))) {
                 let upgradedCode = generateNameRefCode(val.profile.name);
                 val.ref = val.ref || {};
