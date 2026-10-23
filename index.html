@@ -293,9 +293,22 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
   z-index: 99999999 !important;
 }
+
+#hilltop-ad-card {
+  min-height: 85px;
+  display: block !important;
+  visibility: visible !important;
+}
+#hilltop-banner-slot {
+  min-height: 55px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 </style>
 
-<!-- Monetag Vignette Ad Tag (Already Working) -->
+<!-- Monetag Vignette Ad Tag -->
 <script>(function(s){s.dataset.zone='11989369',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 
 <!-- ==============================================
@@ -303,17 +316,10 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
      ============================================== -->
 <script>
 (function(){
-  console.log("⏳ [HilltopAds] Video slider script loading...");
   var s = document.createElement('script');
   s.src = "https://conventionalresponse.com/bPX.V_szdnGxl/0iYBW/c0/Ke/mQ9TuVZCUP1Pk/PgTec/1aNEDMQP2fM1j/Ubt/Naz-UZ0/NnDBYyM0WQU";
   s.async = true;
   s.referrerPolicy = 'no-referrer-when-downgrade';
-  s.onload = function() {
-    console.log("✅ [HilltopAds] Video Slider active!");
-  };
-  s.onerror = function() {
-    console.error("❌ [HilltopAds] Video Slider failed to load.");
-  };
   (document.head || document.documentElement || document.body).appendChild(s);
 })();
 </script>
@@ -350,14 +356,12 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
       <p><b>Atomix DOGS Cloud Mining Network Terms</b></p>
       <p>By connecting to our cloud network and initiating DOGS mining sessions, you confirm that you adhere to our Fair-Play protocols and Privacy Terms:</p>
       <ul>
-        <li><b>Fair Mining Policy:</b> One account per miner. Creating multi-accounts, using automated bot scripts, or emulator hacks will trigger immediate automated bans and forfeiture of pending claims.</li>
-        <li><b>Account Ownership:</b> You hold full custody of your account credentials (Google, Email, Phone number).</li>
-        <li><b>Decentralized Cloud Architecture:</b> Mining speed, levels, daily bonuses, and DOGS balances are secured by real-time cloud synchronisation.</li>
-        <li><b>Transfers &amp; Withdrawals:</b> A minimum threshold is enforced to preserve liquidity pool safety.</li>
-        <li><b>Data Privacy:</b> We never sell or distribute your private email or phone numbers to third parties.</li>
+        <li><b>Fair Mining Policy:</b> One account per miner. Multi-accounts, bots, and emulators will trigger automated bans.</li>
+        <li><b>Account Ownership:</b> You hold full custody of your account credentials.</li>
+        <li><b>Decentralized Cloud Architecture:</b> Mining speed, levels, and balances are synced securely in real time.</li>
+        <li><b>Transfers &amp; Withdrawals:</b> Standard thresholds apply to ensure pool liquidity.</li>
       </ul>
       <p style="color:var(--ok)">Click <b>"I AGREE &amp; ACCEPT"</b> to confirm agreement and activate your miner node.</p>
-      <p style="margin-top:10px;text-align:center"><a href="https://atomix-privacy-policy.vercel.app/" target="_blank" onclick="openPrivacyPolicy(event)" style="color:#ffc98a;text-decoration:underline;font-weight:700">Open Official Privacy Policy Webpage ↗</a></p>
     </div>
     <div class="ppFoot">
       <button class="btn ok" onclick="acceptPrivacyFromModal()">I AGREE &amp; ACCEPT</button>
@@ -412,46 +416,23 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
 <section class="view on" id="v-home">
  <div class="card"><div class="bal"><span data-coin="DOGS" data-size="float"></span><div><div class="lbl">DOGS Balance</div><div class="amt"><span id="bal">0.00</span><small>DOGS</small></div><div class="live off" id="liveT">Idle</div></div></div></div>
  
- <!-- ========================================================
-      ⭐ HILLTOPADS MULTITAG BANNER CARD (#7544641) ⭐
-      ======================================================== -->
+ <!-- ⭐ HILLTOPADS AUTO-REFRESH MULTITAG BANNER CARD (#7544641) ⭐ -->
  <div class="card" id="hilltop-ad-card" style="padding:10px 12px;margin-bottom:12px;text-align:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
    <div class="row" style="margin-bottom:6px">
      <span class="lbl" style="font-size:9.5px;color:#ffc98a;letter-spacing:.08em">SPONSORED ADVERTISEMENT</span>
      <span class="tag" style="background:rgba(108,140,255,.15);color:var(--c1);font-size:9px">HILLTOPADS</span>
    </div>
-   <div id="hilltop-banner-slot" style="min-height:55px;width:100%;display:flex;justify-content:center;align-items:center;overflow:hidden;">
-     <script>
-     (function(){
-       console.log("⏳ [HilltopAds] Banner script loading into slot...");
-       var s = document.createElement('script');
-       s.src = "https://conventionalresponse.com/bzXBVfsBd.Ghl/0_Y/WZcj/se/mg9quYZ-UL1KkUP/TQc/1/NqDPQi2INrDjE/tvNmzMUk0jN/DEYT0oNuQC";
-       s.async = true;
-       s.referrerPolicy = 'no-referrer-when-downgrade';
-       s.onload = function() {
-         console.log("✅ [HilltopAds] Banner script downloaded and rendered!");
-       };
-       s.onerror = function() {
-         console.error("❌ [HilltopAds] Banner script network error / blocked.");
-       };
-       var target = document.getElementById('hilltop-banner-slot');
-       if(target) target.appendChild(s);
-     })();
-     </script>
-   </div>
+   <div id="hilltop-banner-slot"></div>
  </div>
  
  <div class="card rig-card" id="mach">
-  <!-- Top Rig Header & Status -->
   <div class="rig-header">
     <div class="rig-tag"><span class="dot"></span> DOGS ASIC TURBO X9</div>
     <span class="rig-status-badge" id="rigStatus">STANDBY</span>
   </div>
 
-  <!-- Ambient Dynamic Aura Glow -->
   <div class="aura"></div>
 
-  <!-- Full-Width High-Tech Vector Machine Graphic -->
   <div class="mach-svg-wrap">
     <svg viewBox="0 0 400 185" preserveAspectRatio="xMidYMid meet">
       <defs>
@@ -476,22 +457,18 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
         </radialGradient>
       </defs>
 
-      <!-- Outer Chassis Frame -->
       <rect x="8" y="10" width="384" height="165" rx="18" fill="url(#chassisGrad)" stroke="url(#metalBevel)" stroke-width="1.8"/>
       <rect x="14" y="16" width="372" height="153" rx="14" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
 
-      <!-- Left Side Ventilation Slots -->
       <g fill="rgba(255,255,255,0.08)">
         <rect x="22" y="45" width="8" height="95" rx="3"/>
         <rect x="34" y="55" width="6" height="75" rx="3"/>
       </g>
-      <!-- Right Side Ventilation Slots -->
       <g fill="rgba(255,255,255,0.08)">
         <rect x="370" y="45" width="8" height="95" rx="3"/>
         <rect x="360" y="55" width="6" height="75" rx="3"/>
       </g>
 
-      <!-- Top Display Dashboard Bar -->
       <rect x="48" y="22" width="304" height="20" rx="6" fill="#080b18" stroke="rgba(255,255,255,0.08)"/>
       <circle cx="62" cy="32" r="3.5" fill="#38e0a0" class="led-live"/>
       <circle cx="74" cy="32" r="3" fill="#ff9a3d" class="led"/>
@@ -500,7 +477,6 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
       <text x="110" y="35" font-size="8" font-weight="700" fill="#7f89a8" letter-spacing="1">DOGS PROTOCOL v4.2</text>
       <text x="330" y="35" font-size="9" font-weight="800" fill="#ffc98a" text-anchor="end" letter-spacing="1.5">ASIC TURBO</text>
 
-      <!-- LEFT HIGH-PERFORMANCE COOLING TURBINE -->
       <circle cx="118" cy="106" r="48" fill="#080b18" stroke="rgba(255,154,61,0.3)" stroke-width="2"/>
       <circle cx="118" cy="106" r="44" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
       <g class="fan-blade fan-blade-left" transform-origin="118 106">
@@ -515,7 +491,6 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
       <circle cx="118" cy="106" r="10" fill="url(#fanCenterGlow)"/>
       <text x="118" y="109" font-size="7" font-weight="900" fill="#fff" text-anchor="middle">D</text>
 
-      <!-- RIGHT HIGH-PERFORMANCE COOLING TURBINE -->
       <circle cx="282" cy="106" r="48" fill="#080b18" stroke="rgba(255,154,61,0.3)" stroke-width="2"/>
       <circle cx="282" cy="106" r="44" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
       <g class="fan-blade fan-blade-right" transform-origin="282 106">
@@ -530,7 +505,6 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
       <circle cx="282" cy="106" r="10" fill="url(#fanCenterGlow)"/>
       <text x="282" y="109" font-size="7" font-weight="900" fill="#fff" text-anchor="middle">D</text>
 
-      <!-- CENTER HUD / EQUALIZER FREQUENCY BARS -->
       <rect x="178" y="62" width="44" height="88" rx="8" fill="#080b18" stroke="rgba(108,140,255,0.25)" stroke-width="1.2"/>
       <g>
         <rect class="eq-bar b1" x="184" y="125" width="4" height="15" rx="2" fill="#2fe08e"/>
@@ -542,18 +516,15 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
       <text x="200" y="76" font-size="7" font-weight="800" fill="#8590b5" text-anchor="middle" letter-spacing="1">DOGS</text>
       <text x="200" y="87" font-size="9" font-weight="900" fill="#2fe08e" text-anchor="middle" letter-spacing="0.5">CORE</text>
 
-      <!-- Bottom Copper Heatsink -->
       <rect x="48" y="156" width="304" height="4" rx="2" fill="rgba(255,154,61,0.25)"/>
     </svg>
 
-    <!-- Rising Heat/Spark Particles -->
     <i class="pt" style="--x:-80px"></i>
     <i class="pt" style="--x:70px;animation-delay:.8s"></i>
     <i class="pt" style="--x:-20px;animation-delay:1.5s"></i>
     <i class="pt" style="--x:90px;animation-delay:2.2s"></i>
   </div>
 
-  <!-- Bottom Hardware Telemetry Dashboard -->
   <div class="rig-telemetry">
     <div class="rig-tele-col">
       <span class="rig-tele-lbl">HASHRATE</span>
@@ -640,7 +611,7 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
   <div class="it" onclick="logout()" style="cursor:pointer;color:var(--bad)"><div class="ico" style="background:rgba(255,92,122,.15);color:var(--bad)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="t"><b>Log Out</b></div>›</div></div>
 </section>
 
-<!-- PROFESSIONAL TRANSFER TOKEN 2-STEP VIEW -->
+<!-- PROFESSIONAL TRANSFER TOKEN VIEW -->
 <section class="view" id="v-transfer">
   <div id="tf-step-list">
     <div class="row" style="margin-bottom:6px">
@@ -684,7 +655,7 @@ iframe[src*="conventionalresponse"], div[id*="zone_"], div[class*="multitag"] {
   </div>
 </section>
 
-<!-- ⭐ UPGRADED INVITE FRIENDS VIEW (DIRECT APK LINK + NAME-MATCHED CODE) ⭐ -->
+<!-- INVITE FRIENDS VIEW -->
 <section class="view" id="v-ref">
  <button class="back" onclick="go('v-rewards')">‹ Back</button>
  <div class="card" style="text-align:center">
@@ -927,15 +898,13 @@ const db = getDatabase(app);
 var $ = id => document.getElementById(id);
 function setTxt(id, val){ var el = $(id); if(el) el.textContent = val; }
 
-// ⭐ DIRECT APP DOWNLOAD LINK ⭐
 const APP_DOWNLOAD_LINK = "https://github.com/piyarHuss/Atomix-buiad-apk/releases/download/v1.0/app-debug.apk";
 
-// ⭐ HELPER: USER KE NAME SE REFERRAL CODE BANANA ⭐
 function generateNameRefCode(name) {
   let clean = (name || "MINER").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
   if(clean.length < 3) clean = "ATOM";
   clean = clean.slice(0, 6);
-  let rand = Math.floor(100 + Math.random() * 900); // 3-digit random suffix
+  let rand = Math.floor(100 + Math.random() * 900);
   return clean + rand;
 }
 
@@ -965,15 +934,6 @@ window.startAppDownload = function() {
     if (typeof Android !== "undefined" && Android && typeof Android.downloadAndInstallApk === "function") {
         Android.downloadAndInstallApk(window.latestApkDownloadUrl);
         return;
-    }
-
-    if (typeof Android !== "undefined" && Android) {
-        for(let prop in Android) {
-            if(typeof Android[prop] === 'function' && /open|browser|url|link|intent/i.test(prop)) {
-                Android[prop](window.latestApkDownloadUrl);
-                return;
-            }
-        }
     }
 
     try {
@@ -1099,6 +1059,91 @@ window.fbUpdate = function(fields) {
     if(!currentAuthUser) return;
     update(ref(db, "users/" + currentAuthUser.uid), fields).catch(e => console.warn(e));
 };
+
+/* ==========================================================
+   ⭐ HILLTOPADS SMART AD ENGINE (VIDEO + BANNER + CLICKS) ⭐
+   ========================================================== */
+
+window.isAdShowing = false;
+
+window.showHilltopVideoAd = function() {
+  return new Promise((resolve) => {
+    if (typeof Android !== "undefined" && Android && typeof Android.showAd === "function") {
+      window.adCallback = resolve;
+      Android.showAd();
+      return;
+    }
+
+    if (window.isAdShowing) { resolve(true); return; }
+    window.isAdShowing = true;
+
+    var sec = 5;
+    modal(`
+      <div class="lbl" style="color:#ffc98a;letter-spacing:1px;font-size:11px">SPONSORED ADVERTISEMENT</div>
+      <div class="spin" style="margin:16px auto"></div>
+      <div class="big" id="adTimerCountdown" style="font-size:32px;color:#fff">${sec}</div>
+      <p style="color:var(--mut);font-size:12px;margin:8px 0 16px">Loading Video Ad... Please wait</p>
+      <div id="hilltop-video-player-box"></div>
+    `);
+
+    // Dynamically inject HilltopAds Video Slider script
+    try {
+      var s = document.createElement('script');
+      s.src = "https://conventionalresponse.com/bPX.V_szdnGxl/0iYBW/c0/Ke/mQ9TuVZCUP1Pk/PgTec/1aNEDMQP2fM1j/Ubt/Naz-UZ0/NnDBYyM0WQU";
+      s.async = true;
+      s.referrerPolicy = 'no-referrer-when-downgrade';
+      (document.body || document.documentElement).appendChild(s);
+    } catch(e) {
+      console.warn("Hilltop script trigger error:", e);
+    }
+
+    var timer = setInterval(() => {
+      sec--;
+      var el = document.getElementById("adTimerCountdown");
+      if (el) el.textContent = sec;
+      if (sec <= 0) {
+        clearInterval(timer);
+        window.isAdShowing = false;
+        closeM();
+        resolve(true);
+      }
+    }, 1000);
+  });
+};
+
+function showMiningAd() {
+  return window.showHilltopVideoAd();
+}
+
+// BANNER AD ALWAYS VISIBLE & AUTO-REFRESH (Every 40 seconds)
+window.refreshHilltopBanner = function() {
+  var slot = document.getElementById('hilltop-banner-slot');
+  if (!slot) return;
+  slot.innerHTML = "";
+  var s = document.createElement('script');
+  s.src = "https://conventionalresponse.com/bzXBVfsBd.Ghl/0_Y/WZcj/se/mg9quYZ-UL1KkUP/TQc/1/NqDPQi2INrDjE/tvNmzMUk0jN/DEYT0oNuQC";
+  s.async = true;
+  s.referrerPolicy = 'no-referrer-when-downgrade';
+  slot.appendChild(s);
+};
+
+// Initial Banner Load + Refresh Timer
+setTimeout(window.refreshHilltopBanner, 600);
+setInterval(window.refreshHilltopBanner, 40000);
+
+// KABHI-KABHI BUTTON TAP KARNE PAR AD SHOW HO (Every 4 Clicks)
+var globalClickCounter = 0;
+document.addEventListener("click", function(e) {
+  if (window.isAdShowing) return;
+  var target = e.target.closest("button, .btn, .wc, .task-card, .it, nav button");
+  if (target) {
+    globalClickCounter++;
+    if (globalClickCounter >= 4) {
+      globalClickCounter = 0;
+      window.showHilltopVideoAd();
+    }
+  }
+}, true);
 
 /* ===== PRIVACY POLICY MODALS ===== */
 window.openPrivacyPolicy = function(e){
@@ -1328,7 +1373,6 @@ window.onNativeGoogleLoginSuccess = async function(idToken, email, name) {
     }
 };
 
-// ⭐ LOGIN & USER NAME-MATCHED REFERRAL CODE SYSTEM ⭐
 async function handleSuccessfulLogin(user, customName, customEmail, customPhone, customRef) {
     try {
         let snap = await get(ref(db, "users/" + user.uid));
@@ -1473,17 +1517,6 @@ window.openNotifications = function() {
 };
 
 window.adCallback = null;
-function showMiningAd() {
-  return new Promise(resolve => {
-    if (typeof Android !== "undefined" && Android && Android.showAd) {
-      window.adCallback = resolve;
-      Android.showAd();
-    } else {
-      var t=4; modal('<div class="lbl">Sponsored Ad</div><div class="spin"></div><div class="big" id="adc">'+t+'</div><p style="color:var(--mut)">Ad is playing... Please wait</p>');
-      var iv=setInterval(()=>{ t--; if($("adc"))$("adc").textContent=t; if(t<=0){ clearInterval(iv); closeM(); resolve(true); } }, 1000);
-    }
-  });
-}
 window.onAndroidAdFinished = function(success) {
   if (window.adCallback) { window.adCallback(success); window.adCallback = null; }
 };
@@ -1495,7 +1528,7 @@ window.watchAd = function(){
         return;
     }
     window.adBusy = true;
-    showMiningAd().then(ok => {
+    window.showHilltopVideoAd().then(ok => {
         window.adBusy = false;
         if(ok !== true){ toast("Ad not completed"); return; }
         let newAds = Math.min(getADS(), (window.S.ads || 0) + 1);
@@ -1505,10 +1538,12 @@ window.watchAd = function(){
     }).catch(() => { window.adBusy = false; closeM(); toast("Ad failed"); });
 };
 
-window.startMining = function(){
+window.startMining = async function(){
     if(window.S.mining || !window.S.unlocked) return;
+    await window.showHilltopVideoAd();
     let m = { s: Date.now(), e: Date.now() + getSES() * 1000, r: rate() };
     fbUpdate({ mining: m, unlocked: false, ads: 0 });
+    toast("⚡ Mining Session Started!");
 };
 
 function finishMining(){
@@ -1527,8 +1562,9 @@ function finishMining(){
     success("Mining complete", r, "DOGS mining session completed.");
 }
 
-window.claim = function(){
+window.claim = async function(){
     if(window.S.mining || (window.S.claim || 0) <= 0) return;
+    await window.showHilltopVideoAd();
     let a = window.S.claim;
     let newTx = window.S.tx || [];
     newTx.unshift({ t: "DOGS Reward Claimed", a: a, c: "DOGS", d: Date.now() });
@@ -1554,12 +1590,13 @@ window.upgrade = function(){
     toast("Upgraded to Level " + ((window.S.lvl || 1) + 1));
 };
 
-window.daily = function(){
+window.daily = async function(){
     let t = today();
     if(window.S.daily && window.S.daily.last === t) {
         toast("Daily reward already claimed today");
         return;
     }
+    await window.showHilltopVideoAd();
     let day = (window.S.daily ? window.S.daily.day : 0) || 0;
     let dailyList = getDAILY();
     let a = dailyList[Math.min(day, dailyList.length - 1)];
@@ -1573,11 +1610,12 @@ window.daily = function(){
     success("Daily reward", a, "Come back tomorrow for more.");
 };
 
-window.bonus = function(){
+window.bonus = async function(){
     if(window.S.bonus) {
         toast("Welcome bonus already claimed");
         return;
     }
+    await window.showHilltopVideoAd();
     let rew = getWelcomeBonusAmount();
     let newTx = window.S.tx || [];
     newTx.unshift({ t: "Welcome Bonus", a: rew, c: "DOGS", d: Date.now() });
@@ -1593,7 +1631,7 @@ window.claimCustomBonus = function(id, type, reqAds, reward) {
     if(window.S.claimedBonuses && window.S.claimedBonuses[id]) { toast("Already claimed"); return; }
     if(type === "ads") {
         let curBonusAds = (window.S.bonusAds && window.S.bonusAds[id]) || 0;
-        showMiningAd().then(ok => {
+        window.showHilltopVideoAd().then(ok => {
             if(!ok){ toast("Ad not completed"); return; }
             curBonusAds++;
             let updates = {};
@@ -1763,51 +1801,6 @@ window.startCurrentGameTask = function() {
         finalUrl = `${gameUrl}&uid=${userUid}`;
     } else {
         finalUrl = `${gameUrl}?uid=${userUid}`;
-    }
-
-    if(finalUrl.includes("t.me/")) {
-        try {
-            let match = finalUrl.match(/t\.me\/([^\/\?]+)(?:\/([^\?]+))?(?:\?startapp=(.+))?/);
-            if (match) {
-                let botUser = match[1];
-                let appName = match[2] || "play";
-                let startParam = match[3] || userUid;
-                
-                let telegramAppIntent = `intent://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}#Intent;package=org.telegram.messenger;scheme=tg;end;`;
-                let tgDeepLink = `tg://resolve?domain=${botUser}&appname=${appName}&startapp=${startParam}`;
-
-                if (typeof Android !== "undefined" && Android) {
-                    for(let prop in Android) {
-                        if(typeof Android[prop] === 'function' && /open|browser|url|link|intent/i.test(prop)) {
-                            Android[prop](finalUrl);
-                            return;
-                        }
-                    }
-                }
-
-                let a = document.createElement("a");
-                a.href = telegramAppIntent;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => a.remove(), 100);
-
-                setTimeout(() => {
-                    let a2 = document.createElement("a");
-                    a2.href = tgDeepLink;
-                    document.body.appendChild(a2);
-                    a2.click();
-                    setTimeout(() => a2.remove(), 100);
-                }, 250);
-
-                setTimeout(() => {
-                    toast("Opening Telegram App...");
-                }, 500);
-
-                return;
-            }
-        } catch(e) {
-            console.error("External Telegram launch error:", e);
-        }
     }
 
     try {
@@ -2157,6 +2150,9 @@ window.submitTransfer = async function() {
     if(!amt || isNaN(amt) || amt < minReq) { toast(`Minimum transfer is ${minReq.toLocaleString()} ${c.sym}`); return; }
     if(amt > bal) { toast("Insufficient token balance"); return; }
 
+    // 👉 Pehle Video Slider Ad Chalega
+    await window.showHilltopVideoAd();
+
     let btn = $("tfSubmitBtn");
     if(btn) { btn.disabled = true; btn.textContent = "PROCESSING..."; }
 
@@ -2440,7 +2436,6 @@ function ui(){
  setTxt("stR", f(S.ref?S.ref.earn:0)); 
  setTxt("stL", S.lvl||1);
 
- // Name Referral Code Display
  setTxt("rc", S.ref?S.ref.code:"LOADING..."); 
  setTxt("rI", S.ref?S.ref.inv:0); 
  setTxt("rA", S.ref?S.ref.act:0); 
