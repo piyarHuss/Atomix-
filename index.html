@@ -601,7 +601,7 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 <section class="view" id="v-rewards">
  <h1>Rewards</h1>
  <div class="card"><div class="row"><div class="row" style="gap:12px;justify-content:flex-start"><span data-coin="DOGS" data-size="sm"></span><div><b>Daily Reward</b><div class="lbl" id="dtx"></div></div></div><button class="btn sm ok" id="dB" onclick="daily()">Claim</button></div><div class="days" id="days"></div></div>
- <div class="card"><div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="t"><b>Watch Ads</b><small id="adS">0 / 10 completed</small></div><button class="btn sm" onclick="watchAd()">Watch</button></div>
+ <div class="card"><div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="t"><b>Watch Ads</b><small id="adS">0 / 10 completed</small></div><button class="btn sm" id="rewAdB" onclick="watchAd()">Watch</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-3.5 3.2-5 7-5s6.400 1.500 7 5M17 5a3.500 3.500 0 010 7M19 15c1.700.6 2.600 2 3 4"/></svg></div><div class="t"><b>Referral Reward</b><small>Invite friends, earn bonus</small></div><button class="btn sm" onclick="go('v-ref')">Open</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-3 0-4-4-1.500-4S12 8 12 8zM12 8c3 0 4-4 1.500-4S12 8 12 8z"/></svg></div><div class="t"><b>Welcome Bonus</b><small id="bnS">Available once</small></div><button class="btn sm ok" id="bnB" onclick="bonus()">Claim</button></div></div>
  
@@ -1462,11 +1462,70 @@ window.openNotifications = function() {
 };
 
 /* ==========================================================
-   ⭐ RICHADS PRE-ROLL VAST VIDEO AD ENGINE ⭐
+   ⭐ RICHADS PRE-ROLL VAST VIDEO AD ENGINE & COOLDOWN ⭐
    ========================================================== */
 var activeFpInstance = null;
 var richadsSafetyTimer = null;
 var richadsAdCompleted = false;
+var fallbackTimerIv = null;
+
+// ⭐ 10-SECOND AD COOLDOWN TIMER SYSTEM ⭐
+window.adCooldownRemaining = 0;
+var adCooldownInterval = null;
+
+function startAdCooldown(seconds) {
+  window.adCooldownRemaining = seconds || 10;
+  updateCooldownButtons();
+  if (adCooldownInterval) clearInterval(adCooldownInterval);
+  adCooldownInterval = setInterval(function() {
+    window.adCooldownRemaining--;
+    if (window.adCooldownRemaining <= 0) {
+      window.adCooldownRemaining = 0;
+      clearInterval(adCooldownInterval);
+      adCooldownInterval = null;
+    }
+    updateCooldownButtons();
+  }, 1000);
+}
+
+function updateCooldownButtons() {
+  var inCd = window.adCooldownRemaining > 0;
+  var cdText = "Wait " + window.adCooldownRemaining + "s";
+  
+  var adB = $("adB");
+  if (adB) {
+    if (inCd) {
+      adB.disabled = true;
+      adB.textContent = cdText;
+      adB.style.opacity = "0.55";
+      adB.style.pointerEvents = "none";
+    } else {
+      adB.disabled = window.S.unlocked || !!window.S.mining;
+      if (!window.S.unlocked && !window.S.mining) {
+        adB.textContent = "Watch ad";
+        adB.style.opacity = "1";
+        adB.style.pointerEvents = "auto";
+      }
+    }
+  }
+
+  var rewAdB = $("rewAdB");
+  if (rewAdB) {
+    if (inCd) {
+      rewAdB.disabled = true;
+      rewAdB.textContent = cdText;
+      rewAdB.style.opacity = "0.55";
+      rewAdB.style.pointerEvents = "none";
+    } else {
+      rewAdB.disabled = window.S.unlocked || !!window.S.mining;
+      if (!window.S.unlocked && !window.S.mining) {
+        rewAdB.textContent = "Watch";
+        rewAdB.style.opacity = "1";
+        rewAdB.style.pointerEvents = "auto";
+      }
+    }
+  }
+}
 
 function playRichAdsVideoAd(resolve) {
   var modal = document.getElementById("richadsAdModal");
@@ -1479,11 +1538,12 @@ function playRichAdsVideoAd(resolve) {
 
   richadsAdCompleted = false;
   clearTimeout(richadsSafetyTimer);
+  if (fallbackTimerIv) { clearInterval(fallbackTimerIv); fallbackTimerIv = null; }
 
   if (skipBtn) skipBtn.style.display = "none";
   if (closeBtn) closeBtn.style.display = "none";
   if (loading) loading.style.display = "flex";
-  if (loadingText) loadingText.textContent = "Connecting to RichAds Pre-Roll...";
+  if (loadingText) loadingText.textContent = "Loading Sponsored Ad...";
   if (badge) badge.textContent = "Loading Ad...";
   if (modal) modal.style.display = "flex";
 
@@ -1491,6 +1551,7 @@ function playRichAdsVideoAd(resolve) {
     if (richadsAdCompleted) return;
     richadsAdCompleted = true;
     clearTimeout(richadsSafetyTimer);
+    if (fallbackTimerIv) { clearInterval(fallbackTimerIv); fallbackTimerIv = null; }
 
     if (activeFpInstance) {
       try { activeFpInstance.destroy(); } catch(e) {}
@@ -1509,44 +1570,75 @@ function playRichAdsVideoAd(resolve) {
     finalizeAd(false);
   };
 
-  // Safety timer: show skip/claim after 6s and close after 10s
+  // Skip/Claim button after 5 seconds
   richadsSafetyTimer = setTimeout(function() {
     if (skipBtn) skipBtn.style.display = "inline-block";
     if (closeBtn) closeBtn.style.display = "inline-block";
-  }, 6000);
+  }, 5000);
 
-  // If Fluid Player library failed to load or is blocked
-  if (typeof fluidPlayer !== "function") {
-    if (loadingText) loadingText.textContent = "Loading sponsor ad...";
-    var sec = 4;
-    var timerIv = setInterval(function() {
+  // Fallback Sponsor Ad player if VAST has no fill or errors
+  function runFallbackSponsorAd() {
+    if (richadsAdCompleted) return;
+    if (activeFpInstance) {
+      try { activeFpInstance.destroy(); } catch(e) {}
+      activeFpInstance = null;
+    }
+    if (loading) loading.style.display = "none";
+    if (badge) badge.textContent = "Sponsor Ad (10s)";
+
+    if (host) {
+      host.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 50%, #161c3c 0%, #070a16 100%);padding:18px;text-align:center;box-sizing:border-box">' +
+        '<div style="width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,#ff9a3d,#ffc25c);display:grid;place-items:center;box-shadow:0 0 24px rgba(255,154,61,0.4);margin-bottom:12px">' +
+          '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 8v8M8.5 10l7 4"/></svg>' +
+        '</div>' +
+        '<b style="font-size:14.5px;color:#fff;letter-spacing:0.5px">ATOMIX CLOUD SPONSOR</b>' +
+        '<p style="font-size:11px;color:#8590b5;margin:4px 0 14px">High-Speed ASIC Hashrate Node Active</p>' +
+        '<div style="width:85%;height:6px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;margin-bottom:10px">' +
+          '<div id="spAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#ff9a3d,#2fe08e);transition:width 1s linear"></div>' +
+        '</div>' +
+        '<div style="font-size:12px;font-weight:700;color:var(--ok)" id="spAdTimer">10s remaining</div>' +
+      '</div>';
+    }
+
+    var sec = 10;
+    fallbackTimerIv = setInterval(function() {
       sec--;
-      if (badge) badge.textContent = sec + "s remaining";
+      var bar = document.getElementById("spAdBar");
+      var tm = document.getElementById("spAdTimer");
+      if (bar) bar.style.width = ((10 - sec) * 10) + "%";
+      if (tm) tm.textContent = sec > 0 ? (sec + "s remaining") : "Reward Ready!";
+      if (badge) badge.textContent = sec > 0 ? ("Sponsor (" + sec + "s)") : "✔ Ad Complete!";
+
       if (sec <= 0) {
-        clearInterval(timerIv);
-        finalizeAd(true);
+        clearInterval(fallbackTimerIv);
+        fallbackTimerIv = null;
+        setTimeout(function() { finalizeAd(true); }, 500);
       }
     }, 1000);
+  }
+
+  // If Fluid Player library is blocked or missing, run fallback sponsor directly
+  if (typeof fluidPlayer !== "function") {
+    runFallbackSponsorAd();
     return;
   }
 
-  // Inject fresh video element
+  // Clean video tag without conflicting preloaded source to eliminate AbortError
   if (host) {
-    host.innerHTML = '<video id="richadsVideoTag" playsinline webkit-playsinline style="width:100%;height:100%">' +
-      '<source src="https://cdn.fluidplayer.com/videos/valad.mp4" type="video/mp4"/>' +
-    '</video>';
+    host.innerHTML = '<video id="richadsVideoTag" playsinline webkit-playsinline muted style="width:100%;height:100%;object-fit:cover;background:#000"></video>';
   }
 
   var uaStr = encodeURIComponent(navigator.userAgent || '');
   var liveVastTag = 'https://16793.rtb.adp3.net/pre-roll-rp?pubid=997172&siteid=410760&ua=' + uaStr;
-  var testVastTag = 'https://16793.rtb.adp3.net/pre-roll-rp?test=1&ua=' + uaStr;
 
   try {
+    var vastFallbackTriggered = false;
+
     activeFpInstance = fluidPlayer('richadsVideoTag', {
       layoutControls: {
         fillToContainer: true,
         autoPlay: true,
-        mute: true, // Muted autoplay ensures 100% mobile browser & webview compatibility
+        mute: true,
         playPauseAnimation: false,
         playbackRateControls: false,
         allowTheatre: false,
@@ -1560,11 +1652,10 @@ function playRichAdsVideoAd(resolve) {
         adList: [
           {
             roll: 'preRoll',
-            vastTag: liveVastTag,
-            fallbackVastTags: [ testVastTag ]
+            vastTag: liveVastTag
           }
         ],
-        vastTimeout: 8000,
+        vastTimeout: 4000,
         vastAdvanced: {
           vastLoadedCallback: function() {
             if (loading) loading.style.display = "none";
@@ -1576,24 +1667,17 @@ function playRichAdsVideoAd(resolve) {
           },
           vastVideoEndedCallback: function() {
             if (badge) badge.textContent = "✔ Ad Complete!";
-            setTimeout(function() { finalizeAd(true); }, 500);
+            setTimeout(function() { finalizeAd(true); }, 400);
           },
           vastVideoSkippedCallback: function() {
             if (badge) badge.textContent = "✔ Ad Finished!";
             setTimeout(function() { finalizeAd(true); }, 400);
           },
           noVastVideoCallback: function() {
-            console.warn("RichAds: No VAST returned, using graceful fallback");
-            if (loadingText) loadingText.textContent = "Verifying reward claim...";
-            var c = 3;
-            var fbIv = setInterval(function() {
-              c--;
-              if (badge) badge.textContent = "Verifying (" + c + "s)";
-              if (c <= 0) {
-                clearInterval(fbIv);
-                finalizeAd(true);
-              }
-            }, 1000);
+            if (!vastFallbackTriggered) {
+              vastFallbackTriggered = true;
+              runFallbackSponsorAd();
+            }
           }
         }
       }
@@ -1601,22 +1685,17 @@ function playRichAdsVideoAd(resolve) {
 
     var vidEl = document.getElementById("richadsVideoTag");
     if (vidEl) {
-      vidEl.addEventListener("ended", function() {
-        finalizeAd(true);
+      vidEl.addEventListener("ended", function() { finalizeAd(true); });
+      vidEl.addEventListener("error", function() {
+        if (!vastFallbackTriggered) {
+          vastFallbackTriggered = true;
+          runFallbackSponsorAd();
+        }
       });
     }
 
   } catch(err) {
-    console.error("FluidPlayer init error:", err);
-    var c2 = 4;
-    var iv2 = setInterval(function() {
-      c2--;
-      if (badge) badge.textContent = c2 + "s remaining";
-      if (c2 <= 0) {
-        clearInterval(iv2);
-        finalizeAd(true);
-      }
-    }, 1000);
+    runFallbackSponsorAd();
   }
 }
 
@@ -1641,6 +1720,10 @@ window.onAndroidAdFinished = function(success) {
 
 window.watchAd = function(){
     if(window.adBusy) return;
+    if(window.adCooldownRemaining > 0) {
+        toast("Please wait " + window.adCooldownRemaining + "s before watching next ad");
+        return;
+    }
     if(window.S.unlocked || window.S.mining){
         toast(window.S.mining ? "Mining in progress" : "DOGS mining already unlocked");
         return;
@@ -1653,6 +1736,7 @@ window.watchAd = function(){
         let unl = newAds >= getADS();
         if(unl) toast("DOGS mining unlocked");
         fbUpdate({ ads: newAds, unlocked: unl });
+        startAdCooldown(10);
     }).catch(() => { window.adBusy = false; closeM(); toast("Ad failed"); });
 };
 
@@ -1746,6 +1830,7 @@ window.claimCustomBonus = function(id, type, reqAds, reward) {
         let curBonusAds = (window.S.bonusAds && window.S.bonusAds[id]) || 0;
         showMiningAd().then(ok => {
             if(!ok){ toast("Ad not completed"); return; }
+            startAdCooldown(10);
             curBonusAds++;
             let updates = {};
             updates[`bonusAds/${id}`] = curBonusAds;
@@ -2540,8 +2625,9 @@ function ui(){
  setTxt("adS", (S.ads||0)+" / "+getADS()+" completed");
  
  var adT = $("adT");
- if(adT) adT.innerHTML = S.unlocked?'<span class="unl">✓ DOGS MINING UNLOCKED</span>':"Watch "+getADS()+" ads to unlock DOGS mining.";
+ if(adT) adT.innerHTML = S.unlocked?'<span class="unl">✓ DOGS MINING UNLOCKED</span>':(window.adCooldownRemaining>0?'<span style="color:var(--warn)">⏳ Wait '+window.adCooldownRemaining+'s for next ad</span>':"Watch "+getADS()+" ads to unlock DOGS mining.");
  if($("adB")) $("adB").style.display=S.unlocked?"none":"inline-flex";
+ updateCooldownButtons();
  
  setTxt("tm", pad(Math.floor(left/3600))+":"+pad(Math.floor(left%3600/60))+":"+pad(left%60));
  if($("ring")) $("ring").style.strokeDashoffset=414.7*(el/getSES()); 
