@@ -1495,21 +1495,56 @@ function showMiningAd() {
   });
 }
 
+// 20-second cooldown between mining Watch Ad attempts.
+var MINING_AD_COOLDOWN_MS = 20000;
+var miningAdCooldownUntil = 0;
+try {
+    miningAdCooldownUntil = Number(localStorage.getItem("atomix_mining_ad_cooldown_until") || 0);
+    if (!Number.isFinite(miningAdCooldownUntil)) miningAdCooldownUntil = 0;
+} catch (e) { miningAdCooldownUntil = 0; }
+
+function getMiningAdCooldownSeconds() {
+    return Math.max(0, Math.ceil((miningAdCooldownUntil - Date.now()) / 1000));
+}
+
 window.watchAd = function(){
     if(window.adBusy) return;
     if(window.S.unlocked || window.S.mining){
         toast(window.S.mining ? "Mining in progress" : "DOGS mining already unlocked");
         return;
     }
+
+    var waitSeconds = getMiningAdCooldownSeconds();
+    if (waitSeconds > 0) {
+        toast("Please wait " + waitSeconds + "s before the next ad");
+        ui();
+        return;
+    }
+
     window.adBusy = true;
+    var adButton = document.getElementById("adB");
+    if (adButton) { adButton.disabled = true; adButton.textContent = "Opening ad..."; }
+
     showMiningAd().then(ok => {
         window.adBusy = false;
-        if(ok !== true){ toast("Ad not completed"); return; }
+        if(ok !== true){ toast("Ad failed to load"); ui(); return; }
+
+        // HilltopAds confirms tag/script loading, not a completed ad view.
+        miningAdCooldownUntil = Date.now() + MINING_AD_COOLDOWN_MS;
+        try { localStorage.setItem("atomix_mining_ad_cooldown_until", String(miningAdCooldownUntil)); } catch (e) {}
+
         let newAds = Math.min(getADS(), (window.S.ads || 0) + 1);
         let unl = newAds >= getADS();
         if(unl) toast("DOGS mining unlocked (ad view not verified)");
+        else toast("Ad opened. Next ad available in 20 seconds.");
         fbUpdate({ ads: newAds, unlocked: unl });
-    }).catch(() => { window.adBusy = false; closeM(); toast("Ad failed"); });
+        ui();
+    }).catch(() => {
+        window.adBusy = false;
+        closeM();
+        toast("Ad failed");
+        ui();
+    });
 };
 
 window.startMining = function(){
@@ -2401,8 +2436,22 @@ function ui(){
  setTxt("adS", (S.ads||0)+" / "+getADS()+" completed");
  
  var adT = $("adT");
- if(adT) adT.innerHTML = S.unlocked?'<span class="unl">✓ DOGS MINING UNLOCKED</span>':"Watch "+getADS()+" ads to unlock DOGS mining.";
- if($("adB")) $("adB").style.display=S.unlocked?"none":"inline-flex";
+ var adButton = $("adB");
+ var adWait = getMiningAdCooldownSeconds();
+ if(adT) {
+   if(S.unlocked) {
+     adT.innerHTML = '<span class="unl">✓ DOGS MINING UNLOCKED</span>';
+   } else if(adWait > 0) {
+     adT.textContent = "Next mining ad available in " + adWait + " second" + (adWait === 1 ? "" : "s") + ".";
+   } else {
+     adT.textContent = "Watch " + getADS() + " ads to unlock DOGS mining.";
+   }
+ }
+ if(adButton) {
+   adButton.style.display = S.unlocked ? "none" : "inline-flex";
+   adButton.disabled = !!window.adBusy || adWait > 0 || !!S.mining;
+   adButton.textContent = window.adBusy ? "Opening ad..." : adWait > 0 ? ("Wait " + adWait + "s") : "Watch ad";
+ }
  
  setTxt("tm", pad(Math.floor(left/3600))+":"+pad(Math.floor(left%3600/60))+":"+pad(left%60));
  if($("ring")) $("ring").style.strokeDashoffset=414.7*(el/getSES()); 
