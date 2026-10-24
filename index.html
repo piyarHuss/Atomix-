@@ -1496,7 +1496,7 @@ function showMiningAd() {
 }
 
 // 20-second cooldown between mining Watch Ad attempts.
-var MINING_AD_COOLDOWN_MS = 20000;
+var MINING_AD_COOLDOWN_MS = 32000;
 var miningAdCooldownUntil = 0;
 try {
     miningAdCooldownUntil = Number(localStorage.getItem("atomix_mining_ad_cooldown_until") || 0);
