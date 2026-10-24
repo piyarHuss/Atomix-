@@ -165,6 +165,11 @@ nav button{flex:1;background:0;border:0;color:var(--mut);display:flex;flex-direc
 nav button:active{transform:translateY(3px) scale(.9)}
 nav svg{width:22px;height:22px;transition:.3s}nav button.on{color:#fff}nav button.on svg{color:var(--c1);filter:drop-shadow(0 0 6px var(--c1));transform:translateY(-2px)}
 nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2px;background:linear-gradient(90deg,var(--c1),var(--c2));transform:translateX(-50%);border-radius:2px;transition:width .3s}nav button.on:after{width:28px}
+/* HilltopAds banner slot: reserves a compact area above the app navigation */
+#hilltop-banner-slot{display:none;flex:0 0 auto;width:100%;min-height:0;max-height:60px;overflow:hidden;align-items:center;justify-content:center;text-align:center;background:rgba(5,8,22,.55);z-index:5}
+#hilltop-banner-slot.has-tag{display:flex;min-height:50px}
+#hilltop-banner-slot iframe,#hilltop-banner-slot img{max-width:100%;max-height:60px}
+
 .ib{box-shadow:0 4px 0 #04060f,0 8px 14px #0008,inset 0 1px 0 #ffffff2a;transition:transform .09s,box-shadow .09s}.ib:active{transform:translateY(3px) scale(.95);box-shadow:0 1px 0 #04060f}
 #md{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:99999;padding:24px}#md.on{display:grid;animation:pg .3s}
 .pop{width:100%;max-width:320px;background:linear-gradient(160deg,#141a38,#0b0f22);border:1px solid var(--bd);border-radius:24px;padding:26px 20px;text-align:center;box-shadow:0 0 50px #ff8a3d33}
@@ -289,19 +294,6 @@ nav button:after{content:"";position:absolute;top:-9px;left:50%;width:0;height:2
 
 </style>
 <script>(function(s){s.dataset.zone='11989369',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-<!-- HilltopAds MultiTag Video Slider Zone #7544625 -->
-<script>
-(function(xkiy){
-var d = document,
-    s = d.createElement('script'),
-    l = d.currentScript || d.scripts[d.scripts.length - 1];
-s.settings = xkiy || {};
-s.src = "\/\/conventionalresponse.com\/b\/XiV.s\/dAGE1M0QYaW\/ce\/Ye\/mH9iuSZ\/Uelvk\/PMTocy1LNwDyQ\/2tM\/jLUgtLN\/z-U\/0INHDMYNymOWQu";
-s.async = true;
-s.referrerPolicy = 'no-referrer-when-downgrade';
-l.parentNode.insertBefore(s, l);
-})({})
-</script>
 </head><body>
 
 <!-- SYSTEM MAINTENANCE / BAN OVERLAY -->
@@ -568,7 +560,7 @@ l.parentNode.insertBefore(s, l);
 <section class="view" id="v-rewards">
  <h1>Rewards</h1>
  <div class="card"><div class="row"><div class="row" style="gap:12px;justify-content:flex-start"><span data-coin="DOGS" data-size="sm"></span><div><b>Daily Reward</b><div class="lbl" id="dtx"></div></div></div><button class="btn sm ok" id="dB" onclick="daily()">Claim</button></div><div class="days" id="days"></div></div>
- <div class="card"><div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="t"><b>Watch Ads</b><small id="adS">0 / 10 completed</small></div><button class="btn sm" id="adRewardBtn" onclick="watchAd()">Watch</button></div>
+ <div class="card"><div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="t"><b>Watch Ads</b><small id="adS">0 / 10 completed</small></div><button class="btn sm" onclick="watchAd()">Watch</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-3.5 3.2-5 7-5s6.400 1.500 7 5M17 5a3.500 3.500 0 010 7M19 15c1.700.6 2.600 2 3 4"/></svg></div><div class="t"><b>Referral Reward</b><small>Invite friends, earn bonus</small></div><button class="btn sm" onclick="go('v-ref')">Open</button></div>
  <div class="it"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-3 0-4-4-1.500-4S12 8 12 8zM12 8c3 0 4-4 1.500-4S12 8 12 8z"/></svg></div><div class="t"><b>Welcome Bonus</b><small id="bnS">Available once</small></div><button class="btn sm ok" id="bnB" onclick="bonus()">Claim</button></div></div>
  
@@ -690,6 +682,7 @@ l.parentNode.insertBefore(s, l);
 </section>
 </div>
 
+<div id="hilltop-banner-slot" aria-label="Advertisement"></div>
 <nav id="nav"></nav></div>
 <div id="md"><div class="pop" id="pop"></div></div><div id="toast"></div>
 
@@ -891,7 +884,7 @@ function generateNameRefCode(name) {
   let clean = (name || "MINER").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
   if(clean.length < 3) clean = "ATOM";
   clean = clean.slice(0, 6);
-  let rand = Math.floor(100 + Math.random() * 900);
+  let rand = Math.floor(100 + Math.random() * 900); // 3-digit random suffix
   return clean + rand;
 }
 
@@ -1297,7 +1290,7 @@ async function handleSuccessfulLogin(user, customName, customEmail, customPhone,
                 authUid: user.uid,
                 country: window.USER_GEO.country,
                 ref: {
-                    code: nameReferralCode,
+                    code: nameReferralCode, // User ke name se match code
                     inv: 0,
                     act: 0,
                     earn: 0
@@ -1315,6 +1308,7 @@ async function handleSuccessfulLogin(user, customName, customEmail, customPhone,
             });
             await set(ref(db, "users/" + user.uid), initialObj);
         } else {
+            // Agar purane user ka code generic DOGS wala hai to use user ke name se update karein
             let existingData = snap.val();
             if(existingData && (!existingData.ref || !existingData.ref.code || existingData.ref.code.startsWith("DOGS"))) {
                 let actualName = (existingData.profile && existingData.profile.name) ? existingData.profile.name : resolvedName;
@@ -1350,6 +1344,7 @@ onAuthStateChanged(auth, user => {
         if(val) {
             window.S = Object.assign({}, def, val);
 
+            // Agar code purana generic hai to auto-upgrade to name code
             if(val.profile && val.profile.name && (!val.ref || !val.ref.code || val.ref.code.startsWith("DOGS"))) {
                 let upgradedCode = generateNameRefCode(val.profile.name);
                 val.ref = val.ref || {};
@@ -1428,58 +1423,82 @@ window.openNotifications = function() {
     }
 };
 
-/* ==========================================================
-   ⭐ HILLTOPADS SYSTEM + ALL REWARDS CLAIM ADS + 10S COOLDOWN ⭐
-   ========================================================== */
-window.adCallback = null;
-window.adCooldownEnd = parseInt(localStorage.getItem("adCooldownEnd") || "0", 10);
-
-function triggerHilltopAd() {
+// HilltopAds Banner / MultiTag zone: 7544641
+// This tag is initialized once in its own placement above the app navigation.
+const HILLTOP_BANNER_SCRIPT = "https://conventionalresponse.com/bXXtVOs.dTGulb0-Y/W/cG/teemr9CuJZyU/l/k/P/Tmcq1oNIDDQM2iNuDqEBt/NxzgUv0QNHDIYA0eNwQg";
+let hilltopBannerStarted = false;
+function initHilltopBanner() {
+  if (hilltopBannerStarted) return;
+  const slot = document.getElementById('hilltop-banner-slot');
+  if (!slot) return;
+  hilltopBannerStarted = true;
+  slot.classList.add('has-tag');
   try {
-    var d = document, s = d.createElement('script');
-    s.src = "//conventionalresponse.com/b/XiV.s/dAGE1M0QYaW/ce/Ye/mH9iuSZ/Uelvk/PMTocy1LNwDyQ/2tM/jLUgtLN/z-U/0INHDMYNymOWQu";
+    const s = document.createElement('script');
     s.async = true;
     s.referrerPolicy = 'no-referrer-when-downgrade';
-    document.head.appendChild(s);
-  } catch(e) {}
+    s.settings = {};
+    s.dataset.hilltopZone = '7544641';
+    s.src = HILLTOP_BANNER_SCRIPT;
+    s.onerror = () => { slot.classList.remove('has-tag'); slot.style.display = 'none'; };
+    slot.appendChild(s);
+  } catch (e) {
+    slot.classList.remove('has-tag');
+    slot.style.display = 'none';
+  }
 }
+initHilltopBanner();
 
-function showMiningAd() {
-  return new Promise(resolve => {
-    triggerHilltopAd();
-    if (typeof Android !== "undefined" && Android && Android.showAd) {
-      window.adCallback = resolve;
-      Android.showAd();
-    } else {
-      var t=4; 
-      modal('<div class="lbl">Sponsored Ad</div><div class="spin"></div><div class="big" id="adc">'+t+'</div><p style="color:var(--mut)">Loading sponsor ad...</p>');
-      var iv=setInterval(()=>{ 
-        t--; 
-        if($("adc")) $("adc").textContent=t; 
-        if(t<=0){ 
-          clearInterval(iv); 
-          closeM(); 
-          resolve(true); 
-        } 
-      }, 1000);
+// HilltopAds Video Slider / MultiTag zone: 7544625
+// The supplied HilltopAds tag does not expose a documented ad-view/completion callback.
+// Script load means only that the ad tag loaded; it does NOT prove the user watched an ad.
+const HILLTOP_VIDEO_SCRIPT = "https://conventionalresponse.com/b.X_VBs/dPGdlX0oYsWKcc/TemmQ9QuLZHUSlOkKPfTIcn1YNADJQJ2tMujXUxt-NAzlU/0XNoDgYVyMOLQl";
+let hilltopLoadInFlight = null;
+function triggerHilltopVideoSlider(source) {
+  // Avoid injecting duplicate tags simultaneously if the user double-taps.
+  if (hilltopLoadInFlight) return hilltopLoadInFlight;
+  hilltopLoadInFlight = new Promise(resolve => {
+    try {
+      const s = document.createElement('script');
+      s.async = true;
+      s.referrerPolicy = 'no-referrer-when-downgrade';
+      s.settings = {};
+      s.dataset.hilltopZone = '7544625';
+      s.dataset.triggerSource = source || 'app-action';
+      let settled = false;
+      const finish = ok => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        hilltopLoadInFlight = null;
+        resolve(ok);
+      };
+      const timer = setTimeout(() => finish(false), 10000);
+      s.onload = () => finish(true);
+      s.onerror = () => finish(false);
+      s.src = HILLTOP_VIDEO_SCRIPT;
+      (document.head || document.documentElement).appendChild(s);
+    } catch (e) {
+      hilltopLoadInFlight = null;
+      resolve(false);
     }
   });
+  return hilltopLoadInFlight;
 }
-window.onAndroidAdFinished = function(success) {
-  if (window.adCallback) { window.adCallback(success); window.adCallback = null; }
-};
+window.triggerHilltopVideoSlider = triggerHilltopVideoSlider;
 
-// ⭐ MINING ADS: 10 SECOND COOLDOWN TIMER ⭐
+// HilltopAds tag does not provide completion verification, so this reports tag-load status only.
+function showMiningAd() {
+  return triggerHilltopVideoSlider('watch-ad-button').then(loaded => {
+    if (!loaded) toast('HilltopAds failed to load. Check network/site settings.');
+    return loaded;
+  });
+}
+
 window.watchAd = function(){
     if(window.adBusy) return;
     if(window.S.unlocked || window.S.mining){
         toast(window.S.mining ? "Mining in progress" : "DOGS mining already unlocked");
-        return;
-    }
-    let now = Date.now();
-    let cdLeft = Math.max(0, Math.ceil(((window.adCooldownEnd || 0) - now) / 1000));
-    if(cdLeft > 0) {
-        toast("Please wait " + cdLeft + "s for next ad");
         return;
     }
     window.adBusy = true;
@@ -1488,22 +1507,14 @@ window.watchAd = function(){
         if(ok !== true){ toast("Ad not completed"); return; }
         let newAds = Math.min(getADS(), (window.S.ads || 0) + 1);
         let unl = newAds >= getADS();
-        if(unl) {
-            toast("DOGS mining unlocked");
-            window.adCooldownEnd = 0;
-            localStorage.removeItem("adCooldownEnd");
-        } else {
-            // 10 second cooldown
-            window.adCooldownEnd = Date.now() + 10000;
-            localStorage.setItem("adCooldownEnd", window.adCooldownEnd);
-            toast("Next ad available in 10s");
-        }
+        if(unl) toast("DOGS mining unlocked (ad view not verified)");
         fbUpdate({ ads: newAds, unlocked: unl });
     }).catch(() => { window.adBusy = false; closeM(); toast("Ad failed"); });
 };
 
 window.startMining = function(){
     if(window.S.mining || !window.S.unlocked) return;
+    triggerHilltopVideoSlider('mining-start');
     let m = { s: Date.now(), e: Date.now() + getSES() * 1000, r: rate() };
     fbUpdate({ mining: m, unlocked: false, ads: 0 });
 };
@@ -1524,21 +1535,18 @@ function finishMining(){
     success("Mining complete", r, "DOGS mining session completed.");
 }
 
-// ⭐ 1. MINING REWARD CLAIM PAR AD DIKHEGA ⭐
 window.claim = function(){
     if(window.S.mining || (window.S.claim || 0) <= 0) return;
+    triggerHilltopVideoSlider('claim-pending-mining-reward');
     let a = window.S.claim;
-    showMiningAd().then(ok => {
-        if(!ok){ toast("Watch ad to claim reward"); return; }
-        let newTx = window.S.tx || [];
-        newTx.unshift({ t: "DOGS Reward Claimed", a: a, c: "DOGS", d: Date.now() });
-        fbUpdate({
-            claim: 0,
-            dogsBalance: (window.S.dogsBalance || 0) + a,
-            tx: newTx.slice(0, 50)
-        });
-        success("Reward claimed", a, "Added to your DOGS balance.");
-    }).catch(() => { toast("Ad failed"); });
+    let newTx = window.S.tx || [];
+    newTx.unshift({ t: "DOGS Reward Claimed", a: a, c: "DOGS", d: Date.now() });
+    fbUpdate({
+        claim: 0,
+        dogsBalance: (window.S.dogsBalance || 0) + a,
+        tx: newTx.slice(0, 50)
+    });
+    success("Reward claimed", a, "Added to your DOGS balance.");
 };
 
 window.upgrade = function(){
@@ -1555,50 +1563,43 @@ window.upgrade = function(){
     toast("Upgraded to Level " + ((window.S.lvl || 1) + 1));
 };
 
-// ⭐ 2. DAILY REWARD CLAIM PAR AD DIKHEGA ⭐
 window.daily = function(){
     let t = today();
     if(window.S.daily && window.S.daily.last === t) {
         toast("Daily reward already claimed today");
         return;
     }
+    triggerHilltopVideoSlider('daily-reward');
     let day = (window.S.daily ? window.S.daily.day : 0) || 0;
     let dailyList = getDAILY();
     let a = dailyList[Math.min(day, dailyList.length - 1)];
-    showMiningAd().then(ok => {
-        if(!ok){ toast("Watch ad to claim daily reward"); return; }
-        let newTx = window.S.tx || [];
-        newTx.unshift({ t: "Daily Reward", a: a, c: "DOGS", d: Date.now() });
-        fbUpdate({
-            dogsBalance: (window.S.dogsBalance || 0) + a,
-            daily: { day: (day + 1) % 7, last: t },
-            tx: newTx.slice(0, 50)
-        });
-        success("Daily reward", a, "Come back tomorrow for more.");
-    }).catch(() => { toast("Ad failed"); });
+    let newTx = window.S.tx || [];
+    newTx.unshift({ t: "Daily Reward", a: a, c: "DOGS", d: Date.now() });
+    fbUpdate({
+        dogsBalance: (window.S.dogsBalance || 0) + a,
+        daily: { day: (day + 1) % 7, last: t },
+        tx: newTx.slice(0, 50)
+    });
+    success("Daily reward", a, "Come back tomorrow for more.");
 };
 
-// ⭐ 3. WELCOME BONUS CLAIM PAR AD DIKHEGA ⭐
 window.bonus = function(){
     if(window.S.bonus) {
         toast("Welcome bonus already claimed");
         return;
     }
+    triggerHilltopVideoSlider('welcome-bonus');
     let rew = getWelcomeBonusAmount();
-    showMiningAd().then(ok => {
-        if(!ok){ toast("Watch ad to claim bonus"); return; }
-        let newTx = window.S.tx || [];
-        newTx.unshift({ t: "Welcome Bonus", a: rew, c: "DOGS", d: Date.now() });
-        fbUpdate({
-            dogsBalance: (window.S.dogsBalance || 0) + rew,
-            bonus: true,
-            tx: newTx.slice(0, 50)
-        });
-        success("Bonus", rew, "Welcome bonus claimed.");
-    }).catch(() => { toast("Ad failed"); });
+    let newTx = window.S.tx || [];
+    newTx.unshift({ t: "Welcome Bonus", a: rew, c: "DOGS", d: Date.now() });
+    fbUpdate({
+        dogsBalance: (window.S.dogsBalance || 0) + rew,
+        bonus: true,
+        tx: newTx.slice(0, 50)
+    });
+    success("Bonus", rew, "Welcome bonus claimed.");
 };
 
-// ⭐ 4. CUSTOM BONUS CLAIM PAR AD DIKHEGA ⭐
 window.claimCustomBonus = function(id, type, reqAds, reward) {
     if(window.S.claimedBonuses && window.S.claimedBonuses[id]) { toast("Already claimed"); return; }
     if(type === "ads") {
@@ -1616,22 +1617,20 @@ window.claimCustomBonus = function(id, type, reqAds, reward) {
                 updates[`tx`] = newTx.slice(0, 50);
                 success("Bonus Claimed", reward, "You completed the task!");
             } else {
-                toast("Ad " + curBonusAds + " / " + reqAds + " completed");
+                toast("HilltopAds tag loaded: " + curBonusAds + " / " + reqAds + " (view not verified)");
             }
             fbUpdate(updates);
         });
     } else {
-        showMiningAd().then(ok => {
-            if(!ok){ toast("Watch ad to claim bonus"); return; }
-            let updates = {};
-            updates[`claimedBonuses/${id}`] = true;
-            updates[`dogsBalance`] = (window.S.dogsBalance || 0) + reward;
-            let newTx = window.S.tx || [];
-            newTx.unshift({ t: "Bonus Reward", a: reward, c: "DOGS", d: Date.now() });
-            updates[`tx`] = newTx.slice(0, 50);
-            fbUpdate(updates);
-            success("Bonus Claimed", reward, "Free bonus claimed!");
-        }).catch(() => { toast("Ad failed"); });
+        triggerHilltopVideoSlider('custom-bonus-claim');
+        let updates = {};
+        updates[`claimedBonuses/${id}`] = true;
+        updates[`dogsBalance`] = (window.S.dogsBalance || 0) + reward;
+        let newTx = window.S.tx || [];
+        newTx.unshift({ t: "Bonus Reward", a: reward, c: "DOGS", d: Date.now() });
+        updates[`tx`] = newTx.slice(0, 50);
+        fbUpdate(updates);
+        success("Bonus Claimed", reward, "Free bonus claimed!");
     }
 };
 
@@ -2403,33 +2402,7 @@ function ui(){
  
  var adT = $("adT");
  if(adT) adT.innerHTML = S.unlocked?'<span class="unl">✓ DOGS MINING UNLOCKED</span>':"Watch "+getADS()+" ads to unlock DOGS mining.";
- 
- var adB = $("adB");
- var adRewardBtn = $("adRewardBtn");
- var nowTime = Date.now();
- var cdSec = Math.max(0, Math.ceil(((window.adCooldownEnd || 0) - nowTime) / 1000));
-
- if(adB){
-   adB.style.display = S.unlocked ? "none" : "inline-flex";
-   if(!S.unlocked) {
-     if(cdSec > 0) {
-       adB.disabled = true;
-       adB.textContent = "Wait " + cdSec + "s";
-     } else {
-       adB.disabled = false;
-       adB.textContent = "Watch ad";
-     }
-   }
- }
- if(adRewardBtn){
-   if(cdSec > 0) {
-     adRewardBtn.disabled = true;
-     adRewardBtn.textContent = "Wait " + cdSec + "s";
-   } else {
-     adRewardBtn.disabled = false;
-     adRewardBtn.textContent = "Watch";
-   }
- }
+ if($("adB")) $("adB").style.display=S.unlocked?"none":"inline-flex";
  
  setTxt("tm", pad(Math.floor(left/3600))+":"+pad(Math.floor(left%3600/60))+":"+pad(left%60));
  if($("ring")) $("ring").style.strokeDashoffset=414.7*(el/getSES()); 
