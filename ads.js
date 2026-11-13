@@ -47,8 +47,8 @@ const DEBUG = false;
   addScript('https://telegram.org/js/telegram-web-app.js');
   addScript('https://sad.adsgram.ai/js/sad.min.js').then(ok => { if (!ok) dbg('Adsgram SDK load nahi hua'); });
   const MZ = {};
-  function ensureMonetag() {
-    const c = cfg(), z = String(c.monetagZone), fn = 'show_' + z;
+  function ensureMonetag(zoneOverride) {
+    const c = cfg(), z = String(zoneOverride || c.monetagZone), fn = 'show_' + z;
     if (window[fn]) return Promise.resolve(window[fn]);
     if (!MZ[z]) MZ[z] = addScript(c.monetagSdk, { 'data-zone': z, 'data-sdk': fn }).then(() => new Promise(r => {
       let n = 0; const t = setInterval(() => { if (window[fn] || ++n > 30) { clearInterval(t); r(window[fn]); } }, 100);
@@ -72,8 +72,8 @@ const DEBUG = false;
   /* ---- providers: resolve = user ne ad dekha, reject = nahi mila / skip ---- */
   const run = {
     demo: () => new Promise(res => _demo(res)),
-    adsgram: () => agShow(cfg().adsgramBlock),
-    monetag: () => ensureMonetag().then(fn => {
+    adsgram: b => agShow(b || cfg().adsgramBlock),
+    monetag: b => ensureMonetag(b).then(fn => {
       if (!fn) throw new Error('Monetag SDK not loaded');
       return fn();
     })
@@ -81,6 +81,15 @@ const DEBUG = false;
 
   /* ---- Rewarded ad (Watch Ad tasks) ---- */
   const _demo = showRewardedAd;     /* purana 3 second wala demo ad */
+
+  /* ---- kis task card ka ad hai: admin ke Tasks page se (Ad network + Ad Block ID) ---- */
+  let AD_CTX = null;
+  const taskRow = id => {
+    const t = (window.RC && window.RC.tasks) || [];
+    return (Array.isArray(t) ? t : Object.values(t)).filter(Boolean).find(r => r.id === id);
+  };
+  const _w = watchAd;
+  watchAd = function (id) { AD_CTX = id; try { _w(id); } finally { AD_CTX = null; } };
   function loadingBox(on) {
     let o = document.getElementById('ad-load');
     if (!on) { if (o) o.remove(); return; }
@@ -92,15 +101,20 @@ const DEBUG = false;
   showRewardedAd = function (cb) {
     const c = cfg();
     if (!c.enabled) { toast('Ads are turned off'); return; }
-    const order = [c.provider, c.fallback].filter((p, i, a) => p && p !== 'none' && run[p] && a.indexOf(p) === i);
-    if (!order.length) order.push('demo');
+    const row = AD_CTX ? taskRow(AD_CTX) : null; AD_CTX = null;
+    const cand = [
+      { p: (row && row.adNet) || c.provider, b: String((row && row.adBlock) || '').trim() },   /* card ki apni setting */
+      { p: c.fallback, b: '' }                                                                /* global fallback */
+    ];
+    const order = cand.filter((x, i, a) => x.p && x.p !== 'none' && run[x.p] && a.findIndex(y => y.p === x.p && y.b === x.b) === i);
+    if (!order.length) order.push({ p: 'demo', b: '' });
     let finished = 0;
     loadingBox(true);
     (function next(i) {
       if (i >= order.length) { loadingBox(false); toast('Ad not available right now. Try again later'); return; }
-      run[order[i]]().then(() => {
+      run[order[i].p](order[i].b).then(() => {
         if (finished) return; finished = 1; loadingBox(false); cb();     /* reward sirf yahan */
-      }).catch(e => { dbg('Rewarded ' + order[i] + ' failed: ' + errTxt(e)); next(i + 1); });
+      }).catch(e => { dbg('Rewarded ' + order[i].p + ' ' + order[i].b + ' failed: ' + errTxt(e)); next(i + 1); });
     })(0);
   };
 
