@@ -1,5 +1,5 @@
 /* =====================================================================
-   ads.js  v3  —  Ludo Masters  (Adsgram + Monetag)
+   ads.js  v4  —  Ludo Masters  (Adsgram + Monetag)
    Load order (index.html):
      profile_plus.js  ->  remote_config.js  ->  ads.js  ->  boot();
    - Watch Ad tasks / rewarded ad : card ki apni setting (adNet + adBlock),
@@ -10,6 +10,13 @@
    >>> TEST MODE: neeche  const DEBUG = true;  karo.
        Adsgram test ad dikhata hai + har error ka message toast me aata hai.
        Live karne se pehle ZAROOR false karo. <<<
+
+   v4 fixes (interstitial int-59518 nahi chal raha tha):
+   - Adsgram SDK load hone ka wait (pehle SDK late load hone par ad chup-chap skip ho jata tha)
+   - Block ID normalize: remote config me "59518" ya "int-59518" kuch bhi ho, hamesha "int-59518" jayega
+     (task widget ke liye hamesha "task-XXXXX")
+   - Telegram script dobara load nahi hoti agar pehle se hai
+   - Interstitial ka error DEBUG me toast me dikhta hai (exact reason)
 
    v3 fixes:
    - interstitial double-tap guard (intBusy), 3 min gap sirf successful ad par
@@ -52,6 +59,13 @@ const DEBUG = false;
   const dbg = m => { console.log('[ads]', m); if (DEBUG) toast('ADS: ' + m); };
   const num2 = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 
+  /* Block ID normalize: "59518" / "int-59518" / " INT-59518 " -> "int-59518"
+     (prefix 'int-' ya 'task-'). Khali ho to fallback default. */
+  const normBlock = (id, prefix, fallback) => {
+    const n = String(id == null ? '' : id).trim().replace(/^\D*/, '');
+    return n ? prefix + n : (fallback || '');
+  };
+
   /* ---- SDK loading ---- */
   const addScript = (src, attrs) => new Promise(res => {
     const s = document.createElement('script');
@@ -64,8 +78,15 @@ const DEBUG = false;
     try { return SDK_HOSTS.indexOf(new URL(src.indexOf('//') === 0 ? 'https:' + src : src).hostname) !== -1; }
     catch (e) { return false; }
   };
-  addScript('https://telegram.org/js/telegram-web-app.js');
-  addScript('https://sad.adsgram.ai/js/sad.min.js').then(ok => { if (!ok) dbg('Adsgram SDK load nahi hua'); });
+  if (!window.Telegram) addScript('https://telegram.org/js/telegram-web-app.js');
+
+  /* Adsgram SDK: promise jo load hone par resolve hota hai. agShow isi ka wait karta hai. */
+  const agReady = window.Adsgram
+    ? Promise.resolve(true)
+    : addScript('https://sad.adsgram.ai/js/sad.min.js').then(ok => {
+        if (!ok) dbg('Adsgram SDK load nahi hua (network / adblock check karo)');
+        return ok;
+      });
 
   const MZ = {};
   function ensureMonetag(zoneOverride) {
@@ -88,7 +109,7 @@ const DEBUG = false;
 
   /* ---- Adsgram helper: ek jagah se sab block chalte hain ---- */
   function agShow(blockId) {
-    return new Promise((res, rej) => {
+    return agReady.then(() => new Promise((res, rej) => {
       if (!window.Adsgram) return rej(new Error('Adsgram SDK not loaded'));
       if (!inTg()) return rej(new Error('Adsgram only works inside Telegram'));
       try {
@@ -98,7 +119,7 @@ const DEBUG = false;
             res(r);
           }).catch(rej);
       } catch (e) { rej(e); }
-    });
+    }));
   }
 
   /* ---- providers: resolve = user ne ad dekha, reject = nahi mila / skip ---- */
@@ -179,11 +200,15 @@ const DEBUG = false;
     if (!c.enabled) { then(); return; }
     if (intBusy) return;                                              /* double-tap: ignore */
     if (Date.now() - lastInt < c.intGapMs) { dbg('Interstitial skip: 3 min ka gap'); then(); return; }
-    if (!inTg() || !window.Adsgram) { dbg('Interstitial skip: Telegram/Adsgram nahi mila'); then(); return; }
+    if (!inTg()) { dbg('Interstitial skip: Telegram ke andar nahi ho (bot se mini app kholo)'); then(); return; }
+
+    const blockId = normBlock(c.adsgramInt, 'int-', DEF.adsgramInt);  /* hamesha int-XXXXX */
+    dbg('Interstitial try: ' + blockId);
+
     intBusy = true;
     let d = 0, tm = 0;
     const go2 = () => { if (d) return; d = 1; clearTimeout(tm); intBusy = false; then(); };
-    agShow(c.adsgramInt)
+    agShow(blockId)                                                   /* SDK load hone ka wait yahin hota hai */
       .then(() => { lastInt = Date.now(); go2(); })                   /* gap sirf success par */
       .catch(e => { dbg('Interstitial failed: ' + errTxt(e)); go2(); });
     tm = setTimeout(go2, INT_TIMEOUT);                                /* kuch atak jaye to bhi aage badho */
@@ -201,8 +226,9 @@ const DEBUG = false;
     V.tasks = function (...a) {
       const html = o.apply(this, a); if (!inTg() || !cfg().enabled) return html;
       const c = cfg(), done = TK && TK.c && TK.c.ag;
+      const taskBlock = normBlock(c.adsgramTask, 'task-', DEF.adsgramTask);   /* hamesha task-XXXXX */
       const box = done ? '<div class="ag-w">✓ Sponsored task done</div>'
-        : `<div class="ag-w"><span class="ag-lbl">Sponsored Task</span><adsgram-task data-block-id="${c.adsgramTask}" data-debug="${DEBUG}">
+        : `<div class="ag-w"><span class="ag-lbl">Sponsored Task</span><adsgram-task data-block-id="${taskBlock}" data-debug="${DEBUG}">
 <span slot="reward" class="ag-r">+${c.taskReward} 💎</span><div slot="button" class="ag-b">Go</div><div slot="claim" class="ag-b c">Claim</div><div slot="done" class="ag-b d">Done</div></adsgram-task></div>`;
       const mark = '<div class="tk-bonus">';
       if (html.indexOf(mark) === -1) { dbg('tk-bonus div nahi mila, Sponsored Task nahi dikhega'); return html; }
