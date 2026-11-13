@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://atomic-app-55e9b-default-rtdb.firebaseio.com">
 <title>Ludo Masters</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>:root{--u:calc(min(100vw,390px)/360)}
@@ -497,7 +500,6 @@ nav button.on i img.as{filter:drop-shadow(0 2px 3px rgba(119,45,240,.18))}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
 <script>
 /* ================= FIREBASE (realtime cloud save, localStorage ki jagah) ================= */
 const firebaseConfig={
@@ -511,7 +513,6 @@ const firebaseConfig={
   measurementId:"G-WZP3L8LVPH"
 };
 firebase.initializeApp(firebaseConfig);
-try{firebase.analytics()}catch(e){}
 const fdb=firebase.database();
 let UID=null,uref=null;
 /* users/{uid}/{path} me value save. Sab data yahin jata hai */
@@ -712,7 +713,7 @@ result:()=>{const w=RES.won,p=RES.pool||POOLS[0];
  bgm.mp3 popup_open.mp3 claim.mp3 fly.mp3 coin.mp3 balance_add.mp3 tap.mp3 */
 const S={sfx:1,mus:1};
 const saveSnd=()=>dbSet('snd',S);
-const SF={};['tap','popup_open','claim','fly','coin','balance_add','match_found','win','lose'].forEach(n=>{const a=new Audio('sounds/'+n+'.mp3');a.preload='auto';SF[n]=a});
+const SF={};['tap','popup_open','claim','fly','coin','balance_add','match_found','win','lose'].forEach(n=>{const a=new Audio('sounds/'+n+'.mp3');a.preload='none';SF[n]=a});
 const sfx=(n,v=1)=>{if(!S.sfx||!SF[n])return;try{const a=SF[n].cloneNode();a.volume=v;a.play().catch(()=>{})}catch(e){}};
 const bgm=new Audio('sounds/bgm.mp3');bgm.loop=true;bgm.volume=.35;
 const musicOn=()=>{if(S.mus)bgm.play().catch(()=>{});else bgm.pause()};
@@ -1097,6 +1098,7 @@ async function boot(){
 </script>
 <script src="profile_plus.js"></script>
 <script src="remote_config.js"></script>
+<script src="ads.js"></script>
 <script>
 boot();
 </script></body></html>
