@@ -1,14 +1,25 @@
 /* =====================================================================
-   ads.js  v2  —  Ludo Masters  (Adsgram + Monetag)
+   ads.js  v3  —  Ludo Masters  (Adsgram + Monetag)
    Load order (index.html):
      profile_plus.js  ->  remote_config.js  ->  ads.js  ->  boot();
-   - Watch Ad tasks / rewarded ad : Adsgram reward block (59522), fallback Monetag (zone 12251773)
+   - Watch Ad tasks / rewarded ad : card ki apni setting (adNet + adBlock),
+                                    warna Adsgram reward block (59522), fallback Monetag (zone 12251773)
    - Interstitial                 : Adsgram int-59518 (result screen ke buttons par, 3 min me max 1 baar)
    - Adsgram Task widget          : task-59520 (Tasks page par, Telegram ke andar)
 
    >>> TEST MODE: neeche  const DEBUG = true;  karo.
        Adsgram test ad dikhata hai + har error ka message toast me aata hai.
-       Sab theek dikhe to wapas  false  kar do (live karne se pehle ZAROOR). <<<
+       Live karne se pehle ZAROOR false karo. <<<
+
+   v3 fixes:
+   - interstitial double-tap guard (intBusy), 3 min gap sirf successful ad par
+   - cb() crash hone par doosra ad nahi chalta
+   - rewarded ad par timeout (loading box atkega nahi)
+   - user ad skip kare to fallback ad nahi chalta
+   - Task widget listeners document par (re-render safe)
+   - Monetag load fail cache nahi hota, SDK host whitelist
+   - wrappers return value / saare arguments pass karte hain
+   - demo ad sirf tab jab explicitly 'demo' chuna ho (ya DEBUG)
    ===================================================================== */
 const DEBUG = false;
 
@@ -23,6 +34,11 @@ const DEBUG = false;
     monetagSdk: '//libtl.com/sdk.js',
     intGapMs: 180000                /* interstitial ke beech kam se kam 3 minute */
   };
+  /* Monetag SDK sirf in hosts se load hoga. Monetag naya host de to yahan add karo. */
+  const SDK_HOSTS = ['libtl.com'];
+  const REWARD_TIMEOUT = 120000;    /* rewarded ad ke liye max wait */
+  const INT_TIMEOUT = 45000;        /* interstitial atak jaye to aage badho */
+
   const cfg = () => {
     const a = (window.RC && window.RC.ads) || {};
     const o = {};
@@ -44,14 +60,27 @@ const DEBUG = false;
     s.onload = () => res(true); s.onerror = () => res(false);
     document.head.appendChild(s);
   });
+  const hostOk = src => {
+    try { return SDK_HOSTS.indexOf(new URL(src.indexOf('//') === 0 ? 'https:' + src : src).hostname) !== -1; }
+    catch (e) { return false; }
+  };
   addScript('https://telegram.org/js/telegram-web-app.js');
   addScript('https://sad.adsgram.ai/js/sad.min.js').then(ok => { if (!ok) dbg('Adsgram SDK load nahi hua'); });
+
   const MZ = {};
   function ensureMonetag(zoneOverride) {
     const c = cfg(), z = String(zoneOverride || c.monetagZone), fn = 'show_' + z;
     if (window[fn]) return Promise.resolve(window[fn]);
+    if (!hostOk(c.monetagSdk)) { dbg('Monetag SDK host allowed nahi: ' + c.monetagSdk); return Promise.resolve(undefined); }
     if (!MZ[z]) MZ[z] = addScript(c.monetagSdk, { 'data-zone': z, 'data-sdk': fn }).then(() => new Promise(r => {
-      let n = 0; const t = setInterval(() => { if (window[fn] || ++n > 30) { clearInterval(t); r(window[fn]); } }, 100);
+      let n = 0;
+      const t = setInterval(() => {
+        if (window[fn] || ++n > 30) {
+          clearInterval(t);
+          if (!window[fn]) delete MZ[z];      /* fail hua to cache mat karo, agli baar retry */
+          r(window[fn]);
+        }
+      }, 100);
     }));
     return MZ[z];
   }
@@ -64,7 +93,10 @@ const DEBUG = false;
       if (!inTg()) return rej(new Error('Adsgram only works inside Telegram'));
       try {
         window.Adsgram.init({ blockId: String(blockId), debug: DEBUG }).show()
-          .then(r => (r && r.done === false) ? rej(new Error('skipped')) : res(r)).catch(rej);
+          .then(r => {
+            if (r && r.done === false) { const e = new Error('skipped'); e.skipped = true; return rej(e); }
+            res(r);
+          }).catch(rej);
       } catch (e) { rej(e); }
     });
   }
@@ -89,7 +121,10 @@ const DEBUG = false;
     return (Array.isArray(t) ? t : Object.values(t)).filter(Boolean).find(r => r.id === id);
   };
   const _w = watchAd;
-  watchAd = function (id) { AD_CTX = id; try { _w(id); } finally { AD_CTX = null; } };
+  watchAd = function (id, ...rest) {
+    AD_CTX = id;
+    try { return _w.call(this, id, ...rest); } finally { AD_CTX = null; }
+  };
   function loadingBox(on) {
     let o = document.getElementById('ad-load');
     if (!on) { if (o) o.remove(); return; }
@@ -107,32 +142,55 @@ const DEBUG = false;
       { p: c.fallback, b: '' }                                                                /* global fallback */
     ];
     const order = cand.filter((x, i, a) => x.p && x.p !== 'none' && run[x.p] && a.findIndex(y => y.p === x.p && y.b === x.b) === i);
-    if (!order.length) order.push({ p: 'demo', b: '' });
+    if (!order.length) {
+      if (DEBUG) order.push({ p: 'demo', b: '' });
+      else { toast('Ad not available right now. Try again later'); return; }
+    }
     let finished = 0;
     loadingBox(true);
     (function next(i) {
+      if (finished) return;
       if (i >= order.length) { loadingBox(false); toast('Ad not available right now. Try again later'); return; }
-      run[order[i].p](order[i].b).then(() => {
-        if (finished) return; finished = 1; loadingBox(false); cb();     /* reward sirf yahan */
-      }).catch(e => { dbg('Rewarded ' + order[i].p + ' ' + order[i].b + ' failed: ' + errTxt(e)); next(i + 1); });
+      let settled = 0, tm = 0;
+      const ok = () => {
+        if (settled) return; settled = 1; clearTimeout(tm);
+        if (finished) return; finished = 1;
+        loadingBox(false);
+        cb();                                   /* reward sirf yahan */
+      };
+      const fail = e => {
+        if (settled) return; settled = 1; clearTimeout(tm);
+        if (finished) return;
+        dbg('Rewarded ' + order[i].p + ' ' + order[i].b + ' failed: ' + errTxt(e));
+        if (e && e.skipped) { loadingBox(false); toast('Ad skipped. No reward'); return; }   /* skip par fallback nahi */
+        next(i + 1);
+      };
+      tm = setTimeout(() => fail(new Error('timeout')), REWARD_TIMEOUT);
+      let p;
+      try { p = run[order[i].p](order[i].b); } catch (e) { fail(e); return; }
+      Promise.resolve(p).then(ok, fail);        /* cb() crash hua to fallback ad nahi chalega */
     })(0);
   };
 
   /* ---- Interstitial: result screen ke buttons par ---- */
-  let lastInt = 0;
+  let lastInt = 0, intBusy = false;
   function interstitial(then) {
     const c = cfg();
     if (!c.enabled) { then(); return; }
+    if (intBusy) return;                                              /* double-tap: ignore */
     if (Date.now() - lastInt < c.intGapMs) { dbg('Interstitial skip: 3 min ka gap'); then(); return; }
     if (!inTg() || !window.Adsgram) { dbg('Interstitial skip: Telegram/Adsgram nahi mila'); then(); return; }
-    lastInt = Date.now();
-    let d = 0; const go2 = () => { if (!d) { d = 1; then(); } };
-    agShow(c.adsgramInt).then(go2).catch(e => { dbg('Interstitial failed: ' + errTxt(e)); go2(); });
-    setTimeout(go2, 20000);   /* kuch atak jaye to bhi aage badho */
+    intBusy = true;
+    let d = 0, tm = 0;
+    const go2 = () => { if (d) return; d = 1; clearTimeout(tm); intBusy = false; then(); };
+    agShow(c.adsgramInt)
+      .then(() => { lastInt = Date.now(); go2(); })                   /* gap sirf success par */
+      .catch(e => { dbg('Interstitial failed: ' + errTxt(e)); go2(); });
+    tm = setTimeout(go2, INT_TIMEOUT);                                /* kuch atak jaye to bhi aage badho */
   }
   const _ra = resAgain, _rh = resHome;
-  resAgain = function () { if (RES.busy) return; interstitial(() => _ra()); };
-  resHome = function () { if (RES.busy) return; interstitial(() => _rh()); };
+  resAgain = function (...a) { if (RES.busy) return; interstitial(() => _ra.apply(this, a)); };
+  resHome = function (...a) { if (RES.busy) return; interstitial(() => _rh.apply(this, a)); };
 
   /* ---- Adsgram Task widget (Tasks page) ---- */
   (() => {
@@ -140,34 +198,41 @@ const DEBUG = false;
     const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
     const o = V.tasks;
-    V.tasks = function () {
-      const html = o(); if (!inTg() || !cfg().enabled) return html;
+    V.tasks = function (...a) {
+      const html = o.apply(this, a); if (!inTg() || !cfg().enabled) return html;
       const c = cfg(), done = TK && TK.c && TK.c.ag;
       const box = done ? '<div class="ag-w">✓ Sponsored task done</div>'
         : `<div class="ag-w"><span class="ag-lbl">Sponsored Task</span><adsgram-task data-block-id="${c.adsgramTask}" data-debug="${DEBUG}">
 <span slot="reward" class="ag-r">+${c.taskReward} 💎</span><div slot="button" class="ag-b">Go</div><div slot="claim" class="ag-b c">Claim</div><div slot="done" class="ag-b d">Done</div></adsgram-task></div>`;
-      return html.replace('<div class="tk-bonus">', box + '<div class="tk-bonus">');
+      const mark = '<div class="tk-bonus">';
+      if (html.indexOf(mark) === -1) { dbg('tk-bonus div nahi mila, Sponsored Task nahi dikhega'); return html; }
+      return html.replace(mark, () => box + mark);
     };
 
     const giveReward = el => {
       TK = TK0(); if (TK.c.ag) return; TK.c.ag = 1; tkSave();
       rewardFx(el, { g: num2(cfg().taskReward) }, () => go('tasks'));
     };
+
+    /* document par capture listener: Tasks page kitni baar bhi re-render ho, kaam karta rahega */
+    const isTask = e => e.target && e.target.tagName === 'ADSGRAM-TASK';
+    ['reward', 'onReward'].forEach(t =>
+      document.addEventListener(t, e => { if (isTask(e)) giveReward(e.target); }, true));
+    ['onBannerNotFound', 'onError'].forEach(t =>
+      document.addEventListener(t, e => {
+        if (!isTask(e)) return;
+        dbg('Task widget: ' + e.type + ' ' + errTxt(e.detail));
+        const w = e.target.closest('.ag-w'); if (w) w.style.display = 'none';   /* task nahi mila to khali card mat dikhao */
+      }, true));
+
     const _g = go;
-    go = function (v) {
-      _g(v);
+    go = function (v, ...rest) {
+      const r = _g.call(this, v, ...rest);
       if (v === 'tasks') setTimeout(() => {
-        const el = document.querySelector('adsgram-task'); if (!el || el._b) return; el._b = 1;
-        if (!window.customElements || !customElements.get('adsgram-task')) dbg('adsgram-task element define nahi hua (SDK/Telegram check karo)');
-        el.addEventListener('reward', () => giveReward(el));
-        el.addEventListener('onReward', () => giveReward(el));
-        const none = e => {
-          dbg('Task widget: ' + (e && e.type) + ' ' + errTxt(e && e.detail));
-          const w = el.closest('.ag-w'); if (w) w.style.display = 'none';      /* task nahi mila to khali card mat dikhao */
-        };
-        el.addEventListener('onBannerNotFound', none);
-        el.addEventListener('onError', none);
+        if (document.querySelector('adsgram-task') && (!window.customElements || !customElements.get('adsgram-task')))
+          dbg('adsgram-task element define nahi hua (SDK/Telegram check karo)');
       }, 0);
+      return r;
     };
   })();
 })();
