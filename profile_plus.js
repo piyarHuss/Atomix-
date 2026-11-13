@@ -459,7 +459,7 @@ Object.keys(GAMES).forEach(k => { GAMES[k].poolBg = GAMES[k].poolBg || 'pool_bg_
            sounds/match_found.mp3 -> user/opponent mil jane par ek baar bajta hai
    ===================================================================== */
 const SRCH = new Audio('sounds/searching.mp3');
-SRCH.loop = true; SRCH.volume = .6; SRCH.preload = 'auto';
+SRCH.loop = true; SRCH.volume = .6; SRCH.preload = 'none';
 function srchStart() {
   srchStop();
   if (!S.sfx) return;                       /* Sound OFF ho to nahi bajega */
@@ -497,15 +497,10 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) srchS
    Animation: 3D ghoomta Ludo dice + progress bar ke aage chhota dice + % text
    ===================================================================== */
 const LOAD_IMGS = [
-  'bg', 'profile_bg', 'dr_header', 'rewards_banner', 'tk_header', 'logo', 'banner_art',
-  'arrow_circle', 'back', 'bell', 'bcash', 'cash_stack', 'chevron', 'copy', 'crown_corner', 'daily_gift', 'dice',
-  'edit_pencil', 'gem', 'hamburger', 'icon_daily', 'icon_missions', 'icon_play', 'icon_shop', 'level_crown',
-  'menu_gamepad', 'mis_gems', 'mis_trophy', 'mis_trophy_big', 'opp_unknown', 'pack', 'plane', 'set_settings', 'set_sound',
-  'star_featured', 'stat_gem', 'stat_star', 'stat_trophy', 'stats_chart', 'title_community', 'title_gamepad',
-  'tk_bonus_chest', 'tk_calendar', 'verified', 'wallet_gem', 'wallet_icon', 'avatar',
-  'nav_home', 'nav_games', 'nav_community', 'nav_store', 'nav_menu',
-  'av1', 'av2', 'av3', 'av4', 'av5', 'game_ludo', 'game_carrom', 'game_teenpatti', 'game_snakes', 'game_chess', 'game_solitaire',
-  'loading_logo'
+  'bg', 'logo', 'banner_art', 'avatar', 'av1', 'gem', 'wallet_icon', 'bell', 'arrow_circle',
+  'icon_play', 'icon_shop', 'icon_missions', 'icon_daily', 'stat_trophy', 'stat_star', 'stat_gem',
+  'stats_chart', 'chevron', 'nav_home', 'nav_games', 'nav_community', 'nav_store', 'nav_menu',
+  'dr_header', 'loading_logo'
 ];
 const LOAD_TIPS = ['Roll the dice, rule the board!', 'Complete missions to unlock new avatars', 'Invite friends and earn rewards', 'Win games to level up faster', 'Deposit to unlock VIP avatars'];
 
@@ -622,7 +617,7 @@ async function ldLoadImg(n) {
 }
 function ldPreload(onStep) {
   const list = LOAD_IMGS.slice();
-  Object.keys(GAMES).forEach(k => { const g = GAMES[k]; [g.logo, g.bg, g.banner, g.poolBg].forEach(x => x && list.push(x)); });
+  
   if (typeof myAv === 'number' && myAv > 5) list.push('av' + myAv);
   const uniq = [...new Set(list)];
   let done = 0; const total = uniq.length + 1;
