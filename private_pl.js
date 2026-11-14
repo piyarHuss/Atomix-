@@ -18,6 +18,7 @@
    Firebase:  users ke andar dbSet('priv', {...})   (age, name, photo, tg id, ts, version)
    ===================================================================== */
 (() => {
+  const POLICY_URL = 'https://atomix-privacy-policy.vercel.app/';
   const VER = 1, LS = 'lm_priv_v' + VER;
   const PV = { ok: false, bypass: 0, step: 0, name: '', age: '', c1: 0, c2: 0, cb: null, photo: '', tgId: 0, busy: 0 };
   const $ = id => document.getElementById(id);
@@ -114,7 +115,7 @@
  <section class="pv-p">
   <h2>Privacy &amp; Terms</h2><p class="pv-s">Please read and accept to continue</p>
   <div class="pv-pol">${POLICY}</div>
-  <div class="pv-ck" id="pvC1" onclick="pvChk(1)"><span class="pv-bx"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span><span>I have read and accept the <b>Privacy Policy</b></span></div>
+  <div class="pv-ck" id="pvC1" onclick="pvChk(1)"><span class="pv-bx"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span><span>I have read and accept the <a class="pv-lk" href="${POLICY_URL}" onclick="return pvPolicy(event)">Privacy Policy</a></span></div>
   <div class="pv-ck" id="pvC2" onclick="pvChk(2)"><span class="pv-bx"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span><span>I confirm I am <b>18+</b> and agree to the <b>Terms &amp; Conditions</b></span></div>
  </section>
 </div></div>
@@ -147,6 +148,14 @@
     $('pvC1').classList.toggle('on', !!PV.c1); $('pvC2').classList.toggle('on', !!PV.c2);
   }
 
+  window.pvPolicy = e => {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    try {
+      const tg = window.Telegram && Telegram.WebApp;
+      if (tg && tg.openLink) tg.openLink(POLICY_URL); else window.open(POLICY_URL, '_blank', 'noopener');
+    } catch (x) { window.open(POLICY_URL, '_blank', 'noopener'); }
+    return false;
+  };
   window.pvName = v => { PV.name = String(v || '').slice(0, 16); const a = $('pvAv'); if (a && !PV.photo) a.innerHTML = avatar(92); upd(); };
   window.pvAge = a => { PV.age = a; upd(); };
   window.pvChk = i => { PV['c' + i] = PV['c' + i] ? 0 : 1; upd(); };
@@ -269,6 +278,8 @@
 .pv-pol b{color:#4a1fb0}
 .pv-ck{display:flex;align-items:center;gap:calc(10*var(--k));margin-top:calc(10*var(--k));padding:calc(10*var(--k)) calc(12*var(--k));border-radius:calc(16*var(--k));background:rgba(255,255,255,.1);border:calc(2*var(--k)) solid rgba(160,120,255,.5);text-align:left;font-size:calc(12*var(--k));font-weight:600;line-height:1.3;cursor:pointer;transition:all .25s}
 .pv-ck.on{background:rgba(125,236,58,.18);border-color:#7dec3a}
+.pv-lk{color:#6fc3ff;font-weight:800;text-decoration:underline;text-underline-offset:calc(2*var(--k));text-decoration-thickness:calc(1.5*var(--k))}
+.pv-lk:active{color:#ffd21f}
 .pv-bx{flex:none;display:grid;place-items:center;width:calc(26*var(--k));height:calc(26*var(--k));border-radius:calc(8*var(--k));border:calc(2.5*var(--k)) solid #bba9f5;background:#1a0a5c;transition:all .25s}
 .pv-bx svg{width:calc(18*var(--k));height:calc(18*var(--k));fill:none;stroke:#fff;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset .35s .05s}
 .pv-ck.on .pv-bx{background:linear-gradient(180deg,#8cf53a,#1fb010);border-color:#fff}
