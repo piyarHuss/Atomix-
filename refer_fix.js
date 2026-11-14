@@ -25,14 +25,23 @@
   window.refIsRdy = isRdy;
 
   /* ---------- link ---------- */
-  refLink = function () {
+  const myLink = () => {
     const base = String(REFC.botApp || BOT_APP).replace(/[?#].*$/, '').replace(/\/+$/, '');
     return UID ? base + '?startapp=ref_' + refCode() : base;
+  };
+  refCopy = function () {
+    const t = myLink();
+    const done = () => toast('Link copied ✓');
+    const fb = () => {
+      try { const a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.opacity = 0; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); done(); }
+      catch (e) { toast('Copy failed'); }
+    };
+    try { navigator.clipboard.writeText(t).then(done, fb); } catch (e) { fb(); }
   };
 
   /* ---------- share ---------- */
   refShare = function (k) {
-    const link = refLink();
+    const link = myLink();
     const text = 'Join me on Ludo Masters and win real cash rewards! 🎲 Play ' + minG() + ' games and earn. Use my link:';
     const u = encodeURIComponent(link), t = encodeURIComponent(text);
     if (k === 'sh') {
@@ -109,7 +118,7 @@
   const TG_SVG = (s = 40) => `<svg class="rr-svg" viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#2AABEE"/><path fill="#fff" d="M5.43 11.87l11.04-4.26c.51-.19.96.12.79.9l-1.88 8.86c-.14.63-.51.78-1.04.49l-2.87-2.12-1.38 1.33c-.15.15-.28.28-.58.28l.21-2.92 5.31-4.8c.23-.21-.05-.32-.36-.12L8.08 13.7l-2.83-.88c-.61-.19-.62-.61.13-.91z"/></svg>`;
 
   const shareBox3 = () => `<div class="rr-sh"><div class="rr-sht">${rwI(RWA.mega, '📣', 90, 70)}<div><span>Share your referral link &amp;</span><b>start earning</b></div></div>
-<div class="rr-lk">${rwI(RWA.link, '🔗', 24, 24)}<span>${esc(refLink())}</span><button onclick="refCopy()">${A(RWA.copy, '⧉', 22, 26)}</button></div>
+<div class="rr-lk">${rwI(RWA.link, '🔗', 24, 24)}<span>${esc(myLink())}</span><button onclick="refCopy()">${A(RWA.copy, '⧉', 22, 26)}</button></div>
 <div class="rr-sb">${[['wa', rwI(RWA.wa, '💬', 40, 44), 'WhatsApp'], ['tg', TG_SVG(40), 'Telegram'], ['fb', rwI(RWA.fb, 'f', 40, 44), 'Facebook'], ['sh', rwI(RWA.more, '⤴', 40, 44), 'More']].map(b => `<button class="rr-b ${b[0]}" onclick="refShare('${b[0]}')"><span class="rr-bi">${b[1]}</span><small>${b[2]}</small></button>`).join('')}</div></div>`;
 
   const prog = r => {
@@ -154,8 +163,9 @@ ${ec ? `<div class="rr-cash">Cash earned <b>₹${rfm(ec)}</b></div>` : ''}
 <div class="rr-note">Earn <b>${amt || 'rewards'}</b> when a friend completes <b>${minG()} games</b></div>
 ${rd.length ? `<div class="rw-clw"><i class="sp l"></i><button class="rw-claim" data-ns onclick="refClaimReady(this)">${rwI(RWA.claimGift, '🎁', 34, 34)}<span>Claim all (${rd.length})</span></button><i class="sp r"></i></div>` : ''}
 <div class="rr-fc"><div class="rr-top"><div class="rr-art">${rwI(RWA.kids, '👨‍👩‍👧', 150, 120)}<div class="rr-rb">My Friends (${L.length})</div></div><i class="rr-dv"></i>
-<div class="rr-em">${rwI(RWA.add, '👥', 64, 56)}<b>${L.length ? L.length + (L.length > 1 ? ' friends' : ' friend') + ' joined.<br>Keep inviting!' : 'No friends yet.<br>Share your link below!'}</b></div></div>
-${L.length ? '<div class="rr-list">' + rows + '</div>' : ''}</div>`;
+<div class="rr-em">${rwI(RWA.add, '👥', 64, 56)}<b>${L.length ? L.length + (L.length > 1 ? ' friends' : ' friend') + ' joined.<br>Keep inviting!' : 'No friends yet.<br>Invite friends &amp; earn!'}</b></div></div>
+${L.length ? '<div class="rr-list">' + rows + '</div>' : ''}</div>
+<div class="rr-sh"><div class="rr-sht">${rwI(RWA.mega, '📣', 90, 70)}<div><span>Share your referral link &amp;</span><b>start earning</b></div></div></div>`;
   };
 
   /* ---------- Refer Rules (professional + animation) ---------- */
