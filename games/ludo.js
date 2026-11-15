@@ -1,10 +1,12 @@
-/* LUDO MASTERS — 2 PLAYER LUDO (v5.2 PRO UI + exact board calibration)
+/* LUDO MASTERS — 2 PLAYER LUDO (v5.4 PRO UI + exact board calibration + SMART BOT)
    - Pro layout: top bar (menu + "₹X vs ₹X" + coin badge), avatars, name tags on board
    - Emoji / Chat icons under your avatar -> emoji popup (like real Ludo apps)
    - Animated slide-in MENU: Sound, Music, Leave Match
    - Every UI part can be replaced with a PNG from assets/ (CSS fallback if missing)
    - mp3 sound system (Web Audio, reliable on mobile), background image, 13x13 board mapping, 3D dice, bot AI
 
+   v5.4 ADD: Smart + aggressive bot brain (threat calculation, hunting, escaping, risk by game situation).
+             Tune with BOT_AGGRESSION below. Dice stays fair (bot does not cheat).
    v5.3 ADD: 15-second turn timer (see TURN_SECONDS). No tap in time -> turn goes to opponent.
    v5.2 FIX: token positions now use EXACT cell centers measured from ludo_board.png
              (COL_X / ROW_Y arrays) instead of an equal-size-cell formula.
@@ -109,6 +111,10 @@
   // Turn timer: seconds a player has to tap the dice (or pick a token).
   // Time over -> turn passes to the opponent.
   const TURN_SECONDS = 15;
+
+  // BOT: how hunting/aggressive the bot is.
+  //   0.8 = easier   1.25 = dangerous (default)   1.6 - 2.0 = very dangerous
+  const BOT_AGGRESSION = 1.25;
 
   // Token position nudge in board %: [x, y]. Negative y = move UP.
   // Cell centers are now exact, so this is 0 by default. Only use it if the
@@ -1282,49 +1288,120 @@
       }, 700);
     }
 
+    /* ================================================================ */
+    /*  SMART + AGGRESSIVE BOT BRAIN                                     */
+    /*  Dice stays 100% fair — the bot only plays smarter, no cheating.  */
+    /* ================================================================ */
+
+    // chance (0..0.95) that an enemy (blue) token can land on global square g next turn
+    function enemyThreat(g, foeTokens) {
+      if (g < 0 || SAFE_TRACK_INDEXES.has(g)) return 0;
+      let p = 0;
+      let anyAtHome = false;
+
+      for (const s of foeTokens) {
+        if (s === -1) { anyAtHome = true; continue; }
+        if (s < 0 || s > LAST_TRACK_STEP) continue;
+        for (let dist = 1; dist <= 12; dist++) {
+          const t = s + dist;
+          if (t > LAST_TRACK_STEP) break;
+          if (globalIndex("blue", t) === g) {
+            p += dist <= 6 ? 1 / 6 : 1 / 36;   // 7..12 needs a 6 first
+            break;
+          }
+        }
+      }
+
+      // a token coming out of home (needs a 6) can then hit squares just after its start
+      if (anyAtHome) {
+        const dist = (g - PLAYERS.blue.start + TRACK_LEN) % TRACK_LEN;
+        if (dist >= 1 && dist <= 6) p += 1 / 36;
+      }
+      return Math.min(p, 0.95);
+    }
+
     function chooseAiToken(legal, d) {
+      const mine = state.tokens.red;
+      const foe  = state.tokens.blue;
+
+      const myProg  = mine.reduce((a, s) => a + Math.max(s, 0), 0);
+      const foeProg = foe.reduce((a, s) => a + Math.max(s, 0), 0);
+      const behind  = foeProg - myProg;                                  // >0 -> bot is losing
+      const riskW   = behind > 40 ? 0.6 : behind < -40 ? 1.3 : 1;        // losing -> braver, winning -> careful
+      const aggr    = BOT_AGGRESSION * (behind > 40 ? 1.3 : 1);
+
+      const onBoard = mine.filter(s => s >= 0 && s < FINISH).length;
+
       let best = legal[0];
       let bestScore = -Infinity;
 
       for (const index of legal) {
-        const old = state.tokens.red[index];
+        const old  = mine[index];
         const next = old === -1 ? 0 : old + d;
-        let score = next;
+        let score = d;                                                   // basic progress
 
-        if (old === -1) score += 25;
-        if (next === FINISH) score += 100;
-        else if (next >= LANE_START) score += 18;
+        // ---- leaving home ----
+        if (old === -1) {
+          score += 32;
+          if (onBoard === 0) score += 45;                                // no token on board -> must get one out
+          else if (onBoard === 1) score += 12;
+        }
 
+        // ---- finishing / home lane ----
+        if (next === FINISH) score += 120;
+        else if (next >= LANE_START) score += 38 + (old < LANE_START ? 22 : 0);   // permanently safe
+
+        // ---- track square logic ----
+        let foeAfter = foe;
         if (next <= LAST_TRACK_STEP) {
           const g = globalIndex("red", next);
           const safe = SAFE_TRACK_INDEXES.has(g);
 
-          if (safe) score += 10;
-          else {
-            const canCapture = state.tokens.blue.some(s =>
-              s >= 0 && s <= LAST_TRACK_STEP && globalIndex("blue", s) === g);
-            if (canCapture) score += 60;
-
-            const danger = state.tokens.blue.some(s => {
-              if (s < 0 || s > LAST_TRACK_STEP) return false;
-              const dist = (g - globalIndex("blue", s) + TRACK_LEN) % TRACK_LEN;
-              return dist >= 1 && dist <= 6;
+          if (safe) {
+            score += 24;
+          } else {
+            // CAPTURE?
+            let capLoss = 0;
+            foeAfter = foe.map(s => {
+              if (s >= 0 && s <= LAST_TRACK_STEP && globalIndex("blue", s) === g) {
+                capLoss += s + 15;                                       // lost steps + needs a 6 again
+                return -1;
+              }
+              return s;
             });
-            if (danger) score -= 12;
+            if (capLoss > 0) score += (95 + capLoss * 2.5) * aggr;
+
+            // DANGER at landing square (after a capture removes attackers)
+            const risk = enemyThreat(g, foeAfter);
+            score -= risk * (next + 15) * 3 * riskW;
+
+            // HUNTING: non-safe enemy tokens that will be 1..6 ahead of me
+            for (let dist = 1; dist <= 6; dist++) {
+              const t = next + dist;
+              if (t > LAST_TRACK_STEP) break;
+              const gt = globalIndex("red", t);
+              if (SAFE_TRACK_INDEXES.has(gt)) continue;
+              foeAfter.forEach(s => {
+                if (s >= 0 && s <= LAST_TRACK_STEP && globalIndex("blue", s) === gt) {
+                  score += (1 / 6) * (s + 15) * 2 * aggr;
+                }
+              });
+            }
           }
         }
 
+        // ---- ESCAPE: is the token in danger where it stands now? ----
         if (old >= 0 && old <= LAST_TRACK_STEP) {
           const gOld = globalIndex("red", old);
-          if (!SAFE_TRACK_INDEXES.has(gOld)) {
-            const inDanger = state.tokens.blue.some(s => {
-              if (s < 0 || s > LAST_TRACK_STEP) return false;
-              const dist = (gOld - globalIndex("blue", s) + TRACK_LEN) % TRACK_LEN;
-              return dist >= 1 && dist <= 6;
-            });
-            if (inDanger) score += 14;
-          }
+          const oldRisk = enemyThreat(gOld, foe);
+          score += oldRisk * (old + 15) * 3;                             // moving it away saves it
+
+          // don't abandon a safe square for nothing
+          if (SAFE_TRACK_INDEXES.has(gOld) && next <= LAST_TRACK_STEP &&
+              !SAFE_TRACK_INDEXES.has(globalIndex("red", next))) score -= 6;
         }
+
+        score += Math.random() * 3;                                      // tiny randomness -> not predictable
 
         if (score > bestScore) { bestScore = score; best = index; }
       }
