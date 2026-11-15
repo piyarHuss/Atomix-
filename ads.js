@@ -103,12 +103,24 @@
     o.innerHTML = '<div class="ad-box"><b>Loading ad…</b><small>Please wait</small></div>';
     document.getElementById('app').appendChild(o);
   }
+  const adTasks = () => ((window.RC && window.RC.tasks) ? Object.values(window.RC.tasks) : []).filter(x => x && x.kind === 'ad');
   function findTask(t) {
     if (t && typeof t === 'object') return t;
-    if (t == null || t === '') return window.__adTask || null;
-    const all = (window.RC && window.RC.tasks) ? Object.values(window.RC.tasks) : [];
-    return all.find(x => x && x.id === t) || null;
+    if (t == null || t === '') { t = window.__adTask; window.__adTask = null; if (!t) return null; }
+    return adTasks().find(x => x.id === t) || null;
   }
+
+  /* Button ke click se pehle (capture) pata kar lo ki kaun sa Watch Ad card dabaya gaya.
+     Isse app ka task-click code badle bina har card ka apna ad + apni limit chalti hai. */
+  document.addEventListener('click', e => {
+    try {
+      const el = e.target.closest && e.target.closest('[onclick],[data-id],[data-t]');
+      if (!el) return;
+      const s = (el.getAttribute('onclick') || '') + ' ' + (el.dataset.id || '') + ' ' + (el.dataset.t || '');
+      const hit = adTasks().find(x => new RegExp('(^|[\\s\'"(,])' + String(x.id).replace(/[^\w]/g, '') + '([\\s\'")]|$)').test(s));
+      if (hit) { window.__adTask = hit.id; setTimeout(() => { window.__adTask = null; }, 1500); }
+    } catch (err) { }
+  }, true);
 
   showRewardedAd = function (cb, taskArg) {
     const c = cfg();
@@ -132,6 +144,7 @@
     else add(c.pNet, c.pBlock);
     add(c.fNet, c.fBlock);
     if (!chain.length) chain.push({ net: 'demo', block: '' });
+    dbg('chain: ' + chain.map(x => x.net + ':' + x.block).join(' -> ') + ' | task=' + (tid || 'none (Default)') + ' | RC.ads.pBlock=' + ((window.RC && window.RC.ads && window.RC.ads.pBlock) || 'MISSING'));
 
     let finished = 0;
     loadingBox(true);
