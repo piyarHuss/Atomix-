@@ -6,9 +6,8 @@
    index.html me ads.js ke BAAD aur boot() se PEHLE:
      <script src="refer.js"></script>
 
-   REFERRAL LINK (TON Surge jaisa, Telegram ID se):
+   REFERRAL LINK (TON Surge jaisa, Telegram ID se, koi "ref" nahi):
      https://t.me/Lwinup_bot/winup?startapp=<telegramId>
-   Purane links  ...?startapp=ref_<code>  bhi chalte rehte hain.
    Telegram ke bahar link nahi banta (sirf message dikhta hai).
    BOT TOKEN is file me KABHI nahi daalna (client code public hota hai).
 
@@ -57,7 +56,7 @@ const rtg = () => (window.Telegram && Telegram.WebApp) || null;
 const tgUser = () => { const t = rtg(); return (t && t.initDataUnsafe && t.initDataUnsafe.user) || null; };
 /* referral code = sirf Telegram ID. Telegram ke bahar '' (koi fallback nahi) */
 const refCode = () => { const u = tgUser(); return u && u.id ? String(u.id) : ''; };
-/* link: https://t.me/Lwinup_bot/winup?startapp=<telegramId> */
+/* link: https://t.me/Lwinup_bot/winup?startapp=<telegramId>  (koi "ref" prefix nahi) */
 const refLink = () => {
   const code = refCode();
   if (!code) return NO_TG_MSG;
@@ -122,9 +121,9 @@ async function refCapture(v) {
   for (let i = 0; i < 20; i++) { tg = rtg(); if (tg) break; await rsleep(150); }
   if (!tg || !tg.initDataUnsafe) return;
   const tu = tg.initDataUnsafe.user;
-  /* start_param: naya link = Telegram ID, purana link = ref_<code>. Bot ?ref=<id> se bhi aa sakta hai */
+  /* start_param = referrer ka Telegram ID (?startapp=<telegramId>). Bot ?ref=<id> se bhi aa sakta hai */
   const sp = tg.initDataUnsafe.start_param || new URLSearchParams(location.search).get('ref') || '';
-  const code = String(sp).replace(/^ref_/, '');
+  const code = String(sp);
   if (!tu || !tu.id || !/^[A-Za-z0-9]{3,20}$/.test(code) || code === refCode()) return;
   if (v && v.ref && v.ref.by) return;                                   /* pehle se kisi ke referral se aaya */
   if (v && v.createdAt && Date.now() - v.createdAt > 2 * 864e5) return; /* sirf naye users */
