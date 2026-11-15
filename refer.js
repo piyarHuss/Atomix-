@@ -7,7 +7,9 @@
      <script src="refer.js"></script>
 
    REFERRAL LINK (TON Surge jaisa, Telegram ID se, koi "ref" nahi):
-     https://t.me/Lwinup_bot/winup?startapp=<telegramId>
+     https://t.me/Lwinup_bot?start=<telegramId>
+   Isse pehle bot ka START page khulta hai. Bot /start pe mini app ka button bhejta hai
+   (bot code alag, server pe) jo ?startapp=<telegramId> ke saath mini app kholta hai.
    Telegram ke bahar link nahi banta (sirf message dikhta hai).
    BOT TOKEN is file me KABHI nahi daalna (client code public hota hai).
 
@@ -31,7 +33,7 @@
      ref_rf_head.png, ref_rf_bg.png, ref_ic_mail.png, ref_ic_hourglass.png, ref_rf_kids.png,
      ref_rf_add.png, ref_rf_mega.png, ref_ic_link.png, ref_s_fb.png
    ===================================================================== */
-const BOT_APP = 'https://t.me/Lwinup_bot/winup';
+const BOT_APP = 'https://t.me/Lwinup_bot';   /* bot link (START page), mini app direct link nahi */
 const NO_TG_MSG = 'Open Ludo Masters inside Telegram';
 const REF_DEF = {
   enabled: true, rewardGems: 50, rewardCash: 0, welcomeGems: 20, ptsPerRef: 100,
@@ -56,12 +58,12 @@ const rtg = () => (window.Telegram && Telegram.WebApp) || null;
 const tgUser = () => { const t = rtg(); return (t && t.initDataUnsafe && t.initDataUnsafe.user) || null; };
 /* referral code = sirf Telegram ID. Telegram ke bahar '' (koi fallback nahi) */
 const refCode = () => { const u = tgUser(); return u && u.id ? String(u.id) : ''; };
-/* link: https://t.me/Lwinup_bot/winup?startapp=<telegramId>  (koi "ref" prefix nahi) */
+/* link: https://t.me/Lwinup_bot?start=<telegramId>  (bot START page, koi "ref" prefix nahi) */
 const refLink = () => {
   const code = refCode();
   if (!code) return NO_TG_MSG;
   const base = String((typeof REFC !== 'undefined' && REFC.botApp) || BOT_APP).replace(/[?#].*$/, '').replace(/\/+$/, '');
-  return base + '?startapp=' + code;
+  return base + '?start=' + code;
 };
 function wk(off) {                                /* hafta SATURDAY se shuru */
   const d = new Date(); d.setHours(0, 0, 0, 0);
