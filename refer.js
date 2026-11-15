@@ -9,6 +9,7 @@
    REFERRAL LINK (TON Surge jaisa, Telegram ID se):
      https://t.me/Lwinup_bot/winup?startapp=<telegramId>
    Purane links  ...?startapp=ref_<code>  bhi chalte rehte hain.
+   Telegram ke bahar link nahi banta (sirf message dikhta hai).
    BOT TOKEN is file me KABHI nahi daalna (client code public hota hai).
 
    Firebase paths:
@@ -32,8 +33,7 @@
      ref_rf_add.png, ref_rf_mega.png, ref_ic_link.png, ref_s_fb.png
    ===================================================================== */
 const BOT_APP = 'https://t.me/Lwinup_bot/winup';
-const BOT_USER = 'Lwinup_bot';        /* @ ke bina */
-const LINK_MODE = 'startapp';         /* 'startapp' = seedha mini app | 'start' = bot chat (bot server chahiye) */
+const NO_TG_MSG = 'Open Ludo Masters inside Telegram';
 const REF_DEF = {
   enabled: true, rewardGems: 50, rewardCash: 0, welcomeGems: 20, ptsPerRef: 100,
   prizes: '500,300,200,100,100,50,50,50,50,50', channelUrl: '', supportUrl: ''
@@ -55,12 +55,12 @@ const rsleep = ms => new Promise(r => setTimeout(r, ms));
 const rget = p => fdb.ref(p).once('value').then(s => s.val() || {}).catch(() => ({}));
 const rtg = () => (window.Telegram && Telegram.WebApp) || null;
 const tgUser = () => { const t = rtg(); return (t && t.initDataUnsafe && t.initDataUnsafe.user) || null; };
-/* referral code = Telegram ID (TON Surge jaisa). Telegram ke bahar test ho to purana UID code */
-const refCode = () => { const u = tgUser(); return u && u.id ? String(u.id) : String(UID || '').slice(0, 10); };
+/* referral code = sirf Telegram ID. Telegram ke bahar '' (koi fallback nahi) */
+const refCode = () => { const u = tgUser(); return u && u.id ? String(u.id) : ''; };
+/* link: https://t.me/Lwinup_bot/winup?startapp=<telegramId> */
 const refLink = () => {
   const code = refCode();
-  if (!code) return BOT_APP;
-  if (LINK_MODE === 'start') return 'https://t.me/' + BOT_USER + '?start=' + code;
+  if (!code) return NO_TG_MSG;
   const base = String((typeof REFC !== 'undefined' && REFC.botApp) || BOT_APP).replace(/[?#].*$/, '').replace(/\/+$/, '');
   return base + '?startapp=' + code;
 };
@@ -90,6 +90,7 @@ function refOpenUrl(url) {
 }
 function refOpen(k) { const u = REFC[k]; if (!u) { toast('Coming soon'); return; } refOpenUrl(u); }
 function refCopy() {
+  if (!refCode()) { toast(NO_TG_MSG); return; }
   const t = refLink();
   const done = () => toast('Link copied ✓');
   try { navigator.clipboard.writeText(t).then(done, fb); } catch (e) { fb(); }
@@ -99,6 +100,7 @@ function refCopy() {
   }
 }
 function refShare(k) {
+  if (!refCode()) { toast(NO_TG_MSG); return; }
   const link = refLink(), text = 'Join me on Ludo Masters and win real rewards! 🎲 Use my link:';
   const u = encodeURIComponent(link), t = encodeURIComponent(text);
   if (k === 'sh') { if (navigator.share) { navigator.share({ title: 'Ludo Masters', text, url: link }).catch(() => { }); } else refCopy(); return; }
@@ -152,7 +154,8 @@ async function refInit(v) {
   if (!UID) return;
   try {
     await refCfg(true);
-    fdb.ref('refCodes/' + refCode()).set(UID).catch(() => { });
+    const code = refCode();
+    if (code) fdb.ref('refCodes/' + code).set(UID).catch(() => { });   /* sirf Telegram ID se code banta hai */
     refListen();
     await refCapture(v);
   } catch (e) { console.error('refInit', e); }
