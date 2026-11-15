@@ -6,21 +6,17 @@
      <script src="refer_fix.js"></script>     <-- refer.js ke BAAD
    (type="module" mat lagana, warna globals reassign nahi honge)
 
-   v3 me kya badla:
-   1. LINK ab refer.js jaisa hi hai:
-        https://t.me/Lwinup_bot/winup?startapp=ref_<code>
-      code = refCode() (UID ke pehle 10 chars). Telegram ID / ?start= hata diya.
-   2. refCodes/<code> = UID mapping refer.js ka refInit likhta hai;
-      yaha sirf retry hai (agar pehli write fail ho jaye).
-   3. Invite capture: start_param "ref_<code>" (startapp) se pakda jata hai.
-   4. Reward: friend 5 games complete kare tab referrer ko Rs5 (config se badal sakte ho)
-   5. Friend ka game-progress (gp) referrer ki list me sync hota hai (sirf badhta hai)
-   6. My Referrals / My Rewards me progress bar + Claim sirf ready par
-   7. Telegram icon inline SVG, Refer Rules page professional + animation
-   8. Debug: console me "REF:" wali lines dekho
+   v4 LINK FORMAT:
+        https://t.me/Lwinup_bot?start=<Telegram ID>
+      (koi /app-name nahi, koi startapp nahi)
+      Share text: "Join me on Ludo Masters and win real cash rewards! ..."
 
-   ZAROORI (BotFather): Mini App ka short name "winup" hona chahiye
-   (BOT_APP = https://t.me/Lwinup_bot/winup). Warna startapp link kaam nahi karega.
+   ?start= link pehle BOT chat kholta hai. Bot ko /start <ID> pe ek web_app button
+   bhejna hoga jiska URL  <APP_URL>?ref=<ID>  ho (bot ka code reply me diya hai).
+   Mini App ?ref= padh leta hai (startParam), aur referral capture hota hai.
+
+   Baaki: 5 games reward, gp progress sync, My Rewards/Referrals progress bar,
+   Telegram SVG icon, Refer Rules page. Debug: console me "REF:" lines.
 
    BOT TOKEN is file me KABHI nahi daalna (client code public hota hai).
    ===================================================================== */
@@ -38,24 +34,25 @@
   window.refIsRdy = isRdy;
   const dbg = (...a) => { try { console.log('REF:', ...a); } catch (e) { } };
 
-  if (!/^https:\/\/t\.me\/[A-Za-z0-9_]+\/[A-Za-z0-9_]+$/.test(BOT_APP)) {
-    console.warn('REF: BOT_APP galat lag raha hai ->', BOT_APP, '(format: https://t.me/<bot>/<miniapp_short_name>)');
-  }
+  /* ---------- link ---------- */
+  /* referral code = user ka Telegram ID (Telegram na mile to UID code) */
+  const myCode = () => {
+    const tg = rtg(), u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+    return u && u.id ? String(u.id) : refCode();
+  };
+  const LINK_BASE = 'https://t.me/Lwinup_bot';
+  /* https://t.me/Lwinup_bot?start=8075561163 */
+  const myLink = () => LINK_BASE + (UID ? '?start=' + myCode() : '');
 
-  /* ---------- link (refer.js jaisa) ---------- */
-  const myCode = () => refCode();
-  const myLink = () => refLink();   /* https://t.me/Lwinup_bot/winup?startapp=ref_<code> */
-
-  /* refCodes/<code> = UID  (refer.js refInit already likhta hai; ye sirf retry hai) */
-  let CODE_OK = 0, CODE_TRY = 0;
+  /* refCodes/<telegramId> = uid  (referrer ka code UID se map hota hai) */
+  let CODE_OK = 0;
   setInterval(() => {
-    if (CODE_OK || !UID || CODE_TRY > 10) return;
-    const c = myCode(); if (!c) return;
-    CODE_TRY++;
+    if (CODE_OK || !UID) return;
+    const c = myCode(); if (!c || c === refCode()) return;
     fdb.ref('refCodes/' + c).transaction(x => (x && x !== UID) ? undefined : UID)
       .then(res => {
-        if (res.committed) { CODE_OK = 1; dbg('refCodes/' + c + ' ok'); }
-        else dbg('refCodes/' + c + ' kisi aur UID ka hai');
+        if (res.committed) { CODE_OK = 1; dbg('refCodes/' + c + ' saved'); }
+        else dbg('refCodes/' + c + ' kisi aur UID ka hai, save nahi hua');
       })
       .catch(e => console.error('REF: refCodes write failed (Firebase rules check karo)', e));
   }, 4000);
@@ -65,7 +62,7 @@
     let sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
     if (!sp) { try { sp = new URLSearchParams(String(location.hash || '').replace(/^#/, '')).get('tgWebAppStartParam') || ''; } catch (e) { } }
     if (!sp) { try { sp = new URLSearchParams(location.search).get('tgWebAppStartParam') || ''; } catch (e) { } }
-    /* purane/alternate links: ?ref=<code> */
+    /* ?start=<ID> link ke baad bot jo web_app button bhejta hai: <APP_URL>?ref=<ID> */
     if (!sp) { try { sp = new URLSearchParams(location.search).get('ref') || ''; } catch (e) { } }
     if (!sp) { try { sp = new URLSearchParams(String(location.hash || '').replace(/^#/, '')).get('ref') || ''; } catch (e) { } }
     if (!sp) { try { sp = sessionStorage.getItem('ref_code') || ''; } catch (e) { } }
@@ -73,7 +70,7 @@
     return String(sp || '');
   };
 
-  /* referral capture: start_param "ref_<code>" (startapp) ya sirf "<code>" */
+  /* referral capture: ?ref=<TelegramID> (bot ke web_app button se) ya start_param */
   refCapture = async function (v) {
     if (REFC.enabled === false) return dbg('capture: feature disabled');
     let tg = null;
@@ -83,7 +80,7 @@
     dbg('start_param =', JSON.stringify(sp), '| tg user =', tu && tu.id);
     if (!/^(ref_)?[A-Za-z0-9_-]{4,40}$/.test(sp) || !tu || !tu.id) return dbg('capture: ref link se nahi khula (start_param khali)');
     const code = sp.replace(/^ref_/, '');
-    if (!code || code === refCode()) return dbg('capture: self/empty code');
+    if (!code || code === refCode() || code === String(tu.id)) return dbg('capture: self/empty code');
     if (v && v.ref && v.ref.by) return dbg('capture: pehle se kisi ke referral se aaya');
     if (v && v.createdAt && Date.now() - v.createdAt > 2 * 864e5) return dbg('capture: user purana hai (>2 din)');
     if (ST.played > 0) return dbg('capture: user pehle game khel chuka');
