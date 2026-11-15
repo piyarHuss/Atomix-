@@ -10,7 +10,7 @@
    2. Friend ka game-progress (gp) referrer ki list me sync hota hai
    3. My Referrals / My Rewards me progress bar (2/5 games) + Claim sirf ready par
    4. Telegram icon ki jagah inline SVG (purana asset toggle jaisa dikh raha tha)
-   5. Referral link HAMESHA http://t.me/Lwinup_bot se banta hai (config se override nahi hota)
+   5. Referral link: https://t.me/Lwinup_bot?start=<user ka Telegram ID> (har user ka alag)
    6. Refer Rules page professional + animation (typewriter + staggered cards)
    ===================================================================== */
 (() => {
@@ -25,8 +25,45 @@
   window.refIsRdy = isRdy;
 
   /* ---------- link (FIXED: direct bot link) ---------- */
-  const BOT_LINK = 'http://t.me/Lwinup_bot';
-  const myLink = () => UID ? BOT_LINK + '?startapp=ref_' + refCode() : BOT_LINK;
+  const BOT_LINK = 'https://t.me/Lwinup_bot';
+  /* referral code = user ka Telegram ID (Telegram na mile to purana UID code) */
+  const myCode = () => {
+    const tg = rtg(), u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+    return u && u.id ? String(u.id) : refCode();
+  };
+  const myLink = () => UID ? BOT_LINK + '?start=' + myCode() : BOT_LINK;   /* https://t.me/Lwinup_bot?start=6959062335 */
+
+  /* Telegram ID code ko UID se map karo: refCodes/<telegramId> = uid */
+  let CODE_OK = 0;
+  setInterval(() => {
+    if (CODE_OK || !UID) return;
+    const c = myCode(); if (!c || c === refCode()) return;
+    fdb.ref('refCodes/' + c).transaction(x => (x && x !== UID) ? undefined : UID)
+      .then(() => { CODE_OK = 1; }).catch(() => { });
+  }, 4000);
+
+  /* referral capture: start_param "ref_<code>" ya sirf "<code>" (Telegram ID) dono chalega */
+  refCapture = async function (v) {
+    if (REFC.enabled === false) return;
+    let tg = null;
+    for (let i = 0; i < 20; i++) { tg = rtg(); if (tg) break; await rsleep(150); }
+    if (!tg || !tg.initDataUnsafe) return;
+    const sp = String(tg.initDataUnsafe.start_param || ''), tu = tg.initDataUnsafe.user;
+    if (!/^(ref_)?[A-Za-z0-9_-]{4,40}$/.test(sp) || !tu || !tu.id) return;
+    const code = sp.replace(/^ref_/, '');
+    if (!code || code === refCode() || code === String(tu.id)) return;
+    if (v && v.ref && v.ref.by) return;
+    if (v && v.createdAt && Date.now() - v.createdAt > 2 * 864e5) return;
+    if (ST.played > 0) return;
+    const rUid = (await fdb.ref('refCodes/' + code).once('value')).val();
+    if (!rUid || rUid === UID) return;
+    const tx = await fdb.ref('refTg/' + tu.id).transaction(x => x ? undefined : { by: rUid, u: UID, ts: Date.now() });
+    if (!tx.committed) return;
+    await fdb.ref('refs/' + rUid + '/' + UID).set({ ts: Date.now(), n: String(tu.first_name || 'Friend').slice(0, 16), a: 'av' + myAv });
+    dbSet('ref', { by: rUid, ts: Date.now() });
+    const wg = rn(REFC.welcomeGems);
+    if (wg > 0) { BAL.gems += wg; saveBal(); refreshBal(); toast('🎁 Welcome bonus +' + wg + ' 💎'); }
+  };
   refCopy = function () {
     const t = myLink();
     const done = () => toast('Link copied ✓');
@@ -117,7 +154,7 @@
 
   const shareBox3 = () => `<div class="rr-sh"><div class="rr-sht">${rwI(RWA.mega, '📣', 90, 70)}<div><span>Share your referral link &amp;</span><b>start earning</b></div></div>
 <div class="rr-lk">${rwI(RWA.link, '🔗', 24, 24)}<span>${esc(myLink().replace(/^https?:\/\//, ''))}</span><button onclick="refCopy()" aria-label="Copy link">${A(RWA.copy, '⧉', 22, 26)}</button></div>
-<div class="rr-code" onclick="refCopy()"><small>Your referral code</small><b>${esc(UID ? refCode() : '—')}</b><em>Tap to copy link</em></div>
+<div class="rr-code" onclick="refCopy()"><small>Your referral code</small><b>${esc(UID ? myCode() : '—')}</b><em>Tap to copy link</em></div>
 <div class="rr-sb">${[['wa', rwI(RWA.wa, '💬', 40, 44), 'WhatsApp'], ['tg', TG_SVG(40), 'Telegram'], ['fb', rwI(RWA.fb, 'f', 40, 44), 'Facebook'], ['sh', rwI(RWA.more, '⤴', 40, 44), 'More']].map(b => `<button class="rr-b ${b[0] === 'tg' ? 'tgx' : b[0]}" onclick="refShare('${b[0]}')"><span class="rr-bi">${b[1]}</span><small>${b[2]}</small></button>`).join('')}</div></div>`;
 
   const prog = r => {
