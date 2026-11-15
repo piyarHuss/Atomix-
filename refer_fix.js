@@ -33,6 +33,7 @@
   const isRdy = r => !!r && !r.claimed && gpOf(r) >= minG();
   window.refIsRdy = isRdy;
   const dbg = (...a) => { try { console.log('REF:', ...a); } catch (e) { } };
+  dbg('refer_fix v4 loaded (link format: t.me/Lwinup_bot?start=<TelegramID>)');
 
   /* ---------- link ---------- */
   /* referral code = user ka Telegram ID (Telegram na mile to UID code) */
