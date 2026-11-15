@@ -1,27 +1,41 @@
 /* =====================================================================
-   refer_fix.js  —  Ludo Masters  (refer.js ka PATCH)
+   refer_fix.js  v2  —  Ludo Masters  (refer.js ka PATCH)
 
    index.html me:
      <script src="refer.js"></script>
      <script src="refer_fix.js"></script>     <-- refer.js ke BAAD
+   (type="module" mat lagana, warna globals reassign nahi honge)
 
-   Kya badla:
+   Kya badla (v2 fixes):
    1. Reward: friend 5 games complete kare tab referrer ko Rs5 (config se badal sakte ho)
-   2. Friend ka game-progress (gp) referrer ki list me sync hota hai
+   2. Friend ka game-progress (gp) referrer ki list me sync hota hai (sirf badhta hai, kam nahi hota)
    3. My Referrals / My Rewards me progress bar (2/5 games) + Claim sirf ready par
    4. Telegram icon ki jagah inline SVG
-   5. Referral link (FIXED): https://t.me/Lwinup_bot?start=<Telegram ID>
-      (?start= wala link Mini App ko start_param nahi deta, isliye referral capture nahi hota tha)
+   5. Referral link: BOT_APP + '?startapp=<Telegram ID>'
+      -> BOT_APP = 'https://t.me/Lwinup_bot/<app_short_name>'  (BotFather me Mini App ka short name)
+         ya BotFather me "Main Mini App" set ho to 'https://t.me/Lwinup_bot'
+      -> '?start=' Mini App ko start_param NAHI deta, isliye startapp use hota hai.
    6. Refer Rules page professional + animation
    7. Debug logs: console me "REF:" wali lines dekho
 
+   FIXES in v2:
+   - refCodes transaction: sirf committed hone par CODE_OK=1 (pehle galat "saved" aata tha)
+   - Config overwrite bug: admin/Firebase ki value ab patch override nahi karta
+   - Claim se pehle friend ka gp Firebase se fresh padha jata hai (stale/local data par bharosa nahi)
+   - gp sirf upar jata hai, aur 1000 se zyada nahi
+   - BOT_APP galat ho to console warning
+
    BOT TOKEN is file me KABHI nahi daalna (client code public hota hai).
+   Asli security ke liye Firebase rules / server verify zaroori hai (chat me rules diye hain).
    ===================================================================== */
 (() => {
   /* ---------- defaults ---------- */
-  const D = { rewardGems: 0, rewardCash: 5, minGames: 5 };
-  Object.assign(REF_DEF, D);
-  Object.assign(REFC, D);
+  const DEF = { rewardGems: 0, rewardCash: 5, minGames: 5 };
+  const OLD = Object.assign({}, REF_DEF);
+  Object.assign(REF_DEF, DEF);
+  /* REFC me sirf wahi keys badlo jo missing hain ya abhi tak purane default par hain
+     (yaani admin ne change nahi ki). Admin ki value safe rehti hai. */
+  for (const k in DEF) { if (REFC[k] == null || REFC[k] === OLD[k]) REFC[k] = DEF[k]; }
 
   const minG = () => Math.max(1, Math.floor(rn(REFC.minGames)) || 5);
   const gpOf = r => Math.max(0, rn(r && r.gp));
@@ -29,14 +43,19 @@
   window.refIsRdy = isRdy;
   const dbg = (...a) => { try { console.log('REF:', ...a); } catch (e) { } };
 
-  /* ---------- link (FIXED: Mini App link, startapp param) ---------- */
+  /* ---------- link ---------- */
   /* referral code = user ka Telegram ID (Telegram na mile to purana UID code) */
   const myCode = () => {
     const tg = rtg(), u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
     return u && u.id ? String(u.id) : refCode();
   };
-  /* https://t.me/Lwinup_bot?start=6959062335 */
   const myLink = () => UID ? BOT_APP + '?startapp=' + myCode() : BOT_APP;
+
+  /* BOT_APP sanity check */
+  try {
+    if (!/^https:\/\/t\.me\/[A-Za-z0-9_]+(\/[A-Za-z0-9_]+)?$/.test(String(BOT_APP)))
+      console.warn('REF: BOT_APP galat lag raha hai ->', BOT_APP, '(format: https://t.me/Lwinup_bot/appname)');
+  } catch (e) { }
 
   /* Telegram ID code ko UID se map karo: refCodes/<telegramId> = uid */
   let CODE_OK = 0;
@@ -44,7 +63,10 @@
     if (CODE_OK || !UID) return;
     const c = myCode(); if (!c || c === refCode()) return;
     fdb.ref('refCodes/' + c).transaction(x => (x && x !== UID) ? undefined : UID)
-      .then(() => { CODE_OK = 1; dbg('refCodes/' + c + ' saved'); })
+      .then(res => {
+        if (res.committed) { CODE_OK = 1; dbg('refCodes/' + c + ' saved'); }
+        else dbg('refCodes/' + c + ' kisi aur UID ka hai, save nahi hua');
+      })
       .catch(e => console.error('REF: refCodes write failed (Firebase rules check karo)', e));
   }, 4000);
 
@@ -137,8 +159,10 @@
   function pushProg() {
     if (!UID || !REF_BY) return;
     const p = Math.min(1000, Math.floor(rn(typeof ST !== 'undefined' && ST ? ST.played : 0)));
-    if (p === GP_LAST) return;
-    fdb.ref('refs/' + REF_BY + '/' + UID + '/gp').set(p).then(() => { GP_LAST = p; })
+    if (p <= GP_LAST) return;   /* sirf badhta hai */
+    fdb.ref('refs/' + REF_BY + '/' + UID + '/gp')
+      .transaction(x => (typeof x === 'number' && x >= p) ? undefined : p)
+      .then(() => { GP_LAST = p; })
       .catch(e => console.error('REF: gp write failed (rules check karo)', e));
   }
   setInterval(() => {
@@ -158,11 +182,19 @@
       for (const id of ids) {
         const r = REFS[id]; if (!r || r.claimed) continue;
         if (!isRdy(r)) { wait++; continue; }
+        /* fresh gp Firebase se verify karo */
+        let fresh = r;
+        try {
+          const snap = await fdb.ref('refs/' + UID + '/' + id).once('value');
+          const fv = snap.val();
+          if (fv) fresh = Object.assign({}, r, fv);
+        } catch (e) { dbg('claim: fresh read fail', e); }
+        if (!isRdy(fresh)) { wait++; REFS[id] = Object.assign({}, r, fresh); continue; }
         const gg = rn(REFC.rewardGems), cc = rn(REFC.rewardCash);
         const res = await fdb.ref('refs/' + UID + '/' + id + '/claimed').transaction(x => x ? undefined : 1);
         if (!res.committed) continue;
         fdb.ref('refs/' + UID + '/' + id).update({ g: gg, c: cc, cts: Date.now() }).catch(() => { });
-        REFS[id] = Object.assign({}, r, { claimed: 1, g: gg, c: cc });
+        REFS[id] = Object.assign({}, fresh, { claimed: 1, g: gg, c: cc });
         g += gg; c += cc; msAdd('inv'); tkAdd('i1');
       }
     } catch (e) { console.error(e); }
@@ -255,23 +287,23 @@ ${shareBox3()}`;
       'Fake, duplicate or automated accounts are removed and rewards cancelled.',
       'We may change rewards or rules at any time.'
     ];
-    const D = i => `style="--d:${(0.5 + i * 0.14).toFixed(2)}s"`;
+    const dly = i => `style="--d:${(0.5 + i * 0.14).toFixed(2)}s"`;
     return `<div class="rl${fx ? ' rl-go' : ''}">
 <div class="rl-hero"><i class="rl-glow"></i><span class="rl-coin">₹</span><h2>Refer &amp; Earn</h2>
 <div class="rl-amt">${rew}</div><p class="rl-type"><span>${esc(heroTxt)}</span></p></div>
 <div class="rl-h">How it works</div>
-<div class="rl-steps">${steps.map((s, i) => `<div class="rl-s" ${D(i)}><span class="rl-n">${i + 1}</span><span class="rl-i">${s[0]}</span><div><b>${s[1]}</b><p>${s[2]}</p></div></div>`).join('')}</div>
+<div class="rl-steps">${steps.map((s, i) => `<div class="rl-s" ${dly(i)}><span class="rl-n">${i + 1}</span><span class="rl-i">${s[0]}</span><div><b>${s[1]}</b><p>${s[2]}</p></div></div>`).join('')}</div>
 <div class="rl-h">Rewards at a glance</div>
 <div class="rl-tiles">
-<div ${D(4)}><small>You earn</small><b>${rew}</b><i>per friend</i></div>
-<div ${D(5)}><small>Friend gets</small><b>${w ? w + ' 💎' : '—'}</b><i>welcome bonus</i></div>
-<div ${D(6)}><small>Unlocks after</small><b>${n}</b><i>games played</i></div></div>
+<div ${dly(4)}><small>You earn</small><b>${rew}</b><i>per friend</i></div>
+<div ${dly(5)}><small>Friend gets</small><b>${w ? w + ' 💎' : '—'}</b><i>welcome bonus</i></div>
+<div ${dly(6)}><small>Unlocks after</small><b>${n}</b><i>games played</i></div></div>
 <div class="rl-h">Weekly leaderboard prizes</div>
-<div class="rl-c" ${D(7)}><p class="rl-sub">Every friend also gives you <b>${rfm(pt)} points</b>. Top 10 each week win cash prizes.</p>
+<div class="rl-c" ${dly(7)}><p class="rl-sub">Every friend also gives you <b>${rfm(pt)} points</b>. Top 10 each week win cash prizes.</p>
 ${pr.map((z, i) => `<div class="rl-pz"><span>${medal(i)}<em>Rank ${i + 1}</em></span><b>₹${rfm(z)}</b></div>`).join('')}
 <small class="rf-sm">The week runs Saturday to Friday. Prizes are credited by our team after the week ends.</small></div>
 <div class="rl-h">Terms</div>
-<div class="rl-c" ${D(8)}><ul class="rl-ul">${terms.map(t => '<li>' + t + '</li>').join('')}</ul></div></div>`;
+<div class="rl-c" ${dly(8)}><ul class="rl-ul">${terms.map(t => '<li>' + t + '</li>').join('')}</ul></div></div>`;
   };
 
   /* ---------- FAQ text ---------- */
