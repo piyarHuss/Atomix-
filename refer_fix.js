@@ -118,8 +118,9 @@
   const TG_SVG = (s = 40) => `<svg class="rr-svg" viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#2AABEE"/><path fill="#fff" d="M5.43 11.87l11.04-4.26c.51-.19.96.12.79.9l-1.88 8.86c-.14.63-.51.78-1.04.49l-2.87-2.12-1.38 1.33c-.15.15-.28.28-.58.28l.21-2.92 5.31-4.8c.23-.21-.05-.32-.36-.12L8.08 13.7l-2.83-.88c-.61-.19-.62-.61.13-.91z"/></svg>`;
 
   const shareBox3 = () => `<div class="rr-sh"><div class="rr-sht">${rwI(RWA.mega, '📣', 90, 70)}<div><span>Share your referral link &amp;</span><b>start earning</b></div></div>
-<div class="rr-lk">${rwI(RWA.link, '🔗', 24, 24)}<span>${esc(myLink())}</span><button onclick="refCopy()">${A(RWA.copy, '⧉', 22, 26)}</button></div>
-<div class="rr-sb">${[['wa', rwI(RWA.wa, '💬', 40, 44), 'WhatsApp'], ['tg', TG_SVG(40), 'Telegram'], ['fb', rwI(RWA.fb, 'f', 40, 44), 'Facebook'], ['sh', rwI(RWA.more, '⤴', 40, 44), 'More']].map(b => `<button class="rr-b ${b[0]}" onclick="refShare('${b[0]}')"><span class="rr-bi">${b[1]}</span><small>${b[2]}</small></button>`).join('')}</div></div>`;
+<div class="rr-lk">${rwI(RWA.link, '🔗', 24, 24)}<span>${esc(myLink().replace(/^https?:\/\//, ''))}</span><button onclick="refCopy()" aria-label="Copy link">${A(RWA.copy, '⧉', 22, 26)}</button></div>
+<div class="rr-code" onclick="refCopy()"><small>Your referral code</small><b>${esc(UID ? refCode() : '—')}</b><em>Tap to copy link</em></div>
+<div class="rr-sb">${[['wa', rwI(RWA.wa, '💬', 40, 44), 'WhatsApp'], ['tg', TG_SVG(40), 'Telegram'], ['fb', rwI(RWA.fb, 'f', 40, 44), 'Facebook'], ['sh', rwI(RWA.more, '⤴', 40, 44), 'More']].map(b => `<button class="rr-b ${b[0] === 'tg' ? 'tgx' : b[0]}" onclick="refShare('${b[0]}')"><span class="rr-bi">${b[1]}</span><small>${b[2]}</small></button>`).join('')}</div></div>`;
 
   const prog = r => {
     const n = minG(), p = Math.min(gpOf(r), n);
@@ -214,6 +215,22 @@ ${pr.map((z, i) => `<div class="rl-pz"><span>${medal(i)}<em>Rank ${i + 1}</em></
 
   /* ---------- CSS ---------- */
   const css = `
+.rr-b.tgx{background:linear-gradient(180deg,#3cb6f5,#1672c4)!important;background-image:linear-gradient(180deg,#3cb6f5,#1672c4)!important;border:calc(3*var(--u)) solid #f0b43a!important;border-radius:calc(20*var(--u))!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:calc(3*var(--u));padding:calc(6*var(--u)) calc(2*var(--u));box-shadow:0 calc(3*var(--u)) calc(8*var(--u)) rgba(0,0,0,.35);color:#fff}
+.rr-b.tgx::before,.rr-b.tgx::after{display:none!important;content:none!important}
+.rr-b.tgx .rr-bi{background:none!important;width:calc(44*var(--u));height:calc(44*var(--u))}
+.rr-b.tgx small{display:block!important;visibility:visible!important;opacity:1!important;position:static!important;font-weight:800;font-size:calc(11.5*var(--u));color:#fff;text-shadow:0 calc(1.5*var(--u)) calc(2*var(--u)) rgba(0,0,0,.5)}
+.rr-lk{display:flex!important;align-items:center;gap:calc(8*var(--u));height:calc(50*var(--u))!important;min-height:0;padding:0 calc(6*var(--u)) 0 calc(12*var(--u))!important}
+.rr-lk>.as,.rr-lk>.ph,.rr-lk>img{flex:none;margin:0!important}
+.rr-lk>span{flex:1;min-width:0;margin:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:left!important;font-size:calc(13*var(--u))!important;font-weight:700;color:#e9e0ff;letter-spacing:.2px}
+.rr-lk>button{flex:none}
+.rr-code{display:flex;align-items:center;gap:calc(8*var(--u));margin-top:calc(8*var(--u));padding:calc(7*var(--u)) calc(12*var(--u));border-radius:calc(14*var(--u));background:rgba(255,255,255,.08);border:1px dashed rgba(255,210,31,.55);cursor:pointer}
+.rr-code small{font-size:calc(11*var(--u));font-weight:600;color:#cfc2ff}
+.rr-code b{margin-left:auto;font-size:calc(14*var(--u));font-weight:800;letter-spacing:1.5px;color:#ffd21f}
+.rr-code em{font-style:normal;font-size:calc(10*var(--u));color:#bba9f5}
+.rr-code:active{background:rgba(255,255,255,.16)}
+.rr-sb{margin-top:calc(12*var(--u))}
+.rr-sht b{display:block}
+
 .rr-b{min-width:0;overflow:hidden}
 .rr-b small{font-size:calc(10.5*var(--u));white-space:nowrap}
 .rr-bi{display:grid;place-items:center;width:calc(44*var(--u));height:calc(44*var(--u))}
