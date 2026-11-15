@@ -10,12 +10,12 @@
    2. Friend ka game-progress (gp) referrer ki list me sync hota hai
    3. My Referrals / My Rewards me progress bar (2/5 games) + Claim sirf ready par
    4. Telegram icon ki jagah inline SVG (purana asset toggle jaisa dikh raha tha)
-   5. Referral link config se (config/refer/botApp) set ho sakta hai
+   5. Referral link HAMESHA http://t.me/Lwinup_bot se banta hai (config se override nahi hota)
    6. Refer Rules page professional + animation (typewriter + staggered cards)
    ===================================================================== */
 (() => {
   /* ---------- defaults ---------- */
-  const D = { rewardGems: 0, rewardCash: 5, minGames: 5, botApp: '' };
+  const D = { rewardGems: 0, rewardCash: 5, minGames: 5 };
   Object.assign(REF_DEF, D);
   Object.assign(REFC, D);
 
@@ -24,11 +24,9 @@
   const isRdy = r => !!r && !r.claimed && gpOf(r) >= minG();
   window.refIsRdy = isRdy;
 
-  /* ---------- link ---------- */
-  const myLink = () => {
-    const base = String(REFC.botApp || BOT_APP).replace(/[?#].*$/, '').replace(/\/+$/, '');
-    return UID ? base + '?startapp=ref_' + refCode() : base;
-  };
+  /* ---------- link (FIXED: direct bot link) ---------- */
+  const BOT_LINK = 'http://t.me/Lwinup_bot';
+  const myLink = () => UID ? BOT_LINK + '?startapp=ref_' + refCode() : BOT_LINK;
   refCopy = function () {
     const t = myLink();
     const done = () => toast('Link copied ✓');
