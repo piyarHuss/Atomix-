@@ -6,7 +6,7 @@
    index.html me ads.js ke BAAD aur boot() se PEHLE:
      <script src="refer.js"></script>
 
-   Telegram link:  https://t.me/Lwinup_bot?start=<code>
+   Telegram link:  https://t.me/Lwinup_bot/winup?startapp=ref_<code>
    BOT TOKEN is file me KABHI nahi daalna (client code public hota hai).
 
    Firebase paths (naye):
@@ -17,6 +17,18 @@
      lb/d/<day>/<uid>         = { n, a, p }     (yesterday)
      feedback/<id>            = { uid, name, msg, ts }
      config/refer             = admin panel ke settings
+
+   FIREBASE RULES (zaroori, warna referral kaam nahi karega):
+     "refCodes": { "$c": { ".read": true,
+        ".write": "auth != null && (!data.exists() || data.val() === auth.uid)" } },
+     "refs": { "$r": { ".read": "auth != null && auth.uid === $r",
+        "$u": { ".write": "auth != null && (auth.uid === $r || auth.uid === $u)" } } },
+     "refTg": { "$t": { ".read": "auth != null", ".write": "auth != null && !data.exists()" } },
+     "lb": { ".read": true, "$k": { "$p": { "$u": { ".write": "auth != null && auth.uid === $u" } } } },
+     "feedback": { ".read": false, "$id": { ".write": "auth != null" } },
+     "config": { "refer": { ".read": true } }
+
+   DEBUG: browser/Telegram console me "REF:" se shuru hone wali lines dekho.
 
    ASSETS (assets/ folder, sab naam underscore me):
      ref_bg.png        forest + blue rays full background (bina UI ke)
@@ -55,13 +67,14 @@ let refBusy = 0, refListening = 0;
 const RF_LAST = {};
 
 /* ---------- helpers ---------- */
+const RDBG = (...a) => { try { console.log('REF:', ...a); } catch (e) { } };
 const rn = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 const p2 = n => String(n).padStart(2, '0');
 const rD = d => { d = new Date(d); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()); };
 const dmy = d => p2(d.getDate()) + '/' + p2(d.getMonth() + 1) + '/' + d.getFullYear();
 const rfm = n => Number(n || 0).toLocaleString('en-IN');
 const rsleep = ms => new Promise(r => setTimeout(r, ms));
-const rget = p => fdb.ref(p).once('value').then(s => s.val() || {}).catch(() => ({}));
+const rget = p => fdb.ref(p).once('value').then(s => s.val() || {}).catch(e => { console.error('REF: read failed', p, e); return {}; });
 const rtg = () => (window.Telegram && Telegram.WebApp) || null;
 const refCode = () => String(UID || '').slice(0, 10);
 const refLink = () => UID ? BOT_APP + '?startapp=ref_' + refCode() : BOT_APP;
@@ -115,23 +128,44 @@ invite = function () { RF.tab = 'rf'; go('refer'); };
 invMis = function () { RF.tab = 'rf'; go('refer'); };
 
 /* ---------- referral capture (naya user link se aaye) ---------- */
+/* start_param kai jagah se try karte hain: initDataUnsafe, URL hash, URL query */
+function refStartParam(tg) {
+  let sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
+  if (!sp) { try { sp = new URLSearchParams(String(location.hash || '').replace(/^#/, '')).get('tgWebAppStartParam') || ''; } catch (e) { } }
+  if (!sp) { try { sp = new URLSearchParams(location.search).get('tgWebAppStartParam') || ''; } catch (e) { } }
+  return sp;
+}
 async function refCapture(v) {
-  if (REFC.enabled === false) return;
+  if (REFC.enabled === false) return RDBG('capture: feature disabled');
   let tg = null;
   for (let i = 0; i < 20; i++) { tg = rtg(); if (tg) break; await rsleep(150); }
-  if (!tg || !tg.initDataUnsafe) return;
-  const sp = tg.initDataUnsafe.start_param || '', tu = tg.initDataUnsafe.user;
-  if (!/^ref_/.test(sp) || !tu || !tu.id) return;
+  if (!tg || !tg.initDataUnsafe) return RDBG('capture: no Telegram WebApp (app Telegram ke andar nahi khula)');
+  const sp = refStartParam(tg), tu = tg.initDataUnsafe.user;
+  RDBG('start_param =', JSON.stringify(sp), '| tg user =', tu && tu.id);
+  if (!/^ref_/.test(sp) || !tu || !tu.id) return RDBG('capture: ref link se nahi khula (start_param khali)');
   const code = sp.slice(4);
-  if (!code || code === refCode()) return;
-  if (v && v.ref && v.ref.by) return;                                   /* pehle se kisi ke referral se aaya */
-  if (v && v.createdAt && Date.now() - v.createdAt > 2 * 864e5) return; /* sirf naye users */
-  if (ST.played > 0) return;
-  const rUid = (await fdb.ref('refCodes/' + code).once('value')).val();
-  if (!rUid || rUid === UID) return;
-  const tx = await fdb.ref('refTg/' + tu.id).transaction(x => x ? undefined : { by: rUid, u: UID, ts: Date.now() });
-  if (!tx.committed) return;                                            /* ye Telegram account pehle use ho chuka */
-  await fdb.ref('refs/' + rUid + '/' + UID).set({ ts: Date.now(), n: String(tu.first_name || 'Friend').slice(0, 16), a: 'av' + myAv });
+  if (!code || code === refCode()) return RDBG('capture: self/empty code');
+  if (v && v.ref && v.ref.by) return RDBG('capture: pehle se kisi ke referral se aaya');
+  if (v && v.createdAt && Date.now() - v.createdAt > 2 * 864e5) return RDBG('capture: user purana hai (>2 din)');
+  if (ST.played > 0) return RDBG('capture: user pehle game khel chuka');
+  let rUid = null;
+  try { rUid = (await fdb.ref('refCodes/' + code).once('value')).val(); }
+  catch (e) { return console.error('REF: refCodes read failed (rules check karo)', e); }
+  RDBG('referrer uid =', rUid);
+  if (!rUid) return RDBG('capture: refCodes/' + code + ' nahi mila (referrer ne naya app nahi khola ya rules read block kar rahe)');
+  if (rUid === UID) return RDBG('capture: self referral');
+  let tx;
+  try { tx = await fdb.ref('refTg/' + tu.id).transaction(x => x ? undefined : { by: rUid, u: UID, ts: Date.now() }); }
+  catch (e) { return console.error('REF: refTg write failed (rules check karo)', e); }
+  if (!tx.committed) return RDBG('capture: ye Telegram account pehle use ho chuka (refTg/' + tu.id + ')');
+  try {
+    await fdb.ref('refs/' + rUid + '/' + UID).set({ ts: Date.now(), n: String(tu.first_name || 'Friend').slice(0, 16), a: 'av' + myAv });
+  } catch (e) {
+    console.error('REF: refs write failed (rules check karo)', e);
+    fdb.ref('refTg/' + tu.id).remove().catch(() => { });   /* retry ho sake isliye lock hatao */
+    return;
+  }
+  RDBG('SUCCESS: referral saved');
   dbSet('ref', { by: rUid, ts: Date.now() });
   const wg = rn(REFC.welcomeGems);
   if (wg > 0) { BAL.gems += wg; saveBal(); refreshBal(); toast('🎁 Welcome bonus +' + wg + ' 💎'); }
@@ -146,16 +180,19 @@ function refListen() {
       if (n.length) toast('🎉 ' + (v[n[0]].n || 'A friend') + ' joined with your link!');
     }
     first = 0; REFS = v; refSyncLb(); refRender();
-  });
+  }, e => console.error('REF: refs listen failed (rules check karo)', e));
 }
 async function refInit(v) {
-  if (!UID) return;
+  if (!UID) return RDBG('init: UID nahi hai');
   try {
     await refCfg(true);
-    fdb.ref('refCodes/' + refCode()).set(UID).catch(() => { });
+    try {
+      await fdb.ref('refCodes/' + refCode()).set(UID);
+      RDBG('refCodes/' + refCode() + ' saved');
+    } catch (e) { console.error('REF: refCodes write failed (rules check karo)', e); }
     refListen();
     await refCapture(v);
-  } catch (e) { console.error('refInit', e); }
+  } catch (e) { console.error('REF: refInit', e); }
 }
 (() => {
   const o = applyRemote;
@@ -171,7 +208,7 @@ function refSyncLb() {
   const nx = d => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7);
   [['w/' + rD(w0), cnt(w0, nx(w0))], ['w/' + rD(w1), cnt(w1, nx(w1))], ['d/' + rD(y0), cnt(y0, t0)]].forEach(([k, p]) => {
     if (RF_LAST[k] === p) return; RF_LAST[k] = p;
-    if (p > 0) fdb.ref('lb/' + k + '/' + UID).set({ n: PROF.name, a: 'av' + myAv, p }).catch(() => { });
+    if (p > 0) fdb.ref('lb/' + k + '/' + UID).set({ n: PROF.name, a: 'av' + myAv, p }).catch(e => console.error('REF: lb write failed', e));
   });
 }
 async function refLoad(force) {
