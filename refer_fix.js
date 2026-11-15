@@ -11,10 +11,10 @@
    2. Friend ka game-progress (gp) referrer ki list me sync hota hai (sirf badhta hai, kam nahi hota)
    3. My Referrals / My Rewards me progress bar (2/5 games) + Claim sirf ready par
    4. Telegram icon ki jagah inline SVG
-   5. Referral link: BOT_APP + '?startapp=<Telegram ID>'
-      -> BOT_APP = 'https://t.me/Lwinup_bot/<app_short_name>'  (BotFather me Mini App ka short name)
-         ya BotFather me "Main Mini App" set ho to 'https://t.me/Lwinup_bot'
-      -> '?start=' Mini App ko start_param NAHI deta, isliye startapp use hota hai.
+   5. Referral link: https://t.me/Lwinup_bot?start=<Telegram ID>
+      (koi /app-name nahi, koi startapp nahi)
+      NOTE: ?start= link pehle bot chat kholta hai. Bot /start <ID> pe ek web_app button
+      bheje jiska URL  <APP_URL>?ref=<ID>  ho. Mini App ?ref= padh leta hai (neeche startParam).
    6. Refer Rules page professional + animation
    7. Debug logs: console me "REF:" wali lines dekho
 
@@ -49,13 +49,9 @@
     const tg = rtg(), u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
     return u && u.id ? String(u.id) : refCode();
   };
-  const myLink = () => UID ? BOT_APP + '?startapp=' + myCode() : BOT_APP;
-
-  /* BOT_APP sanity check */
-  try {
-    if (!/^https:\/\/t\.me\/[A-Za-z0-9_]+(\/[A-Za-z0-9_]+)?$/.test(String(BOT_APP)))
-      console.warn('REF: BOT_APP galat lag raha hai ->', BOT_APP, '(format: https://t.me/Lwinup_bot/appname)');
-  } catch (e) { }
+  const LINK_BASE = 'https://t.me/Lwinup_bot';
+  /* https://t.me/Lwinup_bot?start=8075561163 */
+  const myLink = () => LINK_BASE + (UID ? '?start=' + myCode() : '');
 
   /* Telegram ID code ko UID se map karo: refCodes/<telegramId> = uid */
   let CODE_OK = 0;
@@ -75,6 +71,11 @@
     let sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
     if (!sp) { try { sp = new URLSearchParams(String(location.hash || '').replace(/^#/, '')).get('tgWebAppStartParam') || ''; } catch (e) { } }
     if (!sp) { try { sp = new URLSearchParams(location.search).get('tgWebAppStartParam') || ''; } catch (e) { } }
+    /* ?start=<ID> link ke baad bot jo web_app button bhejta hai uska URL: <APP_URL>?ref=<ID> */
+    if (!sp) { try { sp = new URLSearchParams(location.search).get('ref') || ''; } catch (e) { } }
+    if (!sp) { try { sp = new URLSearchParams(String(location.hash || '').replace(/^#/, '')).get('ref') || ''; } catch (e) { } }
+    if (!sp) { try { sp = sessionStorage.getItem('ref_code') || ''; } catch (e) { } }
+    else { try { sessionStorage.setItem('ref_code', sp); } catch (e) { } }
     return String(sp || '');
   };
 
