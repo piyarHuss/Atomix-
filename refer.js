@@ -6,11 +6,13 @@
    index.html me ads.js ke BAAD aur boot() se PEHLE:
      <script src="refer.js"></script>
 
-   Telegram link:  https://t.me/Lwinup_bot/winup?startapp=ref_<code>
+   REFERRAL LINK (TON Surge jaisa, Telegram ID se):
+     https://t.me/Lwinup_bot/winup?startapp=<telegramId>
+   Purane links  ...?startapp=ref_<code>  bhi chalte rehte hain.
    BOT TOKEN is file me KABHI nahi daalna (client code public hota hai).
 
-   Firebase paths (naye):
-     refCodes/<code>          = referrer uid
+   Firebase paths:
+     refCodes/<code>          = referrer uid     (code = Telegram ID)
      refs/<referrerUid>/<uid> = { ts, n, a, claimed, g, c }
      refTg/<telegramId>       = { by, u, ts }   (ek Telegram account = sirf ek referral)
      lb/w/<weekStart>/<uid>   = { n, a, p }     (weekly leaderboard)
@@ -19,30 +21,19 @@
      config/refer             = admin panel ke settings
 
    ASSETS (assets/ folder, sab naam underscore me):
-     ref_bg.png        forest + blue rays full background (bina UI ke)
-     ref_sign.png      wooden sign + crown + laurel (number KHALI, number CSS se)
-     ref_chest.png     treasure chest
-     ref_lantern.png   lantern
-     ref_dice.png      dice (right side CSS se flip hota hai)
-     ref_rank1.png     GOLD podium  + crown + laurel ring
-     ref_rank2.png     BLUE podium  + crown + laurel ring
-     ref_rank3.png     ORANGE podium + crown + laurel ring
-                       (teeno same width/height, ring ke andar transparent)
-     ref_coin.png      Rupee coin
-     ref_cal_w.png, ref_cal_y.png, ref_cal_l.png   sub-tab calendar icons
-     ref_group.png     channel banner icon
-     ref_wa.png, ref_tg.png   feedback bar icons
-     --- My Rewards page: sirf ye NAYE PNG chahiye ---
+     ref_bg.png, ref_sign.png, ref_chest.png, ref_lantern.png, ref_dice.png,
+     ref_rank1.png, ref_rank2.png, ref_rank3.png, ref_coin.png,
+     ref_cal_w.png, ref_cal_y.png, ref_cal_l.png, ref_group.png, ref_wa.png, ref_tg.png
+     --- My Rewards page ---
      ref_rw_bg.png, ref_gift.png, ref_t_rf.png, ref_ic_check.png,
      ref_ic_clock.png, ref_ic_date.png, ref_ic_doc.png
-     (baaki icons pehle se maujood: stat_trophy, title_community, wallet_icon,
-      level_crown, stat_star, ref_coin, logo. Naam badalne ho to RWA table dekho)
-     --- My Referrals page: NAYE PNG ---
-     ref_rf_head.png (aapka Ludo Masters header, nahi mila to logo.png dikhega),
-     ref_rf_bg.png, ref_ic_mail.png, ref_ic_hourglass.png, ref_rf_kids.png,
+     --- My Referrals page ---
+     ref_rf_head.png, ref_rf_bg.png, ref_ic_mail.png, ref_ic_hourglass.png, ref_rf_kids.png,
      ref_rf_add.png, ref_rf_mega.png, ref_ic_link.png, ref_s_fb.png
    ===================================================================== */
 const BOT_APP = 'https://t.me/Lwinup_bot/winup';
+const BOT_USER = 'Lwinup_bot';        /* @ ke bina */
+const LINK_MODE = 'startapp';         /* 'startapp' = seedha mini app | 'start' = bot chat (bot server chahiye) */
 const REF_DEF = {
   enabled: true, rewardGems: 50, rewardCash: 0, welcomeGems: 20, ptsPerRef: 100,
   prizes: '500,300,200,100,100,50,50,50,50,50', channelUrl: '', supportUrl: ''
@@ -63,8 +54,16 @@ const rfm = n => Number(n || 0).toLocaleString('en-IN');
 const rsleep = ms => new Promise(r => setTimeout(r, ms));
 const rget = p => fdb.ref(p).once('value').then(s => s.val() || {}).catch(() => ({}));
 const rtg = () => (window.Telegram && Telegram.WebApp) || null;
-const refCode = () => String(UID || '').slice(0, 10);
-const refLink = () => UID ? BOT_APP + '?startapp=ref_' + refCode() : BOT_APP;
+const tgUser = () => { const t = rtg(); return (t && t.initDataUnsafe && t.initDataUnsafe.user) || null; };
+/* referral code = Telegram ID (TON Surge jaisa). Telegram ke bahar test ho to purana UID code */
+const refCode = () => { const u = tgUser(); return u && u.id ? String(u.id) : String(UID || '').slice(0, 10); };
+const refLink = () => {
+  const code = refCode();
+  if (!code) return BOT_APP;
+  if (LINK_MODE === 'start') return 'https://t.me/' + BOT_USER + '?start=' + code;
+  const base = String((typeof REFC !== 'undefined' && REFC.botApp) || BOT_APP).replace(/[?#].*$/, '').replace(/\/+$/, '');
+  return base + '?startapp=' + code;
+};
 function wk(off) {                                /* hafta SATURDAY se shuru */
   const d = new Date(); d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() - ((d.getDay() + 1) % 7) - off * 7); return d;
@@ -120,10 +119,11 @@ async function refCapture(v) {
   let tg = null;
   for (let i = 0; i < 20; i++) { tg = rtg(); if (tg) break; await rsleep(150); }
   if (!tg || !tg.initDataUnsafe) return;
-  const sp = tg.initDataUnsafe.start_param || '', tu = tg.initDataUnsafe.user;
-  if (!/^ref_/.test(sp) || !tu || !tu.id) return;
-  const code = sp.slice(4);
-  if (!code || code === refCode()) return;
+  const tu = tg.initDataUnsafe.user;
+  /* start_param: naya link = Telegram ID, purana link = ref_<code>. Bot ?ref=<id> se bhi aa sakta hai */
+  const sp = tg.initDataUnsafe.start_param || new URLSearchParams(location.search).get('ref') || '';
+  const code = String(sp).replace(/^ref_/, '');
+  if (!tu || !tu.id || !/^[A-Za-z0-9]{3,20}$/.test(code) || code === refCode()) return;
   if (v && v.ref && v.ref.by) return;                                   /* pehle se kisi ke referral se aaya */
   if (v && v.createdAt && Date.now() - v.createdAt > 2 * 864e5) return; /* sirf naye users */
   if (ST.played > 0) return;
