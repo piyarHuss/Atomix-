@@ -6,7 +6,7 @@
    index.html me ads.js ke BAAD aur boot() se PEHLE:
      <script src="refer.js"></script>
 
-   Telegram link:  http://t.me/Lwinup_bot?startapp=ref_<code>
+   Telegram link:  https://t.me/Lwinup_bot?start=<code>
    BOT TOKEN is file me KABHI nahi daalna (client code public hota hai).
 
    Firebase paths (naye):
@@ -42,7 +42,7 @@
      ref_rf_bg.png, ref_ic_mail.png, ref_ic_hourglass.png, ref_rf_kids.png,
      ref_rf_add.png, ref_rf_mega.png, ref_ic_link.png, ref_s_fb.png
    ===================================================================== */
-const BOT_APP = 'http://t.me/Lwinup_bot';
+const BOT_APP = 'https://t.me/Lwinup_bot/winup';
 const REF_DEF = {
   enabled: true, rewardGems: 50, rewardCash: 0, welcomeGems: 20, ptsPerRef: 100,
   prizes: '500,300,200,100,100,50,50,50,50,50', channelUrl: '', supportUrl: ''
