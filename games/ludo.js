@@ -1,23 +1,20 @@
-/* LUDO MASTERS — 2 PLAYER LUDO (v5.4 PRO UI + exact board calibration + SMART BOT)
-   - Pro layout: top bar (menu + "₹X vs ₹X" + coin badge), avatars, name tags on board
-   - Emoji / Chat icons under your avatar -> emoji popup (like real Ludo apps)
-   - Animated slide-in MENU: Sound, Music, Leave Match
-   - Every UI part can be replaced with a PNG from assets/ (CSS fallback if missing)
-   - mp3 sound system (Web Audio, reliable on mobile), background image, 13x13 board mapping, 3D dice, bot AI
+/* LUDO MASTERS — 2 PLAYER LUDO (v5.5 ONLINE)
+   v5.5 ADD: REAL USER vs USER online play (match.net from matchmaking.js)
+     - Har phone par aap hamesha neeche wale = BLUE, opponent upar wala = RED
+     - Sirf apni turn par apna dice / apne tokens chalte hain (opponent ka dice/token lock)
+     - Dice ki value jis phone par turn hai wahi banata hai aur bhejta hai, dusra phone sirf wahi value dikhata hai
+     - Moves / pass / emoji / chat / forfeit sab network se sync
+     - Opponent leave kare ya 3 turn miss kare to aap jeet jate ho
+   (AI match pehle jaisa hi chalta hai)
 
-   v5.4 ADD: Smart + aggressive bot brain (threat calculation, hunting, escaping, risk by game situation).
-             Tune with BOT_AGGRESSION below. Dice stays fair (bot does not cheat).
-   v5.3 ADD: 15-second turn timer (see TURN_SECONDS). No tap in time -> turn goes to opponent.
-   v5.2 FIX: token positions now use EXACT cell centers measured from ludo_board.png
-             (COL_X / ROW_Y arrays) instead of an equal-size-cell formula.
+   v5.4 ADD: Smart + aggressive bot brain.
+   v5.3 ADD: 15-second turn timer.
+   v5.2 FIX: exact cell centers.
 
    START OPTIONS (match object):
-     match.bet            -> 5  shows "₹5 vs ₹5" and coin badge "5"
-                             (also accepted: entryFee, entry, entry_fee, betAmount, bet_amount, amount, stake, fee, price, prize)
-     match.me             -> your name           match.meAvatar        -> image url / file in assets
-     match.opponent       -> opponent name       match.opponentAvatar  -> image url / file in assets
-     match.meFlag / match.opponentFlag -> emoji ("🇮🇳") or png file in assets ("flag_in.png")
-     match.ai = true      -> play against bot    match.background      -> background file
+     match.bet / match.me / match.meAvatar / match.opponent / match.opponentAvatar
+     match.ai = true  -> bot
+     match.net, match.role ('host'|'guest'), match.matchId  -> online match
 */
 (() => {
   "use strict";
@@ -34,22 +31,17 @@
   const SOUND_DIR = "sounds/";
   const BACKGROUND_FILE = "background.png";
 
-  // Optional PNG skins (put in assets/). If a file is missing, CSS design is used.
   const SKINS = {
-    topbar:  "ui_topbar.png",    // full top bar plate
-    menubtn: "btn_menu.png",     // menu button (plate + icon)
-    coin:    "coin_badge.png",   // right coin badge plate
-    frame:   "avatar_frame.png", // frame drawn over avatars
-    panel:   "menu_panel.png"    // slide-in menu background
+    topbar:  "ui_topbar.png",
+    menubtn: "btn_menu.png",
+    coin:    "coin_badge.png",
+    frame:   "avatar_frame.png",
+    panel:   "menu_panel.png"
   };
 
   /* ================================================================== */
   /*  BOARD GEOMETRY  (13 x 13 board image)                              */
   /* ================================================================== */
-  // Exact cell centers measured from ludo_board.png, in % of board size.
-  // The cells in the image are NOT all equal size, so a formula drifts
-  // a few pixels. These arrays are the true centers.
-  //   index = column (left -> right)  /  row (top -> bottom)
   const COL_X = [4.05, 11.99, 19.84, 27.49, 34.89, 42.50, 50.00, 57.46, 64.96, 72.36, 79.96, 87.76, 95.62];
   const ROW_Y = [4.05, 11.75, 19.45, 27.00, 34.45, 41.95, 49.36, 56.76, 64.60, 72.40, 80.10, 87.90, 95.70];
   const cellX = c => COL_X[c];
@@ -92,7 +84,6 @@
     }
   };
 
-  // Exact centers of the 4 holes in each home box (board %)
   const HOME_POSITIONS = {
     red:  [[74.1,12.0],[86.6,12.0],[74.1,24.9],[86.6,24.9]],
     blue: [[12.2,73.4],[24.9,73.4],[12.2,86.4],[24.9,86.4]]
@@ -108,20 +99,10 @@
   const SIZE_HOME = 8.2, SIZE_TRACK = 6.6, SIZE_FINISH = 4.4;
   const STEP_MS = 190;
 
-  // Turn timer: seconds a player has to tap the dice (or pick a token).
-  // Time over -> turn passes to the opponent.
   const TURN_SECONDS = 15;
-
-  // BOT: how hunting/aggressive the bot is.
-  //   0.8 = easier   1.25 = dangerous (default)   1.6 - 2.0 = very dangerous
   const BOT_AGGRESSION = 1.25;
-
-  // Token position nudge in board %: [x, y]. Negative y = move UP.
-  // Cell centers are now exact, so this is 0 by default. Only use it if the
-  // goti PNG itself has extra empty space (e.g. blue: [0, -0.3]).
   const TOKEN_NUDGE = { red: [0, 0], blue: [0, 0] };
 
-  // Possible names for the bet amount inside the match object
   const BET_KEYS = ["bet","entryFee","entry","entry_fee","betAmount","bet_amount","amount","stake","fee","price","prize"];
 
   /* ================================================================== */
@@ -132,12 +113,8 @@
   const REACTION_COOLDOWN = 1200;
 
   /* ================================================================== */
-  /*  SOUND SYSTEM  (mp3 in sounds/, synth beep if a file is missing)    */
+  /*  SOUND SYSTEM                                                       */
   /* ================================================================== */
-  /*  dice_roll  dice_land  token_step  token_enter  token_capture  token_home
-      safe_square  no_move  your_turn  extra_turn  win  lose
-      emoji_send  emoji_receive  button_click  game_start
-      menu_open  menu_close  bg_music     (all .mp3)                          */
   const SOUND_VOLUME = {
     dice_roll: 0.9, dice_land: 0.8, token_step: 0.6, token_enter: 0.8,
     token_capture: 0.9, token_home: 0.9, safe_square: 0.7, no_move: 0.7,
@@ -208,7 +185,6 @@
       return this.ctx;
     },
 
-    // browsers keep audio locked until a user touch — call this on every touch
     unlock() {
       const c = this.getCtx();
       if (c && c.state === "suspended") { try { c.resume(); } catch (e) {} }
@@ -219,7 +195,6 @@
       this.loaded = true;
       const c = this.getCtx();
 
-      // sound effects: decoded once into memory (Web Audio) -> plays reliably every time
       Object.keys(SOUND_VOLUME).forEach(name => {
         const entry = { vol: SOUND_VOLUME[name], buffer: null, failed: false };
         this.bank[name] = entry;
@@ -234,7 +209,6 @@
           .catch(() => { entry.failed = true; });
       });
 
-      // background music: normal looping audio element
       const m = new Audio(this.url("bg_music"));
       m.loop = true;
       m.volume = MUSIC_VOLUME;
@@ -262,9 +236,7 @@
         return;
       }
 
-      // mp3 missing / could not be decoded -> synth beep
       if (e.failed) SYNTH[name] && SYNTH[name]();
-      // else: still loading, skip silently
     },
 
     startMusic() {
@@ -347,7 +319,6 @@
   .lm2-count{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);font-style:normal;font-size:9px;font-weight:900;
     padding:1px 8px;border-radius:9px;background:#2a1608;color:#ffd98a;border:1px solid #c99a4e;white-space:nowrap;z-index:2}
 
-  /* emoji + chat icons */
   .lm2-quick{display:flex;gap:16px;align-items:flex-start}
   .lm2-qbtn{background:transparent;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:#ffe9c0}
   .lm2-qbtn .qi{width:38px;height:38px;display:grid;place-items:center;filter:drop-shadow(0 3px 3px #000a);transition:transform .12s}
@@ -356,7 +327,6 @@
   .lm2-qbtn .lm2-fb{font-size:30px}
   .lm2-qbtn small{font-size:10px;font-weight:900;text-shadow:0 1px 3px #000,0 0 3px #000}
 
-  /* name tags on the board */
   .lm2-nametag{position:absolute;z-index:4;display:flex;align-items:center;gap:5px;max-width:42%;pointer-events:none;
     font-size:clamp(9px,3vw,12px);font-weight:900;color:#fff;white-space:nowrap;text-shadow:0 1px 3px #000,0 0 3px #000}
   .lm2-nametag b{overflow:hidden;text-overflow:ellipsis}
@@ -565,7 +535,6 @@
 
   const ROT = { 1:[0,0], 2:[0,-90], 3:[-90,0], 4:[90,0], 5:[0,90], 6:[0,180] };
 
-  // PNG icon with automatic text fallback
   const iconHtml = (file, fb, fbClass = "lm2-fb") =>
     `<img class="lm2-ico" src="${ASSET(file)}" data-fb="${fb}" data-fbclass="${fbClass}" alt="">`;
 
@@ -654,6 +623,19 @@
     audio.load();
 
     const state = createState();
+
+    /* ---------------- ONLINE (user vs user) ---------------- */
+    const net = match.net || null;
+    const ONLINE = !!net && match.ai !== true && match.opponentType !== "ai";
+    /* Har phone par "blue" = aap (neeche), "red" = opponent (upar).
+       Host pehle khelta hai, guest baad me. */
+    if (ONLINE) state.turn = match.role === "guest" ? "red" : "blue";
+
+    const sendNet = o => { if (ONLINE) { try { net.send(o); } catch (e) { console.warn("net send", e); } } };
+    const netQ = [];
+    let remoteMiss = 0;   /* opponent ke lagatar missed turns */
+    let myMiss = 0;       /* mere lagatar missed turns */
+
     let destroyed = false;
     let aiTimer = null;
     let nextReactionAt = 0;
@@ -672,16 +654,18 @@
     const opponent = String(match.opponent || (isAI ? "Ludo Bot" : "Opponent"));
     const me = String(match.me || "You");
 
-    // ---- bet amount (accepts many key names, and text like "₹5") ----
     let betRaw;
     for (const k of BET_KEYS) {
       if (match[k] !== undefined && match[k] !== null && match[k] !== "") { betRaw = match[k]; break; }
     }
+    if (betRaw === undefined && match.pool && match.pool.kind === "c") betRaw = match.pool.feeN;
     const betNum = Number(String(betRaw ?? "").replace(/[^\d.]/g, ""));
     const hasBet = betRaw !== undefined && betRaw !== null && betRaw !== "" && Number.isFinite(betNum);
     const betText = hasBet ? fmtMoney(betNum) : "";
 
     const isBot = c => isAI && c === "red";
+    const isRemote = c => ONLINE && c === "red";          /* opponent (dusra phone) */
+    const ctl = c => !isBot(c) && !isRemote(c);           /* is phone par kaun control kar sakta hai */
 
     const safeText = s => String(s).replace(/[&<>"']/g, ch => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -762,7 +746,6 @@
           <button type="button" class="lm2-dice blue" id="lm2-blue-dice">${cubeHtml()}</button>
         </div>
 
-        <!-- emoji / chat popup -->
         <div class="lm2-emoji-layer" id="lm2-emoji-layer" hidden>
           <div class="lm2-emoji-pop" id="lm2-pop-emoji" hidden>
             <div class="lm2-emoji-grid">
@@ -784,7 +767,6 @@
           </div>
         </div>
 
-        <!-- slide-in menu -->
         <div class="lm2-menu-layer" id="lm2-menu-layer">
           <div class="lm2-menu-back" data-action="menu-close"></div>
           <aside class="lm2-menu-panel">
@@ -835,11 +817,9 @@
     const chatBtn = root.querySelector("#lm2-chat-btn");
     const menuLayer = root.querySelector("#lm2-menu-layer");
 
-    // ---- background image ----
     const bgFile = match.background || BACKGROUND_FILE;
     root.style.setProperty("--lm2-bg", `url("${assetOrUrl(bgFile)}")`);
 
-    // ---- optional PNG skins ----
     Object.entries(SKINS).forEach(([key, file]) => {
       const im = new Image();
       im.onload = () => {
@@ -875,7 +855,6 @@
       root.querySelector(".lm2-board-fallback").classList.add("visible");
     });
 
-    // any <img data-fb> that fails to load -> show its fallback text/emoji
     root.addEventListener("error", e => {
       const t = e.target;
       if (t && t.tagName === "IMG" && t.dataset.fb !== undefined) {
@@ -886,7 +865,6 @@
       }
     }, true);
 
-    /* ---------------- debug grid (window.LUDO_DEBUG = true) ---------------- */
     if (window.LUDO_DEBUG) {
       const dbg = root.querySelector(".lm2-debug");
       const mk = (x, y, t) => {
@@ -899,7 +877,6 @@
       COLORS.forEach(col => HOME_POSITIONS[col].forEach(([x, y], i) => mk(x, y, "H" + i)));
     }
 
-    /* ---------------- sound toggles (in menu) ---------------- */
     function refreshSoundUi() {
       root.querySelector("#lm2-sfx-ico").innerHTML =
         audio.sfxOn ? iconHtml("icon_sound.png", "🔊") : iconHtml("icon_sound_off.png", "🔇");
@@ -912,7 +889,7 @@
 
     let musicStarted = false;
     const firstTouch = () => {
-      audio.unlock();                // unlock Web Audio on EVERY touch
+      audio.unlock();
       if (musicStarted) return;
       musicStarted = true;
       audio.startMusic();
@@ -928,7 +905,6 @@
     };
     document.addEventListener("visibilitychange", onVisibility);
 
-    /* ---------------- menu ---------------- */
     function openMenu() {
       if (menuOpen) return;
       closePanel();
@@ -1027,8 +1003,9 @@
         el.style.width = it.size + "%";
         el.style.height = it.size + "%";
 
+        /* sirf apne (is phone ke) tokens clickable, aur sirf apni turn par */
         const selectable =
-          !state.busy && !state.gameOver && !isBot(it.color) &&
+          !state.busy && !state.gameOver && ctl(it.color) &&
           it.color === state.turn && legal.includes(it.index);
 
         el.disabled = !selectable;
@@ -1052,7 +1029,8 @@
     function update() {
       COLORS.forEach(color => {
         const myTurn = !state.gameOver && state.turn === color;
-        const clickable = myTurn && !isBot(color) && !state.busy && !state.rolled;
+        /* opponent (red) ka dice online me kabhi clickable nahi */
+        const clickable = myTurn && ctl(color) && !state.busy && !state.rolled;
 
         dice[color].disabled = !clickable;
         dice[color].classList.toggle("active", myTurn);
@@ -1069,7 +1047,7 @@
     function showModal(html) { modalContent.innerHTML = html; modal.hidden = false; }
     function closeModal() { modal.hidden = true; modalContent.innerHTML = ""; }
 
-    /* ---------------- TURN TIMER (15 sec) ---------------- */
+    /* ---------------- TURN TIMER ---------------- */
     const timerEls = {
       red:  root.querySelector("#lm2-red-tmr"),
       blue: root.querySelector("#lm2-blue-tmr")
@@ -1105,13 +1083,15 @@
       stopTurnTimer();
       if (destroyed || state.gameOver || isBot(state.turn)) return;
       const color = state.turn;
-      turnDeadline = Date.now() + TURN_SECONDS * 1000;
+      const remote = isRemote(color);
+      /* opponent ko +5 sec grace (network delay) */
+      turnDeadline = Date.now() + (TURN_SECONDS + (remote ? 5 : 0)) * 1000;
       drawTimer(color, TURN_SECONDS * 1000);
       turnInterval = setInterval(() => {
         if (destroyed) { stopTurnTimer(); return; }
         const remain = turnDeadline - Date.now();
         if (remain <= 0) { onTurnTimeout(); return; }
-        drawTimer(color, remain);
+        drawTimer(color, remote ? Math.max(0, remain - 5000) : remain);
       }, 200);
     }
 
@@ -1126,24 +1106,39 @@
 
     async function onTurnTimeout() {
       stopTurnTimer();
-      if (destroyed || state.gameOver || state.busy) return;
+      if (destroyed || state.gameOver) return;
+
+      /* Opponent ki turn: wo apna timeout khud handle karke message bhejega.
+         Agar bilkul koi message na aaye (2 baar) to mana jayega ki wo gayab hai. */
+      if (isRemote(state.turn)) {
+        remoteMiss++;
+        if (remoteMiss >= 2) { finishGame("blue"); return; }
+        startTurnTimer();
+        return;
+      }
+
+      if (state.busy) return;
       const color = state.turn;
 
-      // dice was rolled but player did not pick a token -> auto-move the most advanced legal token
+      if (ONLINE) {
+        myMiss++;
+        if (myMiss >= 3) { sendNet({ type: "forfeit" }); finishGame("red"); return; }
+      }
+
       if (state.rolled) {
         const legal = getLegal(state);
         if (legal.length) {
           const best = legal.reduce((a, b) =>
             state.tokens[color][b] > state.tokens[color][a] ? b : a);
           showToast("Time's up! Auto move");
-          moveToken(color, best, true);
+          moveToken(color, best, true, true);
           return;
         }
       }
 
-      // player did not tap the dice -> turn goes to the opponent
       state.busy = true;
       showToast("Time's up!");
+      sendNet({ type: "pass" });
       audio.play("no_move");
       update();
       await wait(900);
@@ -1207,6 +1202,7 @@
       audio.play("emoji_send");
       showBubble("blue", payload);
       onReaction({ from: "blue", ...payload });
+      sendNet({ type: "react", payload });
 
       if (isAI && Math.random() < 0.55) {
         later(() => {
@@ -1239,6 +1235,7 @@
 
     /* ---------------- flow ---------------- */
     function finishGame(color) {
+      if (state.gameOver) return;
       state.gameOver = true;
       state.busy = true;
       state.winner = color;
@@ -1255,7 +1252,7 @@
       showModal(`
         <div style="font-size:48px">${iWon ? "🏆" : "😔"}</div>
         <h2>${safeText(winnerName)} Wins!</h2>
-        <p>${hasBet && iWon ? `You won the ₹${betText} match.` : "All four tokens reached home."}</p>
+        <p>${hasBet && iWon ? `You won the ₹${betText} match.` : "Match finished."}</p>
         <button type="button" data-action="result-exit">Back to Lobby</button>
       `);
 
@@ -1271,11 +1268,13 @@
       if (!extra) state.turn = other(state.turn);
 
       if (extra) audio.play("extra_turn");
-      else if (!isBot(state.turn)) audio.play("your_turn");
+      else if (ctl(state.turn)) audio.play("your_turn");
 
       update();
       if (isBot(state.turn)) { stopTurnTimer(); scheduleAiTurn(); }
       else startTurnTimer();
+
+      pump();   /* opponent ka koi pending message ho to ab chalao */
     }
 
     function scheduleAiTurn() {
@@ -1289,11 +1288,8 @@
     }
 
     /* ================================================================ */
-    /*  SMART + AGGRESSIVE BOT BRAIN                                     */
-    /*  Dice stays 100% fair — the bot only plays smarter, no cheating.  */
+    /*  SMART + AGGRESSIVE BOT BRAIN (sirf AI match me)                  */
     /* ================================================================ */
-
-    // chance (0..0.95) that an enemy (blue) token can land on global square g next turn
     function enemyThreat(g, foeTokens) {
       if (g < 0 || SAFE_TRACK_INDEXES.has(g)) return 0;
       let p = 0;
@@ -1306,13 +1302,12 @@
           const t = s + dist;
           if (t > LAST_TRACK_STEP) break;
           if (globalIndex("blue", t) === g) {
-            p += dist <= 6 ? 1 / 6 : 1 / 36;   // 7..12 needs a 6 first
+            p += dist <= 6 ? 1 / 6 : 1 / 36;
             break;
           }
         }
       }
 
-      // a token coming out of home (needs a 6) can then hit squares just after its start
       if (anyAtHome) {
         const dist = (g - PLAYERS.blue.start + TRACK_LEN) % TRACK_LEN;
         if (dist >= 1 && dist <= 6) p += 1 / 36;
@@ -1326,8 +1321,8 @@
 
       const myProg  = mine.reduce((a, s) => a + Math.max(s, 0), 0);
       const foeProg = foe.reduce((a, s) => a + Math.max(s, 0), 0);
-      const behind  = foeProg - myProg;                                  // >0 -> bot is losing
-      const riskW   = behind > 40 ? 0.6 : behind < -40 ? 1.3 : 1;        // losing -> braver, winning -> careful
+      const behind  = foeProg - myProg;
+      const riskW   = behind > 40 ? 0.6 : behind < -40 ? 1.3 : 1;
       const aggr    = BOT_AGGRESSION * (behind > 40 ? 1.3 : 1);
 
       const onBoard = mine.filter(s => s >= 0 && s < FINISH).length;
@@ -1338,20 +1333,17 @@
       for (const index of legal) {
         const old  = mine[index];
         const next = old === -1 ? 0 : old + d;
-        let score = d;                                                   // basic progress
+        let score = d;
 
-        // ---- leaving home ----
         if (old === -1) {
           score += 32;
-          if (onBoard === 0) score += 45;                                // no token on board -> must get one out
+          if (onBoard === 0) score += 45;
           else if (onBoard === 1) score += 12;
         }
 
-        // ---- finishing / home lane ----
         if (next === FINISH) score += 120;
-        else if (next >= LANE_START) score += 38 + (old < LANE_START ? 22 : 0);   // permanently safe
+        else if (next >= LANE_START) score += 38 + (old < LANE_START ? 22 : 0);
 
-        // ---- track square logic ----
         let foeAfter = foe;
         if (next <= LAST_TRACK_STEP) {
           const g = globalIndex("red", next);
@@ -1360,22 +1352,19 @@
           if (safe) {
             score += 24;
           } else {
-            // CAPTURE?
             let capLoss = 0;
             foeAfter = foe.map(s => {
               if (s >= 0 && s <= LAST_TRACK_STEP && globalIndex("blue", s) === g) {
-                capLoss += s + 15;                                       // lost steps + needs a 6 again
+                capLoss += s + 15;
                 return -1;
               }
               return s;
             });
             if (capLoss > 0) score += (95 + capLoss * 2.5) * aggr;
 
-            // DANGER at landing square (after a capture removes attackers)
             const risk = enemyThreat(g, foeAfter);
             score -= risk * (next + 15) * 3 * riskW;
 
-            // HUNTING: non-safe enemy tokens that will be 1..6 ahead of me
             for (let dist = 1; dist <= 6; dist++) {
               const t = next + dist;
               if (t > LAST_TRACK_STEP) break;
@@ -1390,30 +1379,34 @@
           }
         }
 
-        // ---- ESCAPE: is the token in danger where it stands now? ----
         if (old >= 0 && old <= LAST_TRACK_STEP) {
           const gOld = globalIndex("red", old);
           const oldRisk = enemyThreat(gOld, foe);
-          score += oldRisk * (old + 15) * 3;                             // moving it away saves it
+          score += oldRisk * (old + 15) * 3;
 
-          // don't abandon a safe square for nothing
           if (SAFE_TRACK_INDEXES.has(gOld) && next <= LAST_TRACK_STEP &&
               !SAFE_TRACK_INDEXES.has(globalIndex("red", next))) score -= 6;
         }
 
-        score += Math.random() * 3;                                      // tiny randomness -> not predictable
+        score += Math.random() * 3;
 
         if (score > bestScore) { bestScore = score; best = index; }
       }
       return best;
     }
 
-    async function roll(color) {
+    /* forced = opponent (dusre phone) ki bheji hui dice value. Local roll me undefined. */
+    async function roll(color, forced) {
       if (state.busy || state.gameOver || state.turn !== color || state.rolled) return;
 
       stopTurnTimer();
       state.busy = true;
-      const n = 1 + Math.floor(Math.random() * 6);
+
+      const isForced = Number.isInteger(forced) && forced >= 1 && forced <= 6;
+      const n = isForced ? forced : 1 + Math.floor(Math.random() * 6);
+
+      /* meri roll: value yahin banti hai aur opponent ko bheji jati hai */
+      if (ONLINE && color === "blue" && !isForced) sendNet({ type: "roll", v: n });
 
       dice[color].classList.add("rolling");
       showFace(color, n, true);
@@ -1449,23 +1442,28 @@
         return;
       }
 
+      /* ek hi option ya sab tokens ghar me: dono phones par same auto-move (koi message nahi) */
       const allAtBase = legal.every(i => state.tokens[color][i] === -1);
       if (legal.length === 1 || allAtBase) {
         update();
         await wait(450);
         if (destroyed || state.gameOver) return;
-        moveToken(color, legal[0], false);
+        moveToken(color, legal[0], isRemote(color), false);
         return;
       }
 
-      update(); // glowing tokens appear
-      startTurnTimer(); // time to choose a token
+      update();
+      startTurnTimer();
+      pump();   /* opponent ka 'move' message pehle aa chuka ho to ab chalao */
     }
 
-    async function moveToken(color, index, byBot = false) {
+    /* announce = true: ye meri chaal hai, opponent ko bhejo */
+    async function moveToken(color, index, byBot = false, announce = false) {
       if (state.gameOver || state.busy || !state.rolled || state.turn !== color) return;
-      if (isBot(color) && !byBot) return;
+      if ((isBot(color) || isRemote(color)) && !byBot) return;
       if (!getLegal(state).includes(index)) return;
+
+      if (announce && ONLINE && color === "blue") sendNet({ type: "move", token: index });
 
       const d = state.dice;
       const old = state.tokens[color][index];
@@ -1541,6 +1539,57 @@
       nextTurn(d === 6 || captured || reachedHome);
     }
 
+    /* ---------------- ONLINE: opponent ke messages ---------------- */
+    /* Messages queue me aate hain aur tabhi chalte hain jab game us state me ho
+       (animation khatam, opponent ki turn). Isse dono phones sync rehte hain. */
+    function pump() {
+      if (destroyed || state.gameOver) return;
+      while (netQ.length) {
+        if (state.busy) return;
+        const m = netQ[0];
+
+        if (m.type === "roll") {
+          if (state.turn === "red" && !state.rolled) { netQ.shift(); roll("red", Number(m.v)); }
+          return;
+        }
+        if (m.type === "move") {
+          if (state.turn === "red" && state.rolled) {
+            netQ.shift();
+            const t = Number(m.token);
+            if (getLegal(state).includes(t)) { moveToken("red", t, true, false); return; }
+            continue;
+          }
+          return;
+        }
+        if (m.type === "pass") {
+          if (state.turn === "red" && !state.rolled) { netQ.shift(); nextTurn(false); }
+          return;
+        }
+        netQ.shift();
+      }
+    }
+
+    function onNetMsg(m) {
+      if (destroyed || !m || state.gameOver) return;
+      remoteMiss = 0;
+      if (m.type === "react") {
+        const p = m.payload || {};
+        if (p.type === "emoji") receiveReaction({ type: "emoji", id: Number(p.id) || 0 });
+        else if (p.type === "text") receiveReaction({ type: "text", text: String(p.text || "").slice(0, 60) });
+        return;
+      }
+      if (m.type === "forfeit") { finishGame("blue"); return; }
+      if (m.type === "roll" || m.type === "move" || m.type === "pass") {
+        netQ.push(m);
+        pump();
+      }
+    }
+
+    if (ONLINE) {
+      try { net.onMsg(onNetMsg); } catch (e) { console.error("net.onMsg", e); }
+      try { net.onOppLeft(() => { if (!destroyed && !state.gameOver) finishGame("blue"); }); } catch (e) { console.error("net.onOppLeft", e); }
+    }
+
     /* ---------------- events ---------------- */
     function sendChatText() {
       const value = chatInput.value.trim();
@@ -1550,10 +1599,21 @@
       sendReaction({ type: "text", text: value });
     }
 
+    function markLeft() {
+      try {
+        if (ONLINE && match.matchId && typeof fdb !== "undefined" && typeof UID !== "undefined" && UID) {
+          fdb.ref("matches/" + match.matchId + "/left/" + UID).set(true);
+        }
+      } catch (e) { /* ignore */ }
+    }
+
     function clickHandler(event) {
       const piece = event.target.closest(".lm2-piece");
       if (piece) {
-        moveToken(piece.dataset.color, Number(piece.dataset.token), false);
+        const c = piece.dataset.color;
+        if (!ctl(c)) return;   /* opponent ka token kabhi nahi */
+        myMiss = 0;
+        moveToken(c, Number(piece.dataset.token), false, true);
         return;
       }
 
@@ -1609,6 +1669,7 @@
           break;
         case "leave-confirm":
           closeModal();
+          if (ONLINE) { sendNet({ type: "forfeit" }); markLeft(); }
           onExit({ reason: "leave" });
           break;
         case "close":
@@ -1637,8 +1698,8 @@
       if (e.key === "Enter" && e.target === chatInput) { e.preventDefault(); sendChatText(); }
     }
 
-    const redRoll  = () => { audio.startMusic(); roll("red"); };
-    const blueRoll = () => { roll("blue"); };
+    const redRoll  = () => { if (ONLINE) return; audio.startMusic(); roll("red"); };
+    const blueRoll = () => { myMiss = 0; roll("blue"); };
 
     root.addEventListener("click", clickHandler);
     root.addEventListener("keydown", keyHandler);
@@ -1666,6 +1727,7 @@
       dice.red.removeEventListener("click", redRoll);
       dice.blue.removeEventListener("click", blueRoll);
       document.removeEventListener("visibilitychange", onVisibility);
+      if (ONLINE) { try { net.close(); } catch (e) { /* ignore */ } }
       audio.stopMusic();
       style.remove();
       mount.innerHTML = "";
@@ -1679,7 +1741,6 @@
   window.LudoGame = {
     start,
     stop,
-    // online play: LudoGame.receiveReaction({ type:"emoji", id:0..7 }) or { type:"text", text:"Hi" }
     receiveReaction: payload => activeApi && activeApi.receiveReaction(payload),
     __mastersLoaded: true
   };
