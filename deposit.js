@@ -33,16 +33,19 @@ const depLog = (...a) => { try { console.log('DEP:', ...a); } catch (e) { } };
 const depTg = () => (window.Telegram && Telegram.WebApp) || null;
 const depInr = n => '₹' + Number(n || 0).toLocaleString('en-IN');
 
-/* ---------- UPI app kholna ---------- */
-function depUpiUrl(a) {
-  return 'upi://pay?pa=' + DEP_UPI + '&pn=' + encodeURIComponent(DEP_PN) + '&am=' + a + '&cu=INR';
+/* ---------- UPI app kholna ----------
+   Telegram ka WebView upi:// kholta hi nahi (ERR_UNKNOWN_URL_SCHEME), isliye
+   seedha upi:// kabhi nahi kholte. Pehle https wala pay.html (apni site par, index.html ke saath)
+   phone ke browser me khulta hai, wahan se UPI app khulte hain. */
+function depPayUrl(a) {
+  return new URL('pay.html', location.href).href.split('#')[0] + '?am=' + encodeURIComponent(a);
 }
 function depOpen(url) {
   const tg = depTg();
   try {
-    if (tg && tg.openLink) tg.openLink(url);
-    else location.href = url;
-  } catch (e) { try { location.href = url; } catch (e2) { toast('Could not open UPI app'); } }
+    if (tg && tg.openLink) { tg.openLink(url, { try_browser: 'chrome' }); return; }
+  } catch (e) { console.error('DEP: openLink failed', e); }
+  try { window.open(url, '_blank'); } catch (e) { toast('Could not open payment page. Copy the UPI ID and pay manually.'); }
 }
 function depCopyUpi() {
   const done = () => toast('UPI ID copied ✓');
@@ -62,7 +65,7 @@ ppDep = function (i) {
 <div class="dp-chips">${DEP_QUICK.map(x => `<button type="button" onclick="depSet(${x})">₹${x}</button>`).join('')}</div>
 <input id="dpa" type="number" inputmode="numeric" min="${DEP_MIN}" max="${DEP_MAX}" value="${pre}" oninput="depVal()" placeholder="Min ₹${DEP_MIN}">
 <button type="button" class="pp-s vipb" style="margin-top:10px" onclick="depPay()">Pay via PhonePe / GPay / Paytm</button>
-<div class="dp-up">UPI ID: <b>${esc(DEP_UPI)}</b> <a onclick="depCopyUpi()">Copy</a></div>
+<div class="dp-up">UPI ID: <b>${esc(DEP_UPI)}</b> <a onclick="depCopyUpi()">Copy</a><br><small>Button se app na khule to UPI ID copy karke apne UPI app me pay karo.</small></div>
 <label>2. UTR / Ref No. <em>(12 digits)</em></label>
 <input id="dpu" type="text" inputmode="numeric" maxlength="12" placeholder="e.g. 412345678901" autocomplete="off" oninput="depVal()">
 <div class="pp-r"><span id="dpe"></span><span id="dpc"></span></div>
@@ -89,8 +92,8 @@ function depVal() {
 function depPay() {
   const a = depAmt(), e = depCheckAmt(a);
   if (e) { toast(e); return; }
-  depOpen(depUpiUrl(a));
-  toast('After payment, come back and enter the UTR');
+  depOpen(depPayUrl(a));
+  toast('After payment, come back here and enter the UTR');
 }
 
 /* ---------- Verify + claim ---------- */
