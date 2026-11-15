@@ -4,7 +4,7 @@
    index.html me profile_plus.js ke BAAD, boot() se PEHLE (type="module" nahi):
      <script src="profile_plus.js"></script>
      <script src="deposit.js?v=3"></script>
-   Server par ye files index.html ke saath rakho:  pay.html   (+ optional qrcode.min.js)
+   Koi alag pay.html nahi chahiye (redirect isi file me hai). Optional: qrcode.min.js
 
    Flow:
    1. User amount chunta hai -> "Generate QR & Pay"
@@ -39,6 +39,40 @@ const depLog = (...a) => { try { console.log('DEP:', ...a); } catch (e) { } };
 const depTg = () => (window.Telegram && Telegram.WebApp) || null;
 const depInr = n => '₹' + Number(n || 0).toLocaleString('en-IN');
 
+/* ---------- Chrome me khulne wala redirect page (?payredir=1) ---------- */
+const DEP_RD = (() => {
+  try {
+    const p = new URLSearchParams(location.search);
+    if (p.get('payredir') !== '1') return null;
+    return { am: Math.floor(Number(p.get('am'))), app: p.get('app') || 'upi' };
+  } catch (e) { return null; }
+})();
+const DEP_PKG = { phonepe: 'com.phonepe.app', gpay: 'com.google.android.apps.nbu.paisa.user', paytm: 'net.one97.paytm' };
+function depRdUrl(app, a) {
+  const q = 'pa=' + encodeURIComponent(DEP_UPI) + '&pn=' + encodeURIComponent(DEP_PN) + '&am=' + a + '&cu=INR';
+  const pk = DEP_PKG[app];
+  /* intent:// = Android Chrome se seedha usi app me, amount ke saath */
+  return pk ? 'intent://pay?' + q + '#Intent;scheme=upi;package=' + pk + ';end' : 'upi://pay?' + q;
+}
+if (DEP_RD) {
+  boot = function () { };                                  /* is tab me game boot nahi karna */
+  try { bgm.pause(); bgm.play = () => Promise.resolve(); } catch (e) { }
+  const ok = DEP_RD.am >= 1 && DEP_RD.am <= 100000;
+  const names = { phonepe: 'PhonePe', gpay: 'Google Pay', paytm: 'Paytm', upi: 'your UPI app' };
+  const o = document.createElement('div');
+  o.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#2a0f88,#140a52);color:#fff;font-family:Poppins,system-ui,sans-serif';
+  const btn = (app, label, cls) => `<a href="${depRdUrl(app, DEP_RD.am)}" style="display:block;margin-top:10px;padding:13px;border-radius:14px;font-weight:800;font-size:15px;color:${cls ? '#4a2400' : '#fff'};text-decoration:none;background:${cls ? 'linear-gradient(180deg,#ffd84a,#ff9a14)' : 'linear-gradient(180deg,#8b4dff,#5424d0)'}">${label}</a>`;
+  o.innerHTML = ok
+    ? `<div style="width:min(92vw,380px);padding:22px;border-radius:22px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);text-align:center">
+<h2 style="margin:0">Pay via UPI</h2><div style="font-size:38px;font-weight:800;color:#ffd21f;margin:6px 0">₹${DEP_RD.am}</div>
+<p style="margin:6px 0;font-size:13px;color:#d9c8ff;line-height:1.45">Opening ${names[DEP_RD.app] || names.upi}… After paying, go back to Telegram and enter the 12-digit UTR.</p>
+${btn('upi', 'Open any UPI app', 1)}${btn('phonepe', 'PhonePe')}${btn('gpay', 'Google Pay')}${btn('paytm', 'Paytm')}
+<div style="margin-top:14px;padding:9px;border-radius:12px;background:rgba(0,0,0,.3);font-size:13px;word-break:break-all">UPI ID: <b>${DEP_UPI}</b></div></div>`
+    : '<div style="text-align:center"><h2>Invalid amount</h2><p>Go back to the app and try again.</p></div>';
+  document.body.appendChild(o);
+  if (ok) setTimeout(() => { location.href = depRdUrl(DEP_RD.app, DEP_RD.am); }, 300);
+}
+
 /* ---------- session (10 min window) ---------- */
 function depSessLoad() {
   try {
@@ -52,9 +86,10 @@ const depLeft = () => DEP_SESS ? Math.max(0, DEP_SESS.start + DEP_TTL - Date.now
 
 /* ---------- UPI link / QR ---------- */
 const depUpiUrl = a => 'upi://pay?pa=' + DEP_UPI + '&pn=' + encodeURIComponent(DEP_PN) + '&am=' + a + '&cu=INR';
-/* Telegram WebView upi:// kholta nahi -> https pay.html phone ke browser me khulta hai, wahi UPI app kholta hai */
+/* Telegram WebView upi:// kholta nahi -> apna hi https page (index.html?payredir=1) phone ke Chrome me khulta hai,
+   aur wahan se UPI app seedha amount ke saath khulta hai. Alag file upload karne ki zaroorat nahi. */
 function depAppUrl(app, a) {
-  return new URL('pay.html', location.href).href.split('#')[0] + '?am=' + encodeURIComponent(a) + '&app=' + encodeURIComponent(app);
+  return location.origin + location.pathname + '?payredir=1&am=' + encodeURIComponent(a) + '&app=' + encodeURIComponent(app);
 }
 function depOpen(url) {
   const tg = depTg();
@@ -139,6 +174,7 @@ function depPayStep() {
 <label>Enter UTR / Ref No. <em>(12 digits)</em></label>
 <input id="dpu" type="text" inputmode="numeric" maxlength="12" placeholder="e.g. 412345678901" autocomplete="off" oninput="depVal()">
 <div class="pp-r"><span id="dpe"></span><span id="dpc"></span></div>
+<div id="dpr" class="dp-res"></div>
 <div class="pp-bt"><button class="pp-c" onclick="depBack()">Change amount</button><button class="pp-s" id="dps" onclick="depVerify()">Verify &amp; Add Coins</button></div>`);
   depVal(); depDrawQr();
   clearInterval(DEP_T); DEP_T = setInterval(depTick, 1000); depTick();
@@ -166,6 +202,7 @@ function depVal() {
   if (clean !== u.value) u.value = clean;
   c.textContent = clean.length + '/12';
   e.textContent = clean.length && clean.length !== 12 ? 'UTR must be exactly 12 digits' : '';
+  const rr = document.getElementById('dpr'); if (rr) { rr.className = 'dp-res'; rr.innerHTML = ''; }
   b.disabled = clean.length !== 12 || !!DEP_BUSY;
 }
 
@@ -182,7 +219,7 @@ async function depVerify() {
   if (DEP_BUSY) return;
   const a = DEP_SESS ? DEP_SESS.amt : 0, u = ((document.getElementById('dpu') || {}).value || '').trim();
   const err = document.getElementById('dpe'), btn = document.getElementById('dps');
-  const show = m => { if (err) err.textContent = m; };
+  const show = m => depBad('Check details', m);
   if (!a) return show('Session expired. Tap Change amount.');
   if (!/^\d{12}$/.test(u)) return show('UTR must be exactly 12 digits');
   if (!UID) return show('Please wait, account is loading…');
@@ -191,21 +228,21 @@ async function depVerify() {
   if (DEP_FAILS.length >= 5) return show('Too many wrong attempts. Try again after 10 minutes.');
 
   DEP_BUSY = 1; if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
-  const fail = m => { DEP_FAILS.push(Date.now()); show(m); };
+  const bad = (h, d) => { DEP_FAILS.push(Date.now()); depBad(h, d); };
   let ok = 0, bank = 0, ts = 0;
   try {
     let d = null, used = null;
     try {
       d = (await fdb.ref('bank_utrs/' + u).once('value')).val();
       used = (await fdb.ref('used_utrs/' + u).once('value')).val();
-    } catch (e) { console.error('DEP: read failed (rules check karo)', e); show('Could not check UTR. Try again.'); return; }
+    } catch (e) { console.error('DEP: read failed (rules check karo)', e); depBad('Network error', 'Could not check UTR. Try again.'); return; }
     depLog('utr data =', d, '| tombstone =', used);
-    if (used) { fail('This UTR is already used.'); return; }
-    if (!d) { fail('UTR not found. Wait 1-2 minutes after payment and try again.'); return; }
-    if (d.used !== false) { fail('This UTR is already used.'); return; }
+    if (used) { bad('Wrong UTR', 'This UTR was already used.'); return; }
+    if (!d) { bad('Wrong UTR', 'UTR not found. If you just paid, wait 1-2 minutes and try again.'); return; }
+    if (d.used !== false) { bad('Wrong UTR', 'This UTR was already used.'); return; }
     bank = Number(d.amount);
-    if (!(bank > 0)) { fail('Invalid payment record.'); return; }
-    if (bank < a) { fail('Paid amount (' + depInr(bank) + ') is less than the selected amount (' + depInr(a) + ').'); return; }
+    if (!(bank > 0)) { bad('Wrong UTR', 'Invalid payment record.'); return; }
+    if (bank < a) { bad('Amount too low', 'Paid ' + depInr(bank) + ' is less than the selected ' + depInr(a) + '.'); return; }
 
     ts = Date.now();
     dbSet('dep/' + u, { amt: bank, ts, c: 0 });         /* intent marker: beech me app band ho to recovery */
@@ -218,7 +255,7 @@ async function depVerify() {
     catch (e) {
       console.error('DEP: claim failed', e);
       dbSet('dep/' + u, { amt: bank, ts, c: 2 });
-      fail('This UTR is already used or invalid.'); return;
+      bad('Wrong UTR', 'This UTR is already used or invalid.'); return;
     }
     ok = 1;
   } finally {
@@ -231,7 +268,21 @@ async function depVerify() {
   depCredit(u, bank, ts);
   depCleanup(u);
   depSessSave(null); clearInterval(DEP_T); DEP_T = 0;
-  closeSh();
+  depOk(bank);
+}
+
+/* galat UTR / error: bada red message */
+function depBad(head, detail) {
+  const r = document.getElementById('dpr'), e = document.getElementById('dpe');
+  if (e) e.textContent = '';
+  if (r) { r.className = 'dp-res bad'; r.innerHTML = '<b>❌ ' + esc(head) + '</b><small>' + esc(detail || '') + '</small>'; }
+  try { const tg = depTg(); tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred('error'); } catch (e2) { }
+}
+/* sahi UTR: Success message, phir page apne aap band */
+function depOk(amt) {
+  try { const tg = depTg(); tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred('success'); } catch (e) { }
+  sheet(`<div class="dp-ok"><div class="dp-tick">✓</div><div class="pp-t" style="margin:0">Payment Successful</div><p class="pp-p">${depInr(amt)} added to your wallet.</p></div>`);
+  setTimeout(() => { const o = document.getElementById('pp-sh'); if (o && o.querySelector('.dp-ok')) closeSh(); }, 2200);
 }
 
 /* coins/wallet me paisa add */
@@ -309,6 +360,14 @@ onDepositSuccess = function (amount) {
 .dp-a.ot{background:linear-gradient(180deg,#ffa43a,#e06a10)}
 .dp-w.ex .dp-qrw,.dp-w.ex .dp-apps{opacity:.25;pointer-events:none;filter:grayscale(1)}
 .dp-ex{display:none;margin-top:calc(8*var(--u));padding:calc(8*var(--u)) calc(10*var(--u));border-radius:calc(12*var(--u));background:#ffe9e9;color:#a01818;font-size:calc(12*var(--u));font-weight:600;text-align:center;line-height:1.4}
+.dp-res{display:none;margin-top:calc(8*var(--u));padding:calc(10*var(--u)) calc(12*var(--u));border-radius:calc(14*var(--u));text-align:center}
+.dp-res.bad{display:block;background:#ffe3e3;border:calc(2*var(--u)) solid #e04646;color:#b01212;animation:dpShake .4s}
+.dp-res.bad b{display:block;font-size:calc(18*var(--u));font-weight:800}
+.dp-res.bad small{display:block;margin-top:calc(2*var(--u));font-size:calc(12*var(--u));font-weight:600}
+@keyframes dpShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.dp-ok{text-align:center;padding:calc(18*var(--u)) 0 calc(10*var(--u))}
+.dp-tick{width:calc(76*var(--u));height:calc(76*var(--u));margin:0 auto calc(10*var(--u));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:calc(44*var(--u));font-weight:800;color:#fff;background:linear-gradient(180deg,#5fe03a,#1fa80e);box-shadow:0 0 calc(18*var(--u)) rgba(80,220,60,.6);animation:dpPop .45s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes dpPop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
 .dp-up{margin:calc(6*var(--u)) calc(4*var(--u)) 0;text-align:center;font-size:calc(12*var(--u));color:#5b4aa0}
 .dp-up b{color:#3a1590}
 .dp-up a{margin-left:calc(6*var(--u));color:#7a3ff0;font-weight:800;text-decoration:underline;cursor:pointer}
