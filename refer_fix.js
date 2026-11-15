@@ -35,7 +35,7 @@
     const tg = rtg(), u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
     return u && u.id ? String(u.id) : refCode();
   };
-  /* https://t.me/Lwinup_bot/winup?startapp=6959062335 */
+  /* https://t.me/Lwinup_bot?start=6959062335 */
   const myLink = () => UID ? BOT_APP + '?startapp=' + myCode() : BOT_APP;
 
   /* Telegram ID code ko UID se map karo: refCodes/<telegramId> = uid */
