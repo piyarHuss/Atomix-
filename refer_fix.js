@@ -10,7 +10,7 @@
    2. Friend ka game-progress (gp) referrer ki list me sync hota hai
    3. My Referrals / My Rewards me progress bar (2/5 games) + Claim sirf ready par
    4. Telegram icon ki jagah inline SVG
-   5. Referral link (FIXED): https://t.me/Lwinup_bot/winup?startapp=<Telegram ID>
+   5. Referral link (FIXED): https://t.me/Lwinup_bot?start=<Telegram ID>
       (?start= wala link Mini App ko start_param nahi deta, isliye referral capture nahi hota tha)
    6. Refer Rules page professional + animation
    7. Debug logs: console me "REF:" wali lines dekho
