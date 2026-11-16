@@ -24,7 +24,7 @@
      onFinish({ won:true|false, winner:'you'|'bot', points })
 
    NEW in v5:
-     - Striker bada (professional carrom jaisa)
+     - Striker bahut bada (coin ka 2x, mobile carrom jaisa)
      - Opponent (bot ya online) ka striker slide hota dikhta hai, phir aim/pull-back, phir shot
      - Slider ke niche koi text nahi
      - Bot: har shot ko exact physics se simulate karke best shot chunta hai (full hard)
@@ -44,7 +44,7 @@
 
   /* ------------------------------------------------------------------
      CONFIG  (coordinates board.png ke original size 1241 x 1268 mein)
-     strikerR: striker ka size. Coin = 25, pehle 31 tha -> ab 38 (coin se ~1.5x, pro look).
+     strikerR: striker ka size. Coin = 25, pehle 31 tha -> ab 38 (coin se 2x, mobile carrom pro look).
                Aur bada chahiye to 40-42 kar do.
      ------------------------------------------------------------------ */
   var CFG = {
@@ -53,7 +53,7 @@
     pockets: [{ x: 113, y: 112 }, { x: 1127, y: 112 }, { x: 113, y: 1108 }, { x: 1127, y: 1108 }],
     pocketR: 46,
     center: { x: 620, y: 615 },
-    coinR: 25, strikerR: 38, strikerM: 1.8,
+    coinR: 25, strikerR: 50, strikerM: 2.0,
     lines: [{ y: 1011 }, { y: 211 }],
     x1: 259, x2: 980,
     maxSpeed: 3400,
@@ -424,9 +424,11 @@
     '.cr-cv{touch-action:none;display:block;margin:auto 0}' +
     '.cr-bottom{width:100%;padding:12px 28px 14px;box-sizing:border-box;text-align:center}' +
     '.cr-slider{-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:300px;height:28px;margin:0 auto;border-radius:16px;border:4px solid #8a0f14;outline:0;overflow:visible;background:linear-gradient(90deg,#5a2c10,#8b4a22 50%,#5a2c10);box-shadow:0 3px 8px rgba(0,0,0,.55),inset 0 3px 5px rgba(0,0,0,.55)}' +
-    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:52px;height:52px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
-    '.cr-slider::-moz-range-thumb{width:52px;height:52px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
+    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:62px;height:62px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
+    '.cr-slider::-moz-range-thumb{width:62px;height:62px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
     '.cr-slider:disabled{opacity:.7}' +
+    '.cr-otrack{width:100%;padding:8px 28px 14px;box-sizing:border-box}' +
+    '.cr-oslider{pointer-events:none}' +
     /* slider ke niche ka text hata diya */
     '.cr-msg{display:none}' +
     '.cr-ov{position:absolute;inset:0;z-index:30;background:rgba(10,5,40,.78);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px}' +
@@ -489,13 +491,14 @@
     }
     wrap.innerHTML =
       '<div class="cr-top"><button class="cr-btn cr-mn"><span class="bars"><i></i><i></i><i></i></span></button>' + plHtml(0) + plHtml(1) + '</div>' +
+      '<div class="cr-otrack"><input class="cr-slider cr-oslider" type="range" min="0" max="1000" value="500" disabled></div>' +
       '<canvas class="cr-cv"></canvas>' +
       '<div class="cr-bottom"><input class="cr-slider" type="range" min="0" max="1000" value="500"><div class="cr-msg"></div></div>' +
       '<div class="cr-toast"></div><div class="cr-ov"></div><div class="cr-menu"></div>';
     mount.appendChild(wrap);
     var $ = function (s) { return wrap.querySelector(s); };
     var canvas = $('.cr-cv'), ctx = canvas.getContext('2d'), ov = $('.cr-ov'), toast = $('.cr-toast'),
-        slider = $('.cr-slider'), msgEl = $('.cr-msg'), menuBtn = $('.cr-mn'), menuEl = $('.cr-menu');
+        slider = $('.cr-bottom .cr-slider'), oslider = $('.cr-oslider'), otrack = $('.cr-otrack'), msgEl = $('.cr-msg'), menuBtn = $('.cr-mn'), menuEl = $('.cr-menu');
 
     // ---------- state ----------
     var imgs = {}, sprites = {};
@@ -578,7 +581,7 @@
     function fit() {
       if (destroyed) return;
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var availW = wrap.clientWidth, topH = $('.cr-top').offsetHeight, botH = $('.cr-bottom').offsetHeight;
+      var availW = wrap.clientWidth, topH = $('.cr-top').offsetHeight + otrack.offsetHeight, botH = $('.cr-bottom').offsetHeight;
       var availH = wrap.clientHeight - topH - botH - 4;
       var cssW = Math.max(120, Math.min(availW, availH * CFG.W / CFG.H));
       canvas.style.width = cssW + 'px'; canvas.style.height = (cssW * CFG.H / CFG.W) + 'px';
@@ -608,6 +611,11 @@
     }
     function isBot() { return o.mode === 'bot' && turn === 1; }
     function isOppOnline() { return o.mode === 'online' && turn !== o.myIndex; }
+    function mineTurn() { return o.mode === 'bot' ? turn === 0 : turn === o.myIndex; }
+    function setTrack(x) {
+      var v = sliderFromX(x);
+      if (mineTurn()) slider.value = v; else oslider.value = flip ? 1000 - v : v;
+    }
     function sliderFromX(x) { return Math.round((x - CFG.x1) / (CFG.x2 - CFG.x1) * 1000); }
 
     // apna aim/slider online opponent ko bhejna (agar app ne onAim diya ho)
@@ -624,7 +632,7 @@
     }
     function beginTurn() {
       phase = 'aim'; aim.on = false; aim.power = 0; botBusy = false; botPlan = null; remote = null;
-      slider.value = 500; strikerPlace(0.5);
+      slider.value = 500; oslider.value = 500; strikerPlace(0.5);
       slider.disabled = !canControl();
       hud(); startTimer();
       if (isBot()) { botBusy = true; later(botTurn, 450); }
@@ -657,7 +665,7 @@
       if (P.stage === 0) {                                   // 1) striker line par slide
         var k = P.t / P.d0;
         striker.x = P.x0 + (P.pick.x - P.x0) * easeIO(k);
-        slider.value = sliderFromX(striker.x);
+        setTrack(striker.x);
         if (k >= 1) {
           striker.x = P.pick.x; P.stage = 1; P.t = 0;
           aim.on = true; aim.power = 0; aim.dx = Math.cos(P.a0); aim.dy = Math.sin(P.a0);
@@ -679,7 +687,7 @@
       var R = remote; if (!R) return;
       var k = Math.min(1, dt * 14);
       striker.x += (R.x - striker.x) * k;
-      slider.value = sliderFromX(striker.x);
+      setTrack(striker.x);
       if (R.on) {
         aim.on = true;
         aim.dx += (R.dx - aim.dx) * k; aim.dy += (R.dy - aim.dy) * k;
@@ -915,6 +923,12 @@
       if (imgs.board) ctx.drawImage(imgs.board, 0, 0, CFG.W, CFG.H);
       else { ctx.fillStyle = '#d9a35f'; ctx.fillRect(0, 0, CFG.W, CFG.H); }
 
+      // jo khilaadi abhi nahi khel raha, uska striker apni line par rakha dikhta hai
+      if (phase === 'aim' || phase === 'moving') {
+        ctx.save(); ctx.globalAlpha = 0.92;
+        drawBody({ type: 'striker', x: CFG.center.x, y: CFG.lines[1 - turn].y, r: CFG.strikerR });
+        ctx.restore();
+      }
       if (phase === 'aim') {
         // coin ke upar striker ho to laal (sirf apne turn par)
         if (canControl() && !isFree(S, striker.x, striker.y)) {
