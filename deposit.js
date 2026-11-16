@@ -38,6 +38,8 @@ const DEP_QR_AMT = true;                  /* QR me amount rakhna hai? Scan par e
 const DEP_CREDIT = { cash: 1, gems: 0 };
 const DEP_QR_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', 'qrcode.min.js'];
 
+const DEP_DEBUG = true;                   /* TEMP: red box me asli Firebase data dikhata hai. Test ke baad false karo */
+let DEP_DBG = '';
 let DEP_BUSY = 0, DEP_FAILS = [], DEP_SESS = null, DEP_T = 0;
 const DEP_DONE = {};
 const DEP_KEY = 'dep_sess';
@@ -201,11 +203,17 @@ async function depVerify() {
   let ok = 0, bank = 0, ts = 0;
   try {
     let d = null, used = null;
+    let dbUrl = '?';
+    try { dbUrl = fdb.app.options.databaseURL || fdb.ref().toString(); } catch (e0) { }
+    DEP_DBG = 'DB: ' + dbUrl + '\nUID: ' + (UID || '-') + '\nUTR: ' + u + '\nSelected: ' + a;
     try {
       d = (await fdb.ref('bank_utrs/' + u).once('value')).val();
+      DEP_DBG += '\nbank_utrs = ' + JSON.stringify(d);
       used = (await fdb.ref('used_utrs/' + u).once('value')).val();
+      DEP_DBG += '\nused_utrs = ' + JSON.stringify(used);
     } catch (e) {
       console.error('DEP: read failed', e.code, e.message);
+      DEP_DBG += '\nREAD ERROR: ' + (e.code || '') + ' ' + (e.message || '');
       depBad('Network error', 'Could not check UTR (' + (e.code || 'unknown') + '). Try again.'); return;
     }
     depLog('utr data =', JSON.stringify(d), '| tombstone =', JSON.stringify(used));
@@ -253,7 +261,8 @@ async function depVerify() {
 function depBad(head, detail) {
   const r = document.getElementById('dpr'), e = document.getElementById('dpe');
   if (e) e.textContent = '';
-  if (r) { r.className = 'dp-res bad'; r.innerHTML = '<b>❌ ' + esc(head) + '</b><small>' + esc(detail || '') + '</small>'; }
+  if (r) { r.className = 'dp-res bad'; r.innerHTML = '<b>❌ ' + esc(head) + '</b><small>' + esc(detail || '') + '</small>'
+    + (DEP_DEBUG && DEP_DBG ? '<pre style="margin:6px 0 0;padding:6px;border-radius:8px;background:rgba(0,0,0,.08);font:600 10px/1.35 monospace;text-align:left;white-space:pre-wrap;word-break:break-all;color:#600">' + esc(DEP_DBG) + '</pre>' : ''); }
   try { const tg = depTg(); tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred('error'); } catch (e2) { }
 }
 /* sahi UTR: Success message, phir page apne aap band */
