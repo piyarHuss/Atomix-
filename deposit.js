@@ -1,33 +1,37 @@
 /* =====================================================================
-   deposit.js  v3  —  Ludo Masters : REAL UPI deposit (MacroDroid + Firebase UTR)
+   deposit.js  v4  —  Ludo Masters : REAL UPI deposit (MacroDroid + Firebase UTR)
 
    index.html me profile_plus.js ke BAAD, boot() se PEHLE (type="module" nahi):
      <script src="profile_plus.js"></script>
-     <script src="deposit.js?v=3"></script>
-   Koi alag pay.html nahi chahiye (redirect isi file me hai). Optional: qrcode.min.js
+     <script src="deposit.js?v=4"></script>
+
+   v4 me kya badla:
+   - DEP_APP_AMT flag: UPI app buttons me amount pre-fill ON/OFF (default OFF,
+     kyunki personal UPI ID par amount wale link se app "payment nahi hoga" error deta hai)
+   - DEP_QR_AMT flag: QR code me amount ON/OFF
+   - UTR verify: used ("false" / false / missing), amount ("₹10", "10.00") sab handle
+   - Claim fail hone par asli Firebase error code dikhta hai (PERMISSION_DENIED etc.)
+   - Debug: console me "DEP:" lines
 
    Flow:
    1. User amount chunta hai -> "Generate QR & Pay"
-   2. Payment screen: QR (aapki UPI ID, amount ke saath) + 10 minute countdown
-      + PhonePe / GPay / Paytm / Other UPI buttons (amount pre-filled)
-   3. Payment ke baad usi screen par 12-digit UTR -> "Verify & Add Coins"
-   4. Verify: bank_utrs/<utr> exist, used===false, amount >= selected amount
+   2. Payment screen: QR + 10 minute countdown + PhonePe / GPay / Paytm / Other UPI
+   3. Payment ke baad 12-digit UTR -> "Verify & Add Coins"
+   4. Verify: bank_utrs/<utr> exist, not used, amount >= selected amount
       -> atomic claim (bank_utrs used:true + used_utrs/<utr> permanent tombstone)
-      -> wallet me paisa add
-      -> bank_utrs/<utr> DELETE ho jata hai
-   5. Ek UTR sirf ek baar: used_utrs/<utr> kabhi delete nahi hota, to dobara
-      likha hua UTR bhi reject hota hai.
-
-   Debug: console me "DEP:" lines.
+      -> wallet me paisa add -> bank_utrs/<utr> DELETE
+   5. Ek UTR sirf ek baar: used_utrs/<utr> kabhi delete nahi hota.
    ===================================================================== */
 
 /* ---------- SETTINGS ---------- */
-const DEP_UPI = 'mining-fathe@ptaxis';   /* pay.html ke PA se same rakho */
+const DEP_UPI = 'mining-fathe@ptaxis';
 const DEP_PN = 'Admin';
 const DEP_MIN = 10;
 const DEP_MAX = 50000;
 const DEP_QUICK = [50, 100, 250, 500];
 const DEP_TTL = 10 * 60 * 1000;           /* QR/payment window: 10 minute */
+const DEP_APP_AMT = false;                /* false = app buttons amount pre-fill nahi karenge (user khud amount dalega) */
+const DEP_QR_AMT = true;                  /* QR me amount rakhna hai? Agar scan par bhi error aaye to false karo */
 /* ₹1 deposit par kitna milega: cash = withdrawable ₹, gems = diamonds */
 const DEP_CREDIT = { cash: 1, gems: 0 };
 const DEP_QR_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', 'qrcode.min.js'];
@@ -38,6 +42,10 @@ const DEP_KEY = 'dep_sess';
 const depLog = (...a) => { try { console.log('DEP:', ...a); } catch (e) { } };
 const depTg = () => (window.Telegram && Telegram.WebApp) || null;
 const depInr = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+/* Firebase / MacroDroid se aaya "used" kisi bhi form me ho sakta hai */
+const depIsUsed = x => x === true || x === 'true' || x === 1 || x === '1';
+/* "₹10", "Rs. 10.00", "10" -> 10 */
+const depNum = x => { const n = parseFloat(String(x == null ? '' : x).replace(/[^\d.]/g, '')); return isFinite(n) ? n : 0; };
 
 /* ---------- Chrome me khulne wala redirect page (?payredir=1) ---------- */
 const DEP_RD = (() => {
@@ -49,9 +57,10 @@ const DEP_RD = (() => {
 })();
 const DEP_PKG = { phonepe: 'com.phonepe.app', gpay: 'com.google.android.apps.nbu.paisa.user', paytm: 'net.one97.paytm' };
 function depRdUrl(app, a) {
-  const q = 'pa=' + encodeURIComponent(DEP_UPI) + '&pn=' + encodeURIComponent(DEP_PN) + '&am=' + a + '&cu=INR';
+  let q = 'pa=' + encodeURIComponent(DEP_UPI) + '&pn=' + encodeURIComponent(DEP_PN) + '&cu=INR';
+  if (DEP_APP_AMT) q += '&am=' + a;
   const pk = DEP_PKG[app];
-  /* intent:// = Android Chrome se seedha usi app me, amount ke saath */
+  /* intent:// = Android Chrome se seedha usi app me */
   return pk ? 'intent://pay?' + q + '#Intent;scheme=upi;package=' + pk + ';end' : 'upi://pay?' + q;
 }
 if (DEP_RD) {
@@ -62,10 +71,13 @@ if (DEP_RD) {
   const o = document.createElement('div');
   o.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#2a0f88,#140a52);color:#fff;font-family:Poppins,system-ui,sans-serif';
   const btn = (app, label, cls) => `<a href="${depRdUrl(app, DEP_RD.am)}" style="display:block;margin-top:10px;padding:13px;border-radius:14px;font-weight:800;font-size:15px;color:${cls ? '#4a2400' : '#fff'};text-decoration:none;background:${cls ? 'linear-gradient(180deg,#ffd84a,#ff9a14)' : 'linear-gradient(180deg,#8b4dff,#5424d0)'}">${label}</a>`;
+  const hint = DEP_APP_AMT
+    ? 'After paying, go back to Telegram and enter the 12-digit UTR.'
+    : 'Enter <b>₹' + DEP_RD.am + '</b> in the app and pay. Then go back to Telegram and enter the 12-digit UTR.';
   o.innerHTML = ok
     ? `<div style="width:min(92vw,380px);padding:22px;border-radius:22px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);text-align:center">
 <h2 style="margin:0">Pay via UPI</h2><div style="font-size:38px;font-weight:800;color:#ffd21f;margin:6px 0">₹${DEP_RD.am}</div>
-<p style="margin:6px 0;font-size:13px;color:#d9c8ff;line-height:1.45">Opening ${names[DEP_RD.app] || names.upi}… After paying, go back to Telegram and enter the 12-digit UTR.</p>
+<p style="margin:6px 0;font-size:13px;color:#d9c8ff;line-height:1.45">Opening ${names[DEP_RD.app] || names.upi}… ${hint}</p>
 ${btn('upi', 'Open any UPI app', 1)}${btn('phonepe', 'PhonePe')}${btn('gpay', 'Google Pay')}${btn('paytm', 'Paytm')}
 <div style="margin-top:14px;padding:9px;border-radius:12px;background:rgba(0,0,0,.3);font-size:13px;word-break:break-all">UPI ID: <b>${DEP_UPI}</b></div></div>`
     : '<div style="text-align:center"><h2>Invalid amount</h2><p>Go back to the app and try again.</p></div>';
@@ -85,9 +97,8 @@ function depSessSave(s) { DEP_SESS = s; try { if (s) localStorage.setItem(DEP_KE
 const depLeft = () => DEP_SESS ? Math.max(0, DEP_SESS.start + DEP_TTL - Date.now()) : 0;
 
 /* ---------- UPI link / QR ---------- */
-const depUpiUrl = a => 'upi://pay?pa=' + DEP_UPI + '&pn=' + encodeURIComponent(DEP_PN) + '&am=' + a + '&cu=INR';
-/* Telegram WebView upi:// kholta nahi -> apna hi https page (index.html?payredir=1) phone ke Chrome me khulta hai,
-   aur wahan se UPI app seedha amount ke saath khulta hai. Alag file upload karne ki zaroorat nahi. */
+const depUpiUrl = a => 'upi://pay?pa=' + DEP_UPI + '&pn=' + encodeURIComponent(DEP_PN) + (DEP_QR_AMT ? '&am=' + a : '') + '&cu=INR';
+/* Telegram WebView upi:// kholta nahi -> apna hi https page (?payredir=1) phone ke Chrome me khulta hai */
 function depAppUrl(app, a) {
   return location.origin + location.pathname + '?payredir=1&am=' + encodeURIComponent(a) + '&app=' + encodeURIComponent(app);
 }
@@ -162,6 +173,9 @@ function depPayStep() {
   if (!DEP_SESS) return depAmtStep(100);
   const a = DEP_SESS.amt;
   const apps = [['phonepe', 'PhonePe', 'ph'], ['gpay', 'Google Pay', 'gp'], ['paytm', 'Paytm', 'pt'], ['upi', 'Other UPI', 'ot']];
+  const note = DEP_APP_AMT
+    ? 'Scan the QR or tap an app. Amount ' + depInr(a) + ' is pre-filled.'
+    : 'Scan the QR, or tap an app and pay exactly <b>' + depInr(a) + '</b> to the UPI ID below.';
   sheet(`<div class="pp-t">Pay ${depInr(a)}</div>
 <div id="dpw" class="dp-w">
 <div class="dp-qrw"><div id="dpq"><div class="dp-qe">Generating QR…</div></div></div>
@@ -169,7 +183,7 @@ function depPayStep() {
 <div class="dp-apps">${apps.map(x => `<button type="button" class="dp-a ${x[2]}" onclick="depApp('${x[0]}')">${x[1]}</button>`).join('')}</div>
 </div>
 <div id="dpx" class="dp-ex">Payment window ended. Already paid? Enter your UTR below. Otherwise tap <b>Change amount</b> for a new QR.</div>
-<p class="pp-p" style="margin-top:8px">Scan the QR or tap an app. Amount ${depInr(a)} is pre-filled.</p>
+<p class="pp-p" style="margin-top:8px">${note}</p>
 <div class="dp-up">UPI ID: <b>${esc(DEP_UPI)}</b> <a onclick="depCopyUpi()">Copy</a></div>
 <label>Enter UTR / Ref No. <em>(12 digits)</em></label>
 <input id="dpu" type="text" inputmode="numeric" maxlength="12" placeholder="e.g. 412345678901" autocomplete="off" oninput="depVal()">
@@ -193,7 +207,7 @@ function depTick() {
 function depApp(k) {
   if (!DEP_SESS || depLeft() <= 0) { toast('Payment window ended. Change amount to start again.'); return; }
   depOpen(depAppUrl(k, DEP_SESS.amt));
-  toast('After payment, come back and enter the UTR');
+  toast(DEP_APP_AMT ? 'After payment, come back and enter the UTR' : 'Pay ' + depInr(DEP_SESS.amt) + ', then come back and enter the UTR');
 }
 function depVal() {
   const u = document.getElementById('dpu'), e = document.getElementById('dpe'), c = document.getElementById('dpc'), b = document.getElementById('dps');
@@ -218,7 +232,7 @@ ppDep = function (i) {
 async function depVerify() {
   if (DEP_BUSY) return;
   const a = DEP_SESS ? DEP_SESS.amt : 0, u = ((document.getElementById('dpu') || {}).value || '').trim();
-  const err = document.getElementById('dpe'), btn = document.getElementById('dps');
+  const btn = document.getElementById('dps');
   const show = m => depBad('Check details', m);
   if (!a) return show('Session expired. Tap Change amount.');
   if (!/^\d{12}$/.test(u)) return show('UTR must be exactly 12 digits');
@@ -235,13 +249,17 @@ async function depVerify() {
     try {
       d = (await fdb.ref('bank_utrs/' + u).once('value')).val();
       used = (await fdb.ref('used_utrs/' + u).once('value')).val();
-    } catch (e) { console.error('DEP: read failed (rules check karo)', e); depBad('Network error', 'Could not check UTR. Try again.'); return; }
-    depLog('utr data =', d, '| tombstone =', used);
+    } catch (e) {
+      console.error('DEP: read failed', e.code, e.message);
+      depBad('Network error', 'Could not check UTR (' + (e.code || 'unknown') + '). Try again.'); return;
+    }
+    depLog('utr data =', JSON.stringify(d), '| tombstone =', JSON.stringify(used));
     if (used) { bad('Wrong UTR', 'This UTR was already used.'); return; }
     if (!d) { bad('Wrong UTR', 'UTR not found. If you just paid, wait 1-2 minutes and try again.'); return; }
-    if (d.used !== false) { bad('Wrong UTR', 'This UTR was already used.'); return; }
-    bank = Number(d.amount);
-    if (!(bank > 0)) { bad('Wrong UTR', 'Invalid payment record.'); return; }
+    if (typeof d !== 'object') { bad('Wrong UTR', 'Invalid payment record.'); return; }
+    if (depIsUsed(d.used)) { bad('Wrong UTR', 'This UTR was already used.'); return; }
+    bank = depNum(d.amount);
+    if (!(bank > 0)) { depLog('amount parse failed, raw =', d.amount); bad('Wrong UTR', 'Invalid payment record.'); return; }
     if (bank < a) { bad('Amount too low', 'Paid ' + depInr(bank) + ' is less than the selected ' + depInr(a) + '.'); return; }
 
     ts = Date.now();
@@ -250,12 +268,15 @@ async function depVerify() {
     up['bank_utrs/' + u + '/used'] = true;
     up['bank_utrs/' + u + '/claimedBy'] = UID;
     up['bank_utrs/' + u + '/claimedAt'] = ts;
-    up['used_utrs/' + u] = { by: UID, amt: d.amount, ts };   /* permanent: UTR dobara kabhi use nahi hoga */
-    try { await fdb.ref().update(up); }                      /* atomic: sab ya kuch nahi */
+    up['used_utrs/' + u] = { by: UID, amt: bank, ts };   /* permanent: UTR dobara kabhi use nahi hoga */
+    try { await fdb.ref().update(up); }                  /* atomic: sab ya kuch nahi */
     catch (e) {
-      console.error('DEP: claim failed', e);
+      console.error('DEP: claim failed', e.code, e.message);
       dbSet('dep/' + u, { amt: bank, ts, c: 2 });
-      bad('Wrong UTR', 'This UTR is already used or invalid.'); return;
+      const perm = e && e.code === 'PERMISSION_DENIED';
+      bad(perm ? 'Claim blocked' : 'Claim failed',
+        perm ? 'Firebase rules ne write block kiya (PERMISSION_DENIED). Rules check karo.' : (e.code || 'This UTR is already used or invalid.'));
+      return;
     }
     ok = 1;
   } finally {
@@ -271,7 +292,9 @@ async function depVerify() {
   depOk(bank);
 }
 
-/* galat UTR / error: bada red message */
+/* galat UTR / error: bada red message
+   NOTE: depVal() result box clear kar deta hai, isliye bad() ke baad button ko hi enable karte hain,
+   input ko dobara trigger nahi karte. */
 function depBad(head, detail) {
   const r = document.getElementById('dpr'), e = document.getElementById('dpe');
   if (e) e.textContent = '';
@@ -299,7 +322,7 @@ function depCredit(u, amt, ts) {
 function depCleanup(u) {
   fdb.ref('bank_utrs/' + u).remove()
     .then(() => depLog('bank_utrs/' + u + ' deleted'))
-    .catch(e => console.error('DEP: delete failed (rules check karo)', e));
+    .catch(e => console.error('DEP: delete failed (rules check karo)', e.code, e.message));
 }
 
 /* VIP unlock + message */
@@ -321,9 +344,9 @@ onDepositSuccess = function (amount) {
       DEP_DONE[k] = 1;
       try {
         const t = (await fdb.ref('used_utrs/' + k).once('value')).val();
-        if (t && t.by === UID && Number(t.amt) === Number(r.amt)) {
+        if (t && t.by === UID && depNum(t.amt) === depNum(r.amt)) {
           depLog('recovering pending credit', k);
-          depCredit(k, Number(r.amt), r.ts);
+          depCredit(k, depNum(r.amt), r.ts);
           depCleanup(k);
         } else {
           dbSet('dep/' + k, { amt: r.amt, ts: r.ts, c: 2 });   /* claim hua hi nahi tha -> band */
