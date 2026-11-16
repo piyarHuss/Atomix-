@@ -14,6 +14,7 @@
      sounds: bg_music.mp3
 
    Win/Lose sound app ka Result page bajata hai, isliye yahan nahi bajta.
+   Telegram Mini App: swipe-down lock, viewport resize, cache-busting (?v=) support.
 
    Contract:
      window.CarromGame.start({ mount, match, onFinish, onExit })
@@ -23,14 +24,15 @@
 (function (GLOBAL) {
   'use strict';
 
-  var BASE = (function () {
-    try {
-      var s = document.currentScript;
-      if (s && s.src) return s.src.replace(/[^\/]*$/, '');
-    } catch (e) {}
-    return 'games/carrom/';
-  })();
+  var SRC = '';
+  try { SRC = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+  var BASE = SRC ? SRC.replace(/[?#].*$/, '').replace(/[^\/]*$/, '') : 'games/carrom/';
   var LA = BASE + '../assets/';   // Ludo ki shared assets
+  // Telegram cache todne ke liye: carrom.js?v=4 se "?v=4" nikaal ke har asset/sound par lagate hain
+  var VQ = (SRC.match(/\?v=[^&#]*/) || [''])[0];
+  function U(p) { return p + VQ; }
+  var TG = null;
+  try { TG = (window.Telegram && window.Telegram.WebApp) || null; } catch (e) {}
 
   /* ------------------------------------------------------------------
      CONFIG  (coordinates board.png ke original size 1241 x 1268 mein)
@@ -56,7 +58,7 @@
      HELPERS
      ------------------------------------------------------------------ */
   function ico(k, e) {
-    return '<img src="' + LA + k + '.png" onerror="this.replaceWith(document.createTextNode(\'' + e + '\'))">';
+    return '<img src="' + LA + k + '.png' + VQ + '" onerror="this.replaceWith(document.createTextNode(\'' + e + '\'))">';
   }
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v === '1'; } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v ? '1' : '0'); } catch (e) {} }
@@ -246,7 +248,7 @@
         var a = new Audio(); a.preload = 'auto';
         a.addEventListener('canplaythrough', function () { self.ok[k] = true; }, { once: true });
         a.addEventListener('error', function () { self.ok[k] = false; });
-        a.src = BASE + 'sounds/' + SFX_FILES[k];
+        a.src = U(BASE + 'sounds/' + SFX_FILES[k]);
         self.base[k] = a;
       });
     },
@@ -290,7 +292,7 @@
      CSS (sab kuch .cr- se shuru)
      ------------------------------------------------------------------ */
   var CSS = '' +
-    '.cr-wrap{position:absolute;inset:0;background:radial-gradient(circle at 50% 28%,#3b2a8f,#100b3d 70%);color:#fff;font-family:Poppins,system-ui,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;user-select:none;-webkit-user-select:none;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}' +
+    '.cr-wrap{position:absolute;inset:0;background:radial-gradient(circle at 50% 28%,#3b2a8f,#100b3d 70%);color:#fff;font-family:Poppins,system-ui,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overflow:hidden;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}' +
     '.cr-top{width:100%;display:flex;align-items:center;gap:6px;padding:8px 8px 6px;box-sizing:border-box}' +
     '.cr-pl{flex:1;display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:14px;background:rgba(255,255,255,.1);border:2px solid transparent;min-width:0}' +
     '.cr-pl.act{border-color:#ffc83d;background:rgba(255,200,61,.18)}' +
@@ -303,8 +305,8 @@
     '.cr-cv{touch-action:none;display:block;margin:auto 0}' +
     '.cr-bottom{width:100%;padding:12px 28px 12px;box-sizing:border-box;text-align:center}' +
     '.cr-slider{-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:300px;height:28px;margin:0 auto;border-radius:16px;border:4px solid #8a0f14;outline:0;overflow:visible;background:linear-gradient(90deg,#5a2c10,#8b4a22 50%,#5a2c10);box-shadow:0 3px 8px rgba(0,0,0,.55),inset 0 3px 5px rgba(0,0,0,.55)}' +
-    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:46px;height:46px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png) center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
-    '.cr-slider::-moz-range-thumb{width:46px;height:46px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png) center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
+    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:46px;height:46px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
+    '.cr-slider::-moz-range-thumb{width:46px;height:46px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
     '.cr-slider:disabled{opacity:.5}' +
     '.cr-msg{min-height:18px;font-size:12px;opacity:.9}' +
     '.cr-ov{position:absolute;inset:0;z-index:30;background:rgba(10,5,40,.78);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px}' +
@@ -315,12 +317,12 @@
     '.cr-toast{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);padding:9px 18px;border-radius:12px;font-weight:700;font-size:15px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}' +
     '.cr-toast.show{opacity:1}' +
     /* menu button */
-    '.cr-mn{width:44px;height:44px;border-radius:9px;display:grid;place-items:center;padding:0;border:2px solid #e6bd86;background:url(' + LA + 'btn_menu.png) center/100% 100% no-repeat,linear-gradient(145deg,#c9965c,#8a5a2b 60%,#6a4119);box-shadow:0 3px 7px #000a}' +
+    '.cr-mn{width:44px;height:44px;border-radius:9px;display:grid;place-items:center;padding:0;border:2px solid #e6bd86;background:url(' + LA + 'btn_menu.png' + VQ + ') center/100% 100% no-repeat,linear-gradient(145deg,#c9965c,#8a5a2b 60%,#6a4119);box-shadow:0 3px 7px #000a}' +
     '.cr-mn .bars{display:grid;gap:5px;width:22px}.cr-mn .bars i{display:block;height:4px;border-radius:2px;background:linear-gradient(#fff3d0,#e9c98d)}' +
     /* slide-in menu */
     '.cr-menu{position:absolute;inset:0;z-index:20;pointer-events:none}.cr-menu.open{pointer-events:auto}' +
     '.cr-mback{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .32s}.cr-menu.open .cr-mback{opacity:.6}' +
-    '.cr-mpanel{position:absolute;left:0;top:0;bottom:0;width:min(80%,310px);padding:18px 16px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;background:url(' + LA + 'menu_panel.png) center/100% 100% no-repeat,repeating-linear-gradient(90deg,#0000 0 7px,#0000001a 7px 8px),linear-gradient(180deg,#7a4f26,#4d2f16 70%,#35200f);border-right:4px solid #24130a;box-shadow:8px 0 24px #000c;transform:translateX(-106%);transition:transform .4s cubic-bezier(.2,.9,.25,1)}' +
+    '.cr-mpanel{position:absolute;left:0;top:0;bottom:0;width:min(80%,310px);padding:18px 16px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;background:url(' + LA + 'menu_panel.png' + VQ + ') center/100% 100% no-repeat,repeating-linear-gradient(90deg,#0000 0 7px,#0000001a 7px 8px),linear-gradient(180deg,#7a4f26,#4d2f16 70%,#35200f);border-right:4px solid #24130a;box-shadow:8px 0 24px #000c;transform:translateX(-106%);transition:transform .4s cubic-bezier(.2,.9,.25,1)}' +
     '.cr-menu.open .cr-mpanel{transform:none}' +
     '.cr-mhead{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2px solid #24130a66}' +
     '.cr-mhead h3{margin:0;font-size:26px;font-weight:900;letter-spacing:2px;background:linear-gradient(180deg,#fff3b0,#f5b82e 55%,#b9770e);-webkit-background-clip:text;background-clip:text;color:transparent}' +
@@ -360,10 +362,10 @@
     try { if (getComputedStyle(mount).position === 'static') mount.style.position = 'relative'; } catch (e) {}
     var wrap = document.createElement('div'); wrap.className = 'cr-wrap';
     // Background: carrom ka apna -> Ludo wala -> gradient
-    wrap.style.background = 'url(' + BASE + 'assets/background.png) center/cover no-repeat, url(' + LA + 'background.png) center/cover no-repeat, radial-gradient(circle at 50% 28%,#3b2a8f,#100b3d 70%)';
+    wrap.style.background = 'url(' + BASE + 'assets/background.png' + VQ + ') center/cover no-repeat, url(' + LA + 'background.png' + VQ + ') center/cover no-repeat, radial-gradient(circle at 50% 28%,#3b2a8f,#100b3d 70%)';
     function plHtml(i) {
       return '<div class="cr-pl" data-p="' + i + '"><div class="cr-av"><img class="p" src="' + (o.avatars[i] || '') + '" onerror="this.style.visibility=\'hidden\'">' +
-             '<img class="k" src="' + BASE + 'assets/coin_' + COLORS[i] + '.png"></div><div style="min-width:0"><b class="n"></b><small class="c"></small></div></div>';
+             '<img class="k" src="' + BASE + 'assets/coin_' + COLORS[i] + '.png' + VQ + '"></div><div style="min-width:0"><b class="n"></b><small class="c"></small></div></div>';
     }
     wrap.innerHTML =
       '<div class="cr-top"><button class="cr-btn cr-mn"><span class="bars"><i></i><i></i><i></i></span></button>' + plHtml(0) + plHtml(1) + '</div>' +
@@ -385,7 +387,7 @@
     var paused = false, musicOn = lsGet('lm2_music', true), musicStarted = false;
 
     // ---------- music (Ludo wali bg_music.mp3) ----------
-    var music = new Audio(BASE + '../sounds/bg_music.mp3');
+    var music = new Audio(U(BASE + '../sounds/bg_music.mp3'));
     music.loop = true; music.volume = 0.22;
     function playMusic() { if (musicOn) { var p = music.play(); if (p && p.catch) p.catch(function () {}); } }
 
@@ -402,12 +404,18 @@
     // ---------- assets ----------
     function loadImages(done) {
       var names = { board: 'board.png', white: 'coin_white.png', black: 'coin_black.png', queen: 'coin_queen.png', striker: 'striker.png' };
-      var keys = Object.keys(names), left = keys.length;
+      var keys = Object.keys(names), left = keys.length, fired = false;
+      function fin() { if (fired) return; fired = true; done(); }
+      setTimeout(fin, 8000);   // slow network (Telegram): 8 sec baad bina rukke game shuru
       keys.forEach(function (k) {
         var im = new Image();
-        im.onload = function () { imgs[k] = im; if (!--left) done(); };
-        im.onerror = function () { imgs[k] = null; if (!--left) done(); };
-        im.src = BASE + 'assets/' + names[k];
+        im.onload = function () {
+          imgs[k] = im;
+          if (fired) { try { buildSprites(); } catch (e) {} }   // der se aayi image ke baad sprites dobara
+          if (!--left) fin();
+        };
+        im.onerror = function () { imgs[k] = null; if (!--left) fin(); };
+        im.src = U(BASE + 'assets/' + names[k]);
       });
     }
     function makeSprite(img, px, tint) {
@@ -697,6 +705,23 @@
     window.addEventListener('resize', onResize);
     if (window.ResizeObserver) { ro = new ResizeObserver(function () { fit(); }); ro.observe(mount); }
 
+    // ---------- Telegram Mini App ----------
+    // canvas par touch se mini-app neeche na khiske (swipe-down) + long-press menu band
+    ['touchstart', 'touchmove'].forEach(function (t) {
+      canvas.addEventListener(t, function (ev) { if (ev.cancelable) ev.preventDefault(); }, { passive: false });
+    });
+    canvas.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+    if (TG) {
+      try { TG.ready(); TG.expand(); if (TG.disableVerticalSwipes) TG.disableVerticalSwipes(); } catch (e) {}
+      try { TG.onEvent('viewportChanged', onResize); } catch (e) {}
+    }
+    // app background/minimize hone par music band, wapas aane par chalu
+    var onVis = function () {
+      if (document.hidden) { try { music.pause(); } catch (e) {} }
+      else if (musicStarted && phase !== 'over') playMusic();
+    };
+    document.addEventListener('visibilitychange', onVis);
+
     // ---------- render ----------
     function drawBody(b) {
       var r = b.r, spr = sprites[b.type];
@@ -806,6 +831,8 @@
         try { music.pause(); } catch (e) {}
         timers.forEach(clearTimeout);
         window.removeEventListener('resize', onResize);
+        document.removeEventListener('visibilitychange', onVis);
+        try { if (TG) TG.offEvent('viewportChanged', onResize); } catch (e) {}
         if (ro) { try { ro.disconnect(); } catch (e) {} }
         if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
         if (current === api) current = null;
