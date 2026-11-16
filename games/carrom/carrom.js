@@ -1,5 +1,5 @@
 /* =====================================================================
-   games/carrom/carrom.js  -  Carrom Masters engine (full version)
+   games/carrom/carrom.js  -  Carrom Masters engine (v5: pro striker + smart bot)
    ---------------------------------------------------------------------
    Folder:
      games/carrom/carrom.js
@@ -17,9 +17,17 @@
    Telegram Mini App: swipe-down lock, viewport resize, cache-busting (?v=) support.
 
    Contract:
-     window.CarromGame.start({ mount, match, onFinish, onExit })
+     window.CarromGame.start({ mount, match, onFinish, onExit, onShot, onAim })
      window.CarromGame.stop()
+     window.CarromGame.remoteShot({x,dx,dy,power})            (online opponent ki shot)
+     window.CarromGame.remoteAim({x,dx,dy,power,on})          (online opponent ka live aim/slider)
      onFinish({ won:true|false, winner:'you'|'bot', points })
+
+   NEW in v5:
+     - Striker bada (professional carrom jaisa)
+     - Opponent (bot ya online) ka striker slide hota dikhta hai, phir aim/pull-back, phir shot
+     - Slider ke niche koi text nahi
+     - Bot: har shot ko exact physics se simulate karke best shot chunta hai (full hard)
    ===================================================================== */
 (function (GLOBAL) {
   'use strict';
@@ -28,7 +36,7 @@
   try { SRC = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
   var BASE = SRC ? SRC.replace(/[?#].*$/, '').replace(/[^\/]*$/, '') : 'games/carrom/';
   var LA = BASE + '../assets/';   // Ludo ki shared assets
-  // Telegram cache todne ke liye: carrom.js?v=4 se "?v=4" nikaal ke har asset/sound par lagate hain
+  // Telegram cache todne ke liye: carrom.js?v=5 se "?v=5" nikaal ke har asset/sound par lagate hain
   var VQ = (SRC.match(/\?v=[^&#]*/) || [''])[0];
   function U(p) { return p + VQ; }
   var TG = null;
@@ -36,6 +44,8 @@
 
   /* ------------------------------------------------------------------
      CONFIG  (coordinates board.png ke original size 1241 x 1268 mein)
+     strikerR: striker ka size. Coin = 25, pehle 31 tha -> ab 38 (coin se ~1.5x, pro look).
+               Aur bada chahiye to 40-42 kar do.
      ------------------------------------------------------------------ */
   var CFG = {
     W: 1241, H: 1268,
@@ -43,7 +53,7 @@
     pockets: [{ x: 113, y: 112 }, { x: 1127, y: 112 }, { x: 113, y: 1108 }, { x: 1127, y: 1108 }],
     pocketR: 46,
     center: { x: 620, y: 615 },
-    coinR: 25, strikerR: 31, strikerM: 1.6,
+    coinR: 25, strikerR: 38, strikerM: 1.8,
     lines: [{ y: 1011 }, { y: 211 }],
     x1: 259, x2: 980,
     maxSpeed: 3400,
@@ -62,6 +72,7 @@
   }
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v === '1'; } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v ? '1' : '0'); } catch (e) {} }
+  function now() { return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); }
 
   /* ------------------------------------------------------------------
      PHYSICS
@@ -173,7 +184,11 @@
   }
 
   /* ------------------------------------------------------------------
-     BOT
+     BOT  (smart)
+     Idea: har sambhav shot (gotti x pocket x striker position x power) ko
+     game ke exact physics se simulate karo, rules ke hisaab se score do,
+     sabse achhi shot chuno. Physics deterministic hai isliye hard level
+     mein jo bot sochta hai wahi hota hai.
      ------------------------------------------------------------------ */
   function cloneBodies(S) {
     var out = [];
@@ -184,50 +199,154 @@
     return out;
   }
 
-  function simShot(S, x, y, ang, power, p) {
+  function segDist(px, py, ax, ay, bx, by) {
+    var vx = bx - ax, vy = by - ay, l2 = vx * vx + vy * vy;
+    var t = l2 ? ((px - ax) * vx + (py - ay) * vy) / l2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    var cx = ax + vx * t - px, cy = ay + vy * t - py;
+    return Math.sqrt(cx * cx + cy * cy);
+  }
+  function pathBlocked(S, ax, ay, bx, by, need, skip) {
+    for (var i = 0; i < S.bodies.length; i++) {
+      var b = S.bodies[i];
+      if (!b.alive || b.type === 'striker' || b === skip) continue;
+      if (segDist(b.x, b.y, ax, ay, bx, by) < need + (b.r - CFG.coinR)) return true;
+    }
+    return false;
+  }
+  function pocketProx(x, y) {
+    var m = 1e9;
+    for (var k = 0; k < 4; k++) {
+      var dx = x - CFG.pockets[k].x, dy = y - CFG.pockets[k].y, d = Math.sqrt(dx * dx + dy * dy);
+      if (d < m) m = d;
+    }
+    return Math.max(0, 1 - m / 900);
+  }
+
+  // shot simulate karo (game jaisi hi dt) aur score nikalo
+  function simShot(S, x, y, ang, power, p, info) {
     var sim = { bodies: cloneBodies(S), events: [] }, st = mkBody('striker', x, y);
     st.vx = Math.cos(ang) * power * CFG.maxSpeed; st.vy = Math.sin(ang) * power * CFG.maxSpeed;
     sim.bodies.push(st);
-    var dt = 1 / 90, steps = 0;
-    while (steps++ < 1500) { stepState(sim, dt); sim.events.length = 0; if (!isMoving(sim)) break; }
-    var mine = COLORS[p], score = 0, i, b;
-    for (i = 0; i < sim.bodies.length; i++) {
-      b = sim.bodies[i]; if (!b.pocketed) continue;
-      if (b.type === 'striker') score -= 40;
-      else if (b.type === 'queen') score += 12;
-      else if (b.type === mine) score += 10;
-      else score -= 7;
-    }
-    return score;
+    var steps = 0, dt = CFG.dt;
+    while (steps++ < 2400) { stepState(sim, dt); sim.events.length = 0; if (!isMoving(sim)) break; }
+    return scoreSim(sim, p, info || {});
   }
 
-  function botPick(S, p, level) {
-    var mine = COLORS[p], targets = [], i, b;
+  function scoreSim(sim, p, info) {
+    var mine = COLORS[p], i, b, own = 0, oth = 0, queenP = false, foul = false, queenAlive = false;
+    for (i = 0; i < sim.bodies.length; i++) {
+      b = sim.bodies[i];
+      if (b.type === 'queen' && !b.pocketed) queenAlive = true;
+      if (!b.pocketed) continue;
+      if (b.type === 'striker') foul = true;
+      else if (b.type === 'queen') queenP = true;
+      else if (b.type === mine) own++;
+      else oth++;
+    }
+    var startOwn = info.startOwn == null ? 9 : info.startOwn;
+    var startOpp = info.startOpp == null ? 9 : info.startOpp;
+    if (foul) return -40 - 7 * oth;                       // foul: apni gotti wapas, opponent ki wahi rahegi
+    var s = own * 10 - oth * 7;
+    if (queenP) {
+      if (own > 0) s += 14;                               // queen cover ho gayi
+      else queenAlive = true;                              // queen wapas rakhi jayegi
+    }
+    if (own > 0) s += 4;                                   // dobara shot milega
+    if (startOpp - oth <= 0) return -300;                 // opponent ki aakhri gotti dalna = haar
+    if (startOwn - own <= 0) s += queenAlive ? -15 : 200; // saari gotti: queen cover ho to jeet
+    // thodi position sense: apni gotti pocket ke paas, opponent ki door
+    var pos = 0, mp = 0, op = 0;
+    for (i = 0; i < sim.bodies.length; i++) {
+      b = sim.bodies[i];
+      if (b.pocketed || b.type === 'striker' || b.type === 'queen') continue;
+      if (b.type === mine) mp += pocketProx(b.x, b.y); else op += pocketProx(b.x, b.y);
+    }
+    pos = mp * 0.22 - op * 0.22;
+    return s + pos;
+  }
+
+  function botPick(S, p, level, qOwner) {
+    var mine = COLORS[p], y = CFG.lines[p].y, i, b, n;
+    var own = [], q = null, oppN = 0;
     for (i = 0; i < S.bodies.length; i++) {
-      b = S.bodies[i];
-      if (b.alive && (b.type === mine || b.type === 'queen')) targets.push(b);
+      b = S.bodies[i]; if (!b.alive) continue;
+      if (b.type === mine) own.push(b);
+      else if (b.type === 'queen') q = b;
+      else if (b.type !== 'striker') oppN++;
     }
-    if (!targets.length) for (i = 0; i < S.bodies.length; i++) if (S.bodies[i].alive) targets.push(S.bodies[i]);
-    var tries = level === 'hard' ? 320 : level === 'medium' ? 55 : 22;
-    var noise = level === 'hard' ? 0.0015 : level === 'medium' ? 0.02 : 0.06;
-    var powers = level === 'hard' ? [0.4, 0.55, 0.7, 0.85, 1] : [0.55, 0.75, 0.95];
-    var y = CFG.lines[p].y, best = null, n;
-    for (n = 0; n < tries; n++) {
-      var c = targets[Math.floor(Math.random() * targets.length)];
-      var pk = CFG.pockets[Math.floor(Math.random() * 4)];
-      var x = CFG.x1 + Math.random() * (CFG.x2 - CFG.x1);
-      if (!isFree(S, x, y)) continue;
-      var ux = pk.x - c.x, uy = pk.y - c.y, ul = Math.sqrt(ux * ux + uy * uy) || 1;
-      ux /= ul; uy /= ul;
-      var gx = c.x - ux * (c.r + CFG.strikerR), gy = c.y - uy * (c.r + CFG.strikerR);
-      var dx = gx - x, dy = gy - y;
-      if ((p === 0 && dy >= -5) || (p === 1 && dy <= 5)) continue;
-      var ang = Math.atan2(dy, dx) + (Math.random() - 0.5) * 2 * noise;
-      var power = powers[Math.floor(Math.random() * powers.length)];
-      var sc = simShot(S, x, y, ang, power, p) + Math.random() * 0.5;
-      if (!best || sc > best.score) best = { x: x, ang: ang, power: power, score: sc };
+    var info = { startOwn: own.length, startOpp: oppN };
+    var targets = own.slice(); if (q) targets.push(q);
+    if (!targets.length) for (i = 0; i < S.bodies.length; i++) if (S.bodies[i].alive && S.bodies[i].type !== 'striker') targets.push(S.bodies[i]);
+
+    var hard = level === 'hard', med = level === 'medium';
+    var budget = hard ? 520 : med ? 140 : 50;
+    var maxCand = hard ? 80 : med ? 26 : 10;
+    var nx = hard ? 33 : med ? 17 : 9;
+    var noise = hard ? 0 : med ? 0.012 : 0.05;
+    var powers = hard ? [0.72, 0.88, 0.55, 1] : [0.7, 0.9, 0.55];
+
+    // baseline par jo jagah khaali hain
+    var xs = [];
+    for (i = 0; i < nx; i++) {
+      var xx = CFG.x1 + (CFG.x2 - CFG.x1) * i / (nx - 1);
+      if (isFree(S, xx, y)) xs.push(xx);
     }
+    var cands = [];
+    if (xs.length) targets.forEach(function (t) {
+      CFG.pockets.forEach(function (pk) {
+        var ux = pk.x - t.x, uy = pk.y - t.y, ul = Math.sqrt(ux * ux + uy * uy) || 1;
+        ux /= ul; uy /= ul;
+        var gx = t.x - ux * (t.r + CFG.strikerR), gy = t.y - uy * (t.r + CFG.strikerR);
+        if (gx < CFG.L + CFG.strikerR || gx > CFG.R - CFG.strikerR || gy < CFG.T + CFG.strikerR || gy > CFG.B - CFG.strikerR) return;
+        if (pathBlocked(S, t.x, t.y, pk.x, pk.y, 2 * CFG.coinR - 3, t)) return;
+        xs.forEach(function (x) {
+          var dx = gx - x, dy = gy - y;
+          if ((p === 0 && dy >= -5) || (p === 1 && dy <= 5)) return;
+          var dl = Math.sqrt(dx * dx + dy * dy) || 1;
+          var cs = (dx * ux + dy * uy) / dl;               // cut angle (1 = seedhi)
+          if (cs < 0.28) return;
+          if (pathBlocked(S, x, y, gx, gy, CFG.strikerR + CFG.coinR - 3, t)) return;
+          cands.push({ x: x, ang: Math.atan2(dy, dx), g: cs - dl / 2500 - ul / 2500 + (t.type === 'queen' ? 0 : 0.05) });
+        });
+      });
+    });
+    cands.sort(function (a, c) { return c.g - a.g; });
+    cands.length = Math.min(cands.length, maxCand);
+
+    // kuch random shots bhi (bank / break / jab seedhi shot na mile)
+    var extra = hard ? 26 : 8, tries = 0;
+    while (extra > 0 && tries++ < 80) {
+      var rx = CFG.x1 + Math.random() * (CFG.x2 - CFG.x1);
+      if (!isFree(S, rx, y)) continue;
+      var base = p === 0 ? -Math.PI / 2 : Math.PI / 2;
+      cands.push({ x: rx, ang: base + (Math.random() - 0.5) * 2.2, g: -1 });
+      extra--;
+    }
+
+    var best = null, sims = 0, t0 = now(), stop = false, pi, ci, c, sc, pw;
+    for (pi = 0; pi < powers.length && !stop; pi++) {
+      pw = powers[pi];
+      for (ci = 0; ci < cands.length; ci++) {
+        if (sims >= 40 && now() - t0 > budget) { stop = true; break; }
+        c = cands[ci];
+        sc = simShot(S, c.x, y, c.ang, pw, p, info) + Math.random() * 0.25;
+        sims++;
+        if (!best || sc > best.score) best = { x: c.x, ang: c.ang, power: pw, score: sc };
+      }
+    }
+
+    // hard: best shot ke aas-paas chhota sa fine-tune
+    if (hard && best && best.score > 0) {
+      var deltas = [-0.012, -0.006, -0.003, 0.003, 0.006, 0.012], bb = best;
+      for (i = 0; i < deltas.length; i++) {
+        sc = simShot(S, bb.x, y, bb.ang + deltas[i], bb.power, p, info);
+        if (sc > best.score + 0.01) best = { x: bb.x, ang: bb.ang + deltas[i], power: bb.power, score: sc };
+      }
+    }
+
     if (!best) best = { x: CFG.center.x, ang: p === 0 ? -Math.PI / 2 : Math.PI / 2, power: 0.6, score: 0 };
+    if (noise) best.ang += (Math.random() - 0.5) * 2 * noise;
     if (level === 'easy' && Math.random() < 0.35) best.power = 0.3 + Math.random() * 0.5;
     return best;
   }
@@ -260,7 +379,7 @@
     },
     play: function (k, vol) {
       if (!this.on) return;
-      var now = Date.now(); if (this.last[k] && now - this.last[k] < 45) return; this.last[k] = now;
+      var t = Date.now(); if (this.last[k] && t - this.last[k] < 45) return; this.last[k] = t;
       vol = Math.max(0.05, Math.min(1, vol == null ? 1 : vol));
       if (this.ok[k] !== false && this.base[k] && this.base[k].src) {
         try { var n = this.base[k].cloneNode(); n.volume = vol; var pr = n.play(); if (pr && pr.catch) pr.catch(function () {}); return; } catch (e) {}
@@ -303,12 +422,13 @@
     '.cr-pl small{font-size:11px;opacity:.85}' +
     '.cr-btn{flex:none;background:rgba(255,255,255,.14);border:0;color:#fff;width:32px;height:32px;border-radius:10px;font-size:15px;cursor:pointer;padding:0}' +
     '.cr-cv{touch-action:none;display:block;margin:auto 0}' +
-    '.cr-bottom{width:100%;padding:12px 28px 12px;box-sizing:border-box;text-align:center}' +
+    '.cr-bottom{width:100%;padding:12px 28px 14px;box-sizing:border-box;text-align:center}' +
     '.cr-slider{-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:300px;height:28px;margin:0 auto;border-radius:16px;border:4px solid #8a0f14;outline:0;overflow:visible;background:linear-gradient(90deg,#5a2c10,#8b4a22 50%,#5a2c10);box-shadow:0 3px 8px rgba(0,0,0,.55),inset 0 3px 5px rgba(0,0,0,.55)}' +
-    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:46px;height:46px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
-    '.cr-slider::-moz-range-thumb{width:46px;height:46px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
-    '.cr-slider:disabled{opacity:.5}' +
-    '.cr-msg{min-height:18px;font-size:12px;opacity:.9}' +
+    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:52px;height:52px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
+    '.cr-slider::-moz-range-thumb{width:52px;height:52px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
+    '.cr-slider:disabled{opacity:.7}' +
+    /* slider ke niche ka text hata diya */
+    '.cr-msg{display:none}' +
     '.cr-ov{position:absolute;inset:0;z-index:30;background:rgba(10,5,40,.78);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px}' +
     '.cr-ov h2{margin:0;font-size:26px}' +
     '.cr-ov p{margin:0;font-size:13px;opacity:.85}' +
@@ -385,6 +505,9 @@
     var acc = 0, lastT = 0, raf = 0, timers = [], tleft = 0, tInt = 0, endWait = 0, destroyed = false, botBusy = false, finished = false;
     var ro = null;
     var paused = false, musicOn = lsGet('lm2_music', true), musicStarted = false;
+    var botPlan = null;      // bot ki animation (slide -> aim -> fire)
+    var remote = null;       // online opponent ka live aim
+    var lastEmit = 0;
 
     // ---------- music (Ludo wali bg_music.mp3) ----------
     var music = new Audio(U(BASE + '../sounds/bg_music.mp3'));
@@ -430,7 +553,7 @@
       return c;
     }
     function buildSprites() {
-      var px = 128;
+      var px = 160;
       sprites.white = makeSprite(imgs.white, px, '#efe3c8');
       sprites.black = makeSprite(imgs.black, px, '#222');
       if (imgs.queen) sprites.queen = makeSprite(imgs.queen, px);
@@ -484,6 +607,15 @@
       return turn === o.myIndex;
     }
     function isBot() { return o.mode === 'bot' && turn === 1; }
+    function isOppOnline() { return o.mode === 'online' && turn !== o.myIndex; }
+    function sliderFromX(x) { return Math.round((x - CFG.x1) / (CFG.x2 - CFG.x1) * 1000); }
+
+    // apna aim/slider online opponent ko bhejna (agar app ne onAim diya ho)
+    function emitAim(force) {
+      if (!opts.onAim || o.mode !== 'online' || !canControl()) return;
+      var t = Date.now(); if (!force && t - lastEmit < 60) return; lastEmit = t;
+      try { opts.onAim({ p: turn, x: striker.x, dx: aim.dx, dy: aim.dy, power: aim.power, on: aim.on }); } catch (e) {}
+    }
 
     // ---------- turn flow ----------
     function strikerPlace(xv) {
@@ -491,13 +623,11 @@
       striker.vx = striker.vy = 0; striker.alive = true; striker.pocketed = false;
     }
     function beginTurn() {
-      phase = 'aim'; aim.on = false; botBusy = false;
+      phase = 'aim'; aim.on = false; aim.power = 0; botBusy = false; botPlan = null; remote = null;
       slider.value = 500; strikerPlace(0.5);
-      msgEl.textContent = canControl() ? 'Move the slider, pull the striker back and release'
-                         : (o.names[turn] + (isBot() ? ' is thinking...' : "'s turn..."));
       slider.disabled = !canControl();
       hud(); startTimer();
-      if (isBot()) { botBusy = true; later(botTurn, 700); }
+      if (isBot()) { botBusy = true; later(botTurn, 450); }
     }
     function startTimer() {
       clearInterval(tInt);
@@ -509,12 +639,55 @@
         if (tleft <= 0) { clearInterval(tInt); say('Time up!'); Sound.play('foul'); turn = 1 - turn; beginTurn(); }
       }, 1000);
     }
+
+    // Bot: pehle sochta hai, phir striker slide karta hai, phir pull-back/aim dikhata hai, phir shot
     function botTurn() {
-      var pick = botPick(S, 1, o.difficulty);
-      strikerPlace((pick.x - CFG.x1) / (CFG.x2 - CFG.x1));
-      aim.on = true; aim.dx = Math.cos(pick.ang); aim.dy = Math.sin(pick.ang); aim.power = pick.power;
-      later(function () { aim.on = false; fire(pick.x, Math.cos(pick.ang), Math.sin(pick.ang), pick.power, true); }, 900);
+      var pick = botPick(S, 1, o.difficulty, queenOwner);
+      var a0 = Math.PI / 2;   // bot upar se neeche ki taraf khelta hai
+      var da = pick.ang - a0;
+      while (da > Math.PI) da -= 2 * Math.PI;
+      while (da < -Math.PI) da += 2 * Math.PI;
+      var dist = Math.abs(pick.x - striker.x) / (CFG.x2 - CFG.x1);
+      botPlan = { pick: pick, stage: 0, t: 0, x0: striker.x, a0: a0, da: da, d0: 0.35 + 0.55 * dist, d1: 0.8 };
     }
+    function easeIO(k) { k = Math.max(0, Math.min(1, k)); return k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; }
+    function stepBot(dt) {
+      var P = botPlan; if (!P) return;
+      P.t += dt;
+      if (P.stage === 0) {                                   // 1) striker line par slide
+        var k = P.t / P.d0;
+        striker.x = P.x0 + (P.pick.x - P.x0) * easeIO(k);
+        slider.value = sliderFromX(striker.x);
+        if (k >= 1) {
+          striker.x = P.pick.x; P.stage = 1; P.t = 0;
+          aim.on = true; aim.power = 0; aim.dx = Math.cos(P.a0); aim.dy = Math.sin(P.a0);
+        }
+      } else if (P.stage === 1) {                            // 2) aim ghoomana + pull-back
+        var k2 = Math.min(1, P.t / P.d1), e = easeIO(k2);
+        var a = P.a0 + P.da * e + Math.sin(k2 * Math.PI * 3) * 0.05 * (1 - k2);
+        aim.dx = Math.cos(a); aim.dy = Math.sin(a); aim.power = P.pick.power * e;
+        if (k2 >= 1) { aim.dx = Math.cos(P.pick.ang); aim.dy = Math.sin(P.pick.ang); aim.power = P.pick.power; P.stage = 2; P.t = 0; }
+      } else if (P.stage === 2) {                            // 3) thoda ruk ke chhodna
+        if (P.t >= 0.35) {
+          var pk = P.pick; botPlan = null; aim.on = false;
+          fire(pk.x, Math.cos(pk.ang), Math.sin(pk.ang), pk.power, true);
+        }
+      }
+    }
+    // Online opponent: uska bheja hua live aim smooth dikhana
+    function stepRemote(dt) {
+      var R = remote; if (!R) return;
+      var k = Math.min(1, dt * 14);
+      striker.x += (R.x - striker.x) * k;
+      slider.value = sliderFromX(striker.x);
+      if (R.on) {
+        aim.on = true;
+        aim.dx += (R.dx - aim.dx) * k; aim.dy += (R.dy - aim.dy) * k;
+        var l = Math.sqrt(aim.dx * aim.dx + aim.dy * aim.dy) || 1; aim.dx /= l; aim.dy /= l;
+        aim.power += (R.power - aim.power) * k;
+      } else aim.on = false;
+    }
+
     function fire(x, dx, dy, power, noEmit) {
       if (phase !== 'aim') return;
       clearInterval(tInt);
@@ -522,9 +695,9 @@
       striker.vx = dx * power * CFG.maxSpeed; striker.vy = dy * power * CFG.maxSpeed;
       striker.alive = true; striker.pocketed = false;
       S.bodies.push(striker); shotPocketed = []; phase = 'moving'; slider.disabled = true; botBusy = false;
+      botPlan = null; remote = null; aim.on = false;
       Sound.play('strike', 0.4 + 0.6 * power);
       if (!noEmit && opts.onShot) try { opts.onShot({ p: turn, x: x, dx: dx, dy: dy, power: power }); } catch (e) {}
-      msgEl.textContent = '';
     }
 
     function respawn(b) {
@@ -599,7 +772,6 @@
       var pts = remaining(COLORS[1 - winner]) + (queenOwner === winner ? 3 : 0);
       var iWon = (winner === o.myIndex);
       /* win/lose sound yahan nahi: app ka Result page bajata hai */
-      msgEl.textContent = '';
       ov.style.display = 'flex';
       ov.innerHTML = '<h2>' + (iWon ? '🏆 You won!' : 'You lost') + '</h2><p>Points: ' + pts + '</p>';
       later(function () {
@@ -674,6 +846,7 @@
     slider.addEventListener('input', function () {
       if (!canControl()) return;
       strikerPlace(slider.value / 1000);
+      emitAim();
     });
     canvas.addEventListener('pointerdown', function (ev) {
       Sound.unlock();
@@ -683,6 +856,7 @@
         aim.on = true; aim.power = 0; aim.dx = 0; aim.dy = turn === 0 ? -1 : 1;
         try { canvas.setPointerCapture(ev.pointerId); } catch (e) {}
         ev.preventDefault();
+        emitAim(true);
       }
     });
     canvas.addEventListener('pointermove', function (ev) {
@@ -691,16 +865,18 @@
       if (len > 8) { aim.dx = dx / len; aim.dy = dy / len; }
       aim.power = Math.min(len, CFG.maxPull) / CFG.maxPull;
       ev.preventDefault();
+      emitAim();
     });
     canvas.addEventListener('pointerup', function () {
       if (!aim.on || botBusy) return;
+      var sx = aim.dx, sy = aim.dy, sp = aim.power;
       aim.on = false;
       if (phase !== 'aim' || paused) return;
-      if (aim.power < 0.07) return;
-      if (!isFree(S, striker.x, striker.y)) { say('Coin in the way, move the striker'); Sound.play('foul', .5); return; }
-      fire(striker.x, aim.dx, aim.dy, aim.power, false);
+      if (sp < 0.07) { emitAim(true); return; }
+      if (!isFree(S, striker.x, striker.y)) { say('Coin in the way, move the striker'); Sound.play('foul', .5); emitAim(true); return; }
+      fire(striker.x, sx, sy, sp, false);
     });
-    canvas.addEventListener('pointercancel', function () { aim.on = false; });
+    canvas.addEventListener('pointercancel', function () { aim.on = false; emitAim(true); });
     var onResize = function () { fit(); };
     window.addEventListener('resize', onResize);
     if (window.ResizeObserver) { ro = new ResizeObserver(function () { fit(); }); ro.observe(mount); }
@@ -739,20 +915,22 @@
       if (imgs.board) ctx.drawImage(imgs.board, 0, 0, CFG.W, CFG.H);
       else { ctx.fillStyle = '#d9a35f'; ctx.fillRect(0, 0, CFG.W, CFG.H); }
 
-      var human = canControl();
-      if (phase === 'aim' && (human || (isBot() && aim.on))) {
-        var free = isFree(S, striker.x, striker.y);
-        if (!free) { ctx.fillStyle = 'rgba(255,0,0,.35)'; ctx.beginPath(); ctx.arc(striker.x, striker.y, CFG.strikerR + 6, 0, 7); ctx.fill(); }
+      if (phase === 'aim') {
+        // coin ke upar striker ho to laal (sirf apne turn par)
+        if (canControl() && !isFree(S, striker.x, striker.y)) {
+          ctx.fillStyle = 'rgba(255,0,0,.35)'; ctx.beginPath(); ctx.arc(striker.x, striker.y, CFG.strikerR + 6, 0, 7); ctx.fill();
+        }
+        // aim guide: apna, bot ka aur online opponent ka - sabka dikhta hai
         if (aim.on && aim.power > 0.03) {
           var rc = rayCast(S, striker.x, striker.y, aim.dx, aim.dy, CFG.strikerR);
-          var GUIDE = 330;                       // guide ki max lambai (chhoti rakhi hai)
+          var GUIDE = 330;                       // guide ki max lambai
           var gl = Math.min(rc.t, GUIDE), gi, gn, ga;
           ctx.save();
           ctx.lineCap = 'round';
           // pull-back band: striker ke peeche, power ke hisab se
-          ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 10;
+          ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 12;
           ctx.beginPath(); ctx.moveTo(striker.x, striker.y);
-          ctx.lineTo(striker.x - aim.dx * aim.power * 110, striker.y - aim.dy * aim.power * 110); ctx.stroke();
+          ctx.lineTo(striker.x - aim.dx * aim.power * 120, striker.y - aim.dy * aim.power * 120); ctx.stroke();
           // chhote dots, door jaate hue fade
           gn = Math.floor(gl / 26);
           for (gi = 1; gi <= gn; gi++) {
@@ -771,8 +949,8 @@
             }
           }
           // power ring (striker ke aas-paas)
-          ctx.lineWidth = 7; ctx.strokeStyle = 'hsl(' + (120 - aim.power * 120) + ',90%,55%)';
-          ctx.beginPath(); ctx.arc(striker.x, striker.y, CFG.strikerR + 12, -Math.PI / 2, -Math.PI / 2 + aim.power * Math.PI * 2); ctx.stroke();
+          ctx.lineWidth = 8; ctx.strokeStyle = 'hsl(' + (120 - aim.power * 120) + ',90%,55%)';
+          ctx.beginPath(); ctx.arc(striker.x, striker.y, CFG.strikerR + 13, -Math.PI / 2, -Math.PI / 2 + aim.power * Math.PI * 2); ctx.stroke();
           ctx.restore();
         }
       }
@@ -808,6 +986,10 @@
       raf = requestAnimationFrame(loop);
       var dt = Math.min(0.05, (ts - lastT) / 1000 || 0); lastT = ts;
       if (paused) { render(); return; }
+      if (phase === 'aim') {
+        if (botPlan) stepBot(dt);
+        else if (isOppOnline()) stepRemote(dt);
+      }
       if (phase === 'moving') {
         acc += dt;
         var guard = 0;
@@ -824,6 +1006,10 @@
         if (phase !== 'aim' || !s) return;
         strikerPlace((s.x - CFG.x1) / (CFG.x2 - CFG.x1));
         fire(s.x, s.dx, s.dy, s.power, true);
+      },
+      remoteAim: function (s) {
+        if (!s || phase !== 'aim' || !isOppOnline()) return;
+        remote = { x: s.x, dx: s.dx, dy: s.dy, power: s.power || 0, on: !!s.on };
       },
       destroy: function () {
         if (destroyed) return;
@@ -854,6 +1040,7 @@
     start: function (opts) { if (current) current.destroy(); current = createGame(opts); return current; },
     stop: function () { if (current) current.destroy(); },
     remoteShot: function (s) { if (current) current.remoteShot(s); },
+    remoteAim: function (s) { if (current) current.remoteAim(s); },
     _test: { CFG: CFG, newBoard: newBoard, stepState: stepState, isMoving: isMoving, mkBody: mkBody, botPick: botPick, simShot: simShot }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
