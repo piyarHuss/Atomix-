@@ -166,14 +166,15 @@ function depTick() {
     clearInterval(DEP_T); DEP_T = 0;
   }
 }
-function depVal() {
+function depVal(keep) {
   const u = document.getElementById('dpu'), e = document.getElementById('dpe'), c = document.getElementById('dpc'), b = document.getElementById('dps');
   if (!u || !b) return;
   const clean = u.value.replace(/\D/g, '');
   if (clean !== u.value) u.value = clean;
   c.textContent = clean.length + '/12';
-  e.textContent = clean.length && clean.length !== 12 ? 'UTR must be exactly 12 digits' : '';
-  const rr = document.getElementById('dpr'); if (rr) { rr.className = 'dp-res'; rr.innerHTML = ''; }
+  if (!keep) e.textContent = clean.length && clean.length !== 12 ? 'UTR must be exactly 12 digits' : '';
+  /* keep=true (verify fail ke baad): error box ko mat mitao */
+  if (!keep) { const rr = document.getElementById('dpr'); if (rr) { rr.className = 'dp-res'; rr.innerHTML = ''; } }
   b.disabled = clean.length !== 12 || !!DEP_BUSY;
 }
 
@@ -244,7 +245,7 @@ async function depVerify() {
     ok = 1;
   } finally {
     DEP_BUSY = 0;
-    if (!ok && btn) { btn.textContent = 'Verify & Add Coins'; depVal(); }
+    if (!ok && btn) { btn.textContent = 'Verify & Add Coins'; depVal(true); }
   }
   if (!ok) return;
   depLog('claimed', u, bank);
@@ -263,6 +264,8 @@ function depBad(head, detail) {
   if (e) e.textContent = '';
   if (r) { r.className = 'dp-res bad'; r.innerHTML = '<b>❌ ' + esc(head) + '</b><small>' + esc(detail || '') + '</small>'
     + (DEP_DEBUG && DEP_DBG ? '<pre style="margin:6px 0 0;padding:6px;border-radius:8px;background:rgba(0,0,0,.08);font:600 10px/1.35 monospace;text-align:left;white-space:pre-wrap;word-break:break-all;color:#600">' + esc(DEP_DBG) + '</pre>' : ''); }
+  try { toast('❌ ' + head + (detail ? ': ' + detail : '')); } catch (e3) { }
+  try { r && r.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e4) { }
   try { const tg = depTg(); tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred('error'); } catch (e2) { }
 }
 /* sahi UTR: Success message, phir page apne aap band */
