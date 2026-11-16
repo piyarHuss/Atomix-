@@ -1,26 +1,29 @@
 /* =====================================================================
-   deposit.js  v4  —  Ludo Masters : REAL UPI deposit (MacroDroid + Firebase UTR)
+   deposit.js  v5  —  Ludo Masters : PREMIUM UPI deposit (QR + MacroDroid + Firebase UTR)
 
    index.html me profile_plus.js ke BAAD, boot() se PEHLE (type="module" nahi):
      <script src="profile_plus.js"></script>
-     <script src="deposit.js?v=4"></script>
+     <script src="deposit.js?v=5"></script>
 
-   v4 me kya badla:
-   - DEP_APP_AMT flag: UPI app buttons me amount pre-fill ON/OFF (default OFF,
-     kyunki personal UPI ID par amount wale link se app "payment nahi hoga" error deta hai)
-   - DEP_QR_AMT flag: QR code me amount ON/OFF
-   - UTR verify: used ("false" / false / missing), amount ("₹10", "10.00") sab handle
-   - Claim fail hone par asli Firebase error code dikhta hai (PERMISSION_DENIED etc.)
-   - Debug: console me "DEP:" lines
+   v5 me kya badla:
+   - PhonePe / GPay / Paytm / Other UPI buttons REMOVE (UPI apps redirect par security
+     ke karan payment block kar dete the) + ?payredir=1 redirect page bhi hata diya
+   - Amount select -> QR usi amount ke saath generate hota hai
+   - QR ke niche professional English instruction: screenshot lo, kisi bhi payment app se
+     scan karke timer ke andar pay karo
+   - Premium UI: gold QR frame, timer pill + progress bar, step-by-step guide
+   - UTR (12-digit) verify system SAME hai, kuch nahi hataya
+   - DEP_QR_AMT: QR me amount ON/OFF (agar kisi app me amount wale QR par error aaye to false)
 
    Flow:
    1. User amount chunta hai -> "Generate QR & Pay"
-   2. Payment screen: QR + 10 minute countdown + PhonePe / GPay / Paytm / Other UPI
-   3. Payment ke baad 12-digit UTR -> "Verify & Add Coins"
-   4. Verify: bank_utrs/<utr> exist, not used, amount >= selected amount
+   2. Payment screen: QR (amount ke saath) + 10 minute countdown + instructions
+   3. User QR ka screenshot leta hai, payment app me gallery se scan karke pay karta hai
+   4. Payment ke baad 12-digit UTR -> "Verify & Add Coins"
+   5. Verify: bank_utrs/<utr> exist, not used, amount >= selected amount
       -> atomic claim (bank_utrs used:true + used_utrs/<utr> permanent tombstone)
       -> wallet me paisa add -> bank_utrs/<utr> DELETE
-   5. Ek UTR sirf ek baar: used_utrs/<utr> kabhi delete nahi hota.
+   6. Ek UTR sirf ek baar: used_utrs/<utr> kabhi delete nahi hota.
    ===================================================================== */
 
 /* ---------- SETTINGS ---------- */
@@ -30,8 +33,7 @@ const DEP_MIN = 10;
 const DEP_MAX = 50000;
 const DEP_QUICK = [50, 100, 250, 500];
 const DEP_TTL = 10 * 60 * 1000;           /* QR/payment window: 10 minute */
-const DEP_APP_AMT = false;                /* false = app buttons amount pre-fill nahi karenge (user khud amount dalega) */
-const DEP_QR_AMT = true;                  /* QR me amount rakhna hai? Agar scan par bhi error aaye to false karo */
+const DEP_QR_AMT = true;                  /* QR me amount rakhna hai? Scan par error aaye to false karo */
 /* ₹1 deposit par kitna milega: cash = withdrawable ₹, gems = diamonds */
 const DEP_CREDIT = { cash: 1, gems: 0 };
 const DEP_QR_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', 'qrcode.min.js'];
@@ -47,44 +49,6 @@ const depIsUsed = x => x === true || x === 'true' || x === 1 || x === '1';
 /* "₹10", "Rs. 10.00", "10" -> 10 */
 const depNum = x => { const n = parseFloat(String(x == null ? '' : x).replace(/[^\d.]/g, '')); return isFinite(n) ? n : 0; };
 
-/* ---------- Chrome me khulne wala redirect page (?payredir=1) ---------- */
-const DEP_RD = (() => {
-  try {
-    const p = new URLSearchParams(location.search);
-    if (p.get('payredir') !== '1') return null;
-    return { am: Math.floor(Number(p.get('am'))), app: p.get('app') || 'upi' };
-  } catch (e) { return null; }
-})();
-const DEP_PKG = { phonepe: 'com.phonepe.app', gpay: 'com.google.android.apps.nbu.paisa.user', paytm: 'net.one97.paytm' };
-function depRdUrl(app, a) {
-  let q = 'pa=' + encodeURIComponent(DEP_UPI) + '&pn=' + encodeURIComponent(DEP_PN) + '&cu=INR';
-  if (DEP_APP_AMT) q += '&am=' + a;
-  const pk = DEP_PKG[app];
-  /* intent:// = Android Chrome se seedha usi app me */
-  return pk ? 'intent://pay?' + q + '#Intent;scheme=upi;package=' + pk + ';end' : 'upi://pay?' + q;
-}
-if (DEP_RD) {
-  boot = function () { };                                  /* is tab me game boot nahi karna */
-  try { bgm.pause(); bgm.play = () => Promise.resolve(); } catch (e) { }
-  const ok = DEP_RD.am >= 1 && DEP_RD.am <= 100000;
-  const names = { phonepe: 'PhonePe', gpay: 'Google Pay', paytm: 'Paytm', upi: 'your UPI app' };
-  const o = document.createElement('div');
-  o.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#2a0f88,#140a52);color:#fff;font-family:Poppins,system-ui,sans-serif';
-  const btn = (app, label, cls) => `<a href="${depRdUrl(app, DEP_RD.am)}" style="display:block;margin-top:10px;padding:13px;border-radius:14px;font-weight:800;font-size:15px;color:${cls ? '#4a2400' : '#fff'};text-decoration:none;background:${cls ? 'linear-gradient(180deg,#ffd84a,#ff9a14)' : 'linear-gradient(180deg,#8b4dff,#5424d0)'}">${label}</a>`;
-  const hint = DEP_APP_AMT
-    ? 'After paying, go back to Telegram and enter the 12-digit UTR.'
-    : 'Enter <b>₹' + DEP_RD.am + '</b> in the app and pay. Then go back to Telegram and enter the 12-digit UTR.';
-  o.innerHTML = ok
-    ? `<div style="width:min(92vw,380px);padding:22px;border-radius:22px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);text-align:center">
-<h2 style="margin:0">Pay via UPI</h2><div style="font-size:38px;font-weight:800;color:#ffd21f;margin:6px 0">₹${DEP_RD.am}</div>
-<p style="margin:6px 0;font-size:13px;color:#d9c8ff;line-height:1.45">Opening ${names[DEP_RD.app] || names.upi}… ${hint}</p>
-${btn('upi', 'Open any UPI app', 1)}${btn('phonepe', 'PhonePe')}${btn('gpay', 'Google Pay')}${btn('paytm', 'Paytm')}
-<div style="margin-top:14px;padding:9px;border-radius:12px;background:rgba(0,0,0,.3);font-size:13px;word-break:break-all">UPI ID: <b>${DEP_UPI}</b></div></div>`
-    : '<div style="text-align:center"><h2>Invalid amount</h2><p>Go back to the app and try again.</p></div>';
-  document.body.appendChild(o);
-  if (ok) setTimeout(() => { location.href = depRdUrl(DEP_RD.app, DEP_RD.am); }, 300);
-}
-
 /* ---------- session (10 min window) ---------- */
 function depSessLoad() {
   try {
@@ -98,16 +62,6 @@ const depLeft = () => DEP_SESS ? Math.max(0, DEP_SESS.start + DEP_TTL - Date.now
 
 /* ---------- UPI link / QR ---------- */
 const depUpiUrl = a => 'upi://pay?pa=' + DEP_UPI + '&pn=' + encodeURIComponent(DEP_PN) + (DEP_QR_AMT ? '&am=' + a : '') + '&cu=INR';
-/* Telegram WebView upi:// kholta nahi -> apna hi https page (?payredir=1) phone ke Chrome me khulta hai */
-function depAppUrl(app, a) {
-  return location.origin + location.pathname + '?payredir=1&am=' + encodeURIComponent(a) + '&app=' + encodeURIComponent(app);
-}
-function depOpen(url) {
-  const tg = depTg();
-  try { if (tg && tg.openLink) { tg.openLink(url, { try_browser: 'chrome' }); return; } }
-  catch (e) { console.error('DEP: openLink failed', e); }
-  try { window.open(url, '_blank'); } catch (e) { toast('Could not open. Copy the UPI ID and pay manually.'); }
-}
 function depLoadQr() {
   return new Promise(res => {
     if (window.QRCode) return res(true);
@@ -127,11 +81,11 @@ async function depDrawQr() {
   const box = document.getElementById('dpq'); if (!box || !DEP_SESS) return;
   const ok = await depLoadQr();
   const b2 = document.getElementById('dpq'); if (!b2) return;
-  if (!ok) { b2.innerHTML = '<div class="dp-qe">QR could not load.<br>Use the app buttons or UPI ID below.</div>'; return; }
+  if (!ok) { b2.innerHTML = '<div class="dp-qe">QR could not load.<br>Please check your connection and reopen this screen.</div>'; return; }
   b2.innerHTML = '';
   try {
     new QRCode(b2, { text: depUpiUrl(DEP_SESS.amt), width: 190, height: 190, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-  } catch (e) { console.error('DEP: QR failed', e); b2.innerHTML = '<div class="dp-qe">QR error. Use the app buttons.</div>'; }
+  } catch (e) { console.error('DEP: QR failed', e); b2.innerHTML = '<div class="dp-qe">QR error. Please try again.</div>'; }
 }
 function depCopyUpi() {
   const done = () => toast('UPI ID copied ✓');
@@ -146,7 +100,7 @@ function depCopyUpi() {
 const depCheckAmt = a => a < DEP_MIN ? 'Minimum deposit is ₹' + DEP_MIN : a > DEP_MAX ? 'Maximum deposit is ₹' + DEP_MAX : '';
 function depAmtStep(pre) {
   sheet(`<div class="pp-t">Add Cash</div>
-<p class="pp-p">Select an amount. You will get a QR code and UPI app buttons.</p>
+<p class="pp-p">Select an amount to generate a secure payment QR code.</p>
 <label>Amount (₹)</label>
 <div class="dp-chips">${DEP_QUICK.map(x => `<button type="button" onclick="depSet(${x})">₹${x}</button>`).join('')}</div>
 <input id="dpa" type="number" inputmode="numeric" min="${DEP_MIN}" max="${DEP_MAX}" value="${pre}" oninput="depAmtVal()" placeholder="Min ₹${DEP_MIN}">
@@ -168,22 +122,26 @@ function depStart() {
 }
 function depBack() { depSessSave(null); depAmtStep(100); }
 
-/* ---------- STEP B: QR + timer + app buttons + UTR ---------- */
+/* ---------- STEP B: QR + timer + instructions + UTR ---------- */
 function depPayStep() {
   if (!DEP_SESS) return depAmtStep(100);
   const a = DEP_SESS.amt;
-  const apps = [['phonepe', 'PhonePe', 'ph'], ['gpay', 'Google Pay', 'gp'], ['paytm', 'Paytm', 'pt'], ['upi', 'Other UPI', 'ot']];
-  const note = DEP_APP_AMT
-    ? 'Scan the QR or tap an app. Amount ' + depInr(a) + ' is pre-filled.'
-    : 'Scan the QR, or tap an app and pay exactly <b>' + depInr(a) + '</b> to the UPI ID below.';
-  sheet(`<div class="pp-t">Pay ${depInr(a)}</div>
+  sheet(`<div class="dp-hd"><span class="dp-hl">Amount to Pay</span><span class="dp-ha">${depInr(a)}</span></div>
 <div id="dpw" class="dp-w">
-<div class="dp-qrw"><div id="dpq"><div class="dp-qe">Generating QR…</div></div></div>
-<div class="dp-tm">Time left <b id="dpt">10:00</b></div>
-<div class="dp-apps">${apps.map(x => `<button type="button" class="dp-a ${x[2]}" onclick="depApp('${x[0]}')">${x[1]}</button>`).join('')}</div>
+<div class="dp-qrw"><div class="dp-fr"><div id="dpq"><div class="dp-qe">Generating QR…</div></div></div></div>
+<div class="dp-tm"><span>⏱ Time left</span><b id="dpt">10:00</b></div>
+<div class="dp-bar"><i id="dpbar"></i></div>
+<div class="dp-ins">
+<div class="dp-it">How to complete your payment</div>
+<ol>
+<li><b>Take a screenshot</b> of this QR code.</li>
+<li>Open <b>any UPI payment app</b> and choose <b>Scan QR → Upload from gallery</b>.</li>
+<li>Pay exactly <b>${depInr(a)}</b> <u>before the timer ends</u>.</li>
+<li>Enter the <b>12-digit UTR / Ref No.</b> below to receive your cash.</li>
+</ol>
+</div>
 </div>
 <div id="dpx" class="dp-ex">Payment window ended. Already paid? Enter your UTR below. Otherwise tap <b>Change amount</b> for a new QR.</div>
-<p class="pp-p" style="margin-top:8px">${note}</p>
 <div class="dp-up">UPI ID: <b>${esc(DEP_UPI)}</b> <a onclick="depCopyUpi()">Copy</a></div>
 <label>Enter UTR / Ref No. <em>(12 digits)</em></label>
 <input id="dpu" type="text" inputmode="numeric" maxlength="12" placeholder="e.g. 412345678901" autocomplete="off" oninput="depVal()">
@@ -198,16 +156,13 @@ function depTick() {
   if (!t || !DEP_SESS) { clearInterval(DEP_T); DEP_T = 0; return; }
   const l = depLeft(), m = Math.floor(l / 60000), s = Math.floor(l % 60000 / 1000);
   t.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  const bar = document.getElementById('dpbar');
+  if (bar) { bar.style.width = (l / DEP_TTL * 100).toFixed(1) + '%'; bar.className = l < 60000 ? 'low' : ''; }
   if (l <= 0) {
     const w = document.getElementById('dpw'), x = document.getElementById('dpx');
     if (w) w.classList.add('ex'); if (x) x.style.display = 'block';
     clearInterval(DEP_T); DEP_T = 0;
   }
-}
-function depApp(k) {
-  if (!DEP_SESS || depLeft() <= 0) { toast('Payment window ended. Change amount to start again.'); return; }
-  depOpen(depAppUrl(k, DEP_SESS.amt));
-  toast(DEP_APP_AMT ? 'After payment, come back and enter the UTR' : 'Pay ' + depInr(DEP_SESS.amt) + ', then come back and enter the UTR');
 }
 function depVal() {
   const u = document.getElementById('dpu'), e = document.getElementById('dpe'), c = document.getElementById('dpc'), b = document.getElementById('dps');
@@ -369,19 +324,26 @@ onDepositSuccess = function (amount) {
   const css = `
 .dp-chips{display:flex;gap:calc(8*var(--u));margin-bottom:calc(8*var(--u))}
 .dp-chips button{flex:1;height:calc(38*var(--u));border:0;border-radius:calc(12*var(--u));background:#ddd0ff;color:#5424d0;font:800 calc(13*var(--u)) Poppins,sans-serif;cursor:pointer}
+.dp-hd{display:flex;align-items:center;justify-content:space-between;padding:calc(10*var(--u)) calc(14*var(--u));margin-bottom:calc(8*var(--u));border-radius:calc(16*var(--u));background:linear-gradient(135deg,#2a0f88,#5424d0);color:#fff;box-shadow:0 calc(4*var(--u)) calc(12*var(--u)) rgba(60,30,140,.35)}
+.dp-hl{font-size:calc(12*var(--u));font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#d9c8ff}
+.dp-ha{font-size:calc(26*var(--u));font-weight:800;color:#ffd21f;text-shadow:0 1px 0 rgba(0,0,0,.25)}
 .dp-qrw{display:flex;justify-content:center;margin:calc(4*var(--u)) 0 calc(8*var(--u))}
-#dpq{width:calc(206*var(--u));height:calc(206*var(--u));padding:calc(8*var(--u));border-radius:calc(16*var(--u));background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 calc(4*var(--u)) calc(14*var(--u)) rgba(60,30,140,.3)}
+.dp-fr{padding:calc(5*var(--u));border-radius:calc(22*var(--u));background:linear-gradient(135deg,#ffe27a,#ff9a14 55%,#ffd84a);box-shadow:0 calc(5*var(--u)) calc(16*var(--u)) rgba(255,154,20,.45)}
+#dpq{width:calc(206*var(--u));height:calc(206*var(--u));padding:calc(8*var(--u));border-radius:calc(17*var(--u));background:#fff;display:flex;align-items:center;justify-content:center}
 #dpq img,#dpq canvas{max-width:100%;max-height:100%;display:block}
 .dp-qe{font-size:calc(12*var(--u));color:#5b4aa0;text-align:center;font-weight:600}
-.dp-tm{text-align:center;font-weight:700;font-size:calc(13*var(--u));color:#5b4aa0}
-.dp-tm b{display:inline-block;min-width:calc(56*var(--u));margin-left:calc(4*var(--u));font-size:calc(20*var(--u));font-weight:800;color:#d02a2a;font-variant-numeric:tabular-nums}
-.dp-apps{display:grid;grid-template-columns:1fr 1fr;gap:calc(8*var(--u));margin-top:calc(10*var(--u))}
-.dp-a{height:calc(44*var(--u));border:0;border-radius:calc(14*var(--u));color:#fff;font:800 calc(14*var(--u)) Poppins,sans-serif;cursor:pointer;box-shadow:0 calc(3*var(--u)) 0 rgba(0,0,0,.22)}
-.dp-a.ph{background:linear-gradient(180deg,#8a4dff,#5f259f)}
-.dp-a.gp{background:linear-gradient(180deg,#4a8bff,#1a5fd8)}
-.dp-a.pt{background:linear-gradient(180deg,#2bb3ff,#0a7ed8)}
-.dp-a.ot{background:linear-gradient(180deg,#ffa43a,#e06a10)}
-.dp-w.ex .dp-qrw,.dp-w.ex .dp-apps{opacity:.25;pointer-events:none;filter:grayscale(1)}
+.dp-tm{display:flex;align-items:center;justify-content:center;gap:calc(8*var(--u));font-weight:700;font-size:calc(13*var(--u));color:#5b4aa0}
+.dp-tm b{min-width:calc(60*var(--u));padding:calc(2*var(--u)) calc(10*var(--u));border-radius:calc(20*var(--u));background:#fff0f0;border:calc(1.5*var(--u)) solid #f0b4b4;text-align:center;font-size:calc(19*var(--u));font-weight:800;color:#d02a2a;font-variant-numeric:tabular-nums}
+.dp-bar{height:calc(5*var(--u));margin:calc(7*var(--u)) calc(6*var(--u)) 0;border-radius:calc(5*var(--u));background:#e4dbff;overflow:hidden}
+.dp-bar i{display:block;height:100%;width:100%;border-radius:inherit;background:linear-gradient(90deg,#5fe03a,#ffd21f);transition:width 1s linear}
+.dp-bar i.low{background:linear-gradient(90deg,#ff5a5a,#ff9a14)}
+.dp-ins{margin-top:calc(10*var(--u));padding:calc(10*var(--u)) calc(12*var(--u));border-radius:calc(14*var(--u));background:#f3edff;border:calc(1.5*var(--u)) solid #d8c9ff;text-align:left}
+.dp-it{font-size:calc(13*var(--u));font-weight:800;color:#3a1590;margin-bottom:calc(4*var(--u))}
+.dp-ins ol{margin:0;padding-left:calc(18*var(--u));font-size:calc(12*var(--u));line-height:1.5;color:#4b3a8a;font-weight:500}
+.dp-ins li{margin-bottom:calc(2*var(--u))}
+.dp-ins b{color:#3a1590}
+.dp-ins u{text-decoration:none;font-weight:800;color:#d02a2a}
+.dp-w.ex .dp-qrw,.dp-w.ex .dp-ins{opacity:.25;pointer-events:none;filter:grayscale(1)}
 .dp-ex{display:none;margin-top:calc(8*var(--u));padding:calc(8*var(--u)) calc(10*var(--u));border-radius:calc(12*var(--u));background:#ffe9e9;color:#a01818;font-size:calc(12*var(--u));font-weight:600;text-align:center;line-height:1.4}
 .dp-res{display:none;margin-top:calc(8*var(--u));padding:calc(10*var(--u)) calc(12*var(--u));border-radius:calc(14*var(--u));text-align:center}
 .dp-res.bad{display:block;background:#ffe3e3;border:calc(2*var(--u)) solid #e04646;color:#b01212;animation:dpShake .4s}
@@ -391,7 +353,7 @@ onDepositSuccess = function (amount) {
 .dp-ok{text-align:center;padding:calc(18*var(--u)) 0 calc(10*var(--u))}
 .dp-tick{width:calc(76*var(--u));height:calc(76*var(--u));margin:0 auto calc(10*var(--u));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:calc(44*var(--u));font-weight:800;color:#fff;background:linear-gradient(180deg,#5fe03a,#1fa80e);box-shadow:0 0 calc(18*var(--u)) rgba(80,220,60,.6);animation:dpPop .45s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes dpPop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
-.dp-up{margin:calc(6*var(--u)) calc(4*var(--u)) 0;text-align:center;font-size:calc(12*var(--u));color:#5b4aa0}
+.dp-up{margin:calc(8*var(--u)) calc(4*var(--u)) 0;text-align:center;font-size:calc(12*var(--u));color:#5b4aa0}
 .dp-up b{color:#3a1590}
 .dp-up a{margin-left:calc(6*var(--u));color:#7a3ff0;font-weight:800;text-decoration:underline;cursor:pointer}
 `;
