@@ -206,8 +206,9 @@
       if (b.alive && (b.type === mine || b.type === 'queen')) targets.push(b);
     }
     if (!targets.length) for (i = 0; i < S.bodies.length; i++) if (S.bodies[i].alive) targets.push(S.bodies[i]);
-    var tries = level === 'hard' ? 110 : level === 'medium' ? 55 : 22;
-    var noise = level === 'hard' ? 0.005 : level === 'medium' ? 0.02 : 0.06;
+    var tries = level === 'hard' ? 320 : level === 'medium' ? 55 : 22;
+    var noise = level === 'hard' ? 0.0015 : level === 'medium' ? 0.02 : 0.06;
+    var powers = level === 'hard' ? [0.4, 0.55, 0.7, 0.85, 1] : [0.55, 0.75, 0.95];
     var y = CFG.lines[p].y, best = null, n;
     for (n = 0; n < tries; n++) {
       var c = targets[Math.floor(Math.random() * targets.length)];
@@ -220,7 +221,7 @@
       var dx = gx - x, dy = gy - y;
       if ((p === 0 && dy >= -5) || (p === 1 && dy <= 5)) continue;
       var ang = Math.atan2(dy, dx) + (Math.random() - 0.5) * 2 * noise;
-      var power = [0.55, 0.75, 0.95][Math.floor(Math.random() * 3)];
+      var power = powers[Math.floor(Math.random() * powers.length)];
       var sc = simShot(S, x, y, ang, power, p) + Math.random() * 0.5;
       if (!best || sc > best.score) best = { x: x, ang: ang, power: power, score: sc };
     }
@@ -345,7 +346,7 @@
     var online = (match.opponentType === 'human' || match.ai === false || match.online === true);
     var o = {
       mode: online ? 'online' : 'bot',
-      difficulty: match.difficulty || 'medium',
+      difficulty: 'hard',   // computer hamesha full hard (match.difficulty ignore hota hai)
       names: [match.me || 'You', match.opponent || 'Bot'],
       avatars: [match.meAvatar || '', match.opponentAvatar || ''],
       myIndex: online ? (match.myIndex || 0) : 0,
