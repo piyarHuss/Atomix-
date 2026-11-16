@@ -420,14 +420,16 @@
     '.cr-av img.k{position:absolute;right:-5px;bottom:-5px;width:16px;height:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}' +
     '.cr-pl b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;line-height:1.2}' +
     '.cr-pl small{font-size:11px;opacity:.85}' +
+    '.cr-tm{margin-left:auto;flex:none;min-width:26px;height:26px;padding:0 2px;box-sizing:border-box;border-radius:13px;background:#ffc83d;color:#2b1b10;font-weight:800;font-size:13px;display:none;align-items:center;justify-content:center}' +
+    '.cr-pl.act .cr-tm{display:flex}.cr-tm.warn{background:#e0453f;color:#fff}' +
     '.cr-btn{flex:none;background:rgba(255,255,255,.14);border:0;color:#fff;width:32px;height:32px;border-radius:10px;font-size:15px;cursor:pointer;padding:0}' +
     '.cr-cv{touch-action:none;display:block;margin:0}' +
-    '.cr-bottom{width:100%;margin-bottom:auto;padding:8px 28px 14px;box-sizing:border-box;text-align:center}' +
+    '.cr-bottom{width:100%;margin:auto 0;padding:8px 28px 14px;box-sizing:border-box;text-align:center}' +
     '.cr-slider{-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:300px;height:28px;margin:0 auto;border-radius:16px;border:4px solid #8a0f14;outline:0;overflow:visible;background:linear-gradient(90deg,#5a2c10,#8b4a22 50%,#5a2c10);box-shadow:0 3px 8px rgba(0,0,0,.55),inset 0 3px 5px rgba(0,0,0,.55)}' +
-    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:44px;height:44px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
-    '.cr-slider::-moz-range-thumb{width:44px;height:44px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
+    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:34px;height:34px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
+    '.cr-slider::-moz-range-thumb{width:34px;height:34px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
     '.cr-slider:disabled{opacity:.7}' +
-    '.cr-otrack{width:100%;padding:8px 28px 6px;box-sizing:border-box;margin-top:auto}' +
+    '.cr-otrack{width:100%;padding:8px 28px 6px;box-sizing:border-box;margin:auto 0}' +
     '.cr-oslider{pointer-events:none}' +
     /* slider ke niche ka text hata diya */
     '.cr-msg{display:none}' +
@@ -474,7 +476,7 @@
       names: [match.me || 'You', match.opponent || 'Bot'],
       avatars: [match.meAvatar || '', match.opponentAvatar || ''],
       myIndex: online ? (match.myIndex || 0) : 0,
-      turnTime: match.turnTime || 0
+      turnTime: match.turnTime || 20   // har turn 20 sec; time khatam to turn opponent ko
     };
 
     // ---------- DOM ----------
@@ -487,7 +489,7 @@
     wrap.style.background = 'url(' + BASE + 'assets/background.png' + VQ + ') center/cover no-repeat, url(' + LA + 'background.png' + VQ + ') center/cover no-repeat, radial-gradient(circle at 50% 28%,#3b2a8f,#100b3d 70%)';
     function plHtml(i) {
       return '<div class="cr-pl" data-p="' + i + '"><div class="cr-av"><img class="p" src="' + (o.avatars[i] || '') + '" onerror="this.style.visibility=\'hidden\'">' +
-             '<img class="k" src="' + BASE + 'assets/coin_' + COLORS[i] + '.png' + VQ + '"></div><div style="min-width:0"><b class="n"></b><small class="c"></small></div></div>';
+             '<img class="k" src="' + BASE + 'assets/coin_' + COLORS[i] + '.png' + VQ + '"></div><div style="min-width:0"><b class="n"></b><small class="c"></small></div><span class="cr-tm tm"></span></div>';
     }
     wrap.innerHTML =
       '<div class="cr-top"><button class="cr-btn cr-mn"><span class="bars"><i></i><i></i><i></i></span></button>' + plHtml(0) + plHtml(1) + '</div>' +
@@ -602,6 +604,9 @@
         el.querySelector('.n').textContent = o.names[p];
         el.querySelector('.c').textContent = remaining(COLORS[p]) + ' left' + (queenOwner === p ? '  ♛' : '');
         el.classList.toggle('act', turn === p && phase !== 'over' && phase !== 'loading');
+        var tm = el.querySelector('.tm'), showT = o.turnTime && turn === p && phase === 'aim';
+        tm.textContent = showT ? Math.max(0, tleft) : '';
+        tm.classList.toggle('warn', !!showT && tleft <= 5);
       });
     }
     function canControl() {
@@ -640,11 +645,11 @@
     function startTimer() {
       clearInterval(tInt);
       if (!o.turnTime) return;
-      tleft = o.turnTime;
+      tleft = o.turnTime; hud();
       tInt = setInterval(function () {
         if (phase !== 'aim' || paused) return;
-        tleft--;
-        if (tleft <= 0) { clearInterval(tInt); say('Time up!'); Sound.play('foul'); turn = 1 - turn; beginTurn(); }
+        tleft--; hud();
+        if (tleft <= 0) { clearInterval(tInt); aim.on = false; say('Time up! Turn passed'); Sound.play('foul'); turn = 1 - turn; beginTurn(); }
       }, 1000);
     }
 
