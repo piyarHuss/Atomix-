@@ -421,13 +421,13 @@
     '.cr-pl b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;line-height:1.2}' +
     '.cr-pl small{font-size:11px;opacity:.85}' +
     '.cr-btn{flex:none;background:rgba(255,255,255,.14);border:0;color:#fff;width:32px;height:32px;border-radius:10px;font-size:15px;cursor:pointer;padding:0}' +
-    '.cr-cv{touch-action:none;display:block;margin:auto 0}' +
-    '.cr-bottom{width:100%;padding:12px 28px 14px;box-sizing:border-box;text-align:center}' +
+    '.cr-cv{touch-action:none;display:block;margin:0}' +
+    '.cr-bottom{width:100%;margin-bottom:auto;padding:8px 28px 14px;box-sizing:border-box;text-align:center}' +
     '.cr-slider{-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:300px;height:28px;margin:0 auto;border-radius:16px;border:4px solid #8a0f14;outline:0;overflow:visible;background:linear-gradient(90deg,#5a2c10,#8b4a22 50%,#5a2c10);box-shadow:0 3px 8px rgba(0,0,0,.55),inset 0 3px 5px rgba(0,0,0,.55)}' +
-    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:62px;height:62px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
-    '.cr-slider::-moz-range-thumb{width:62px;height:62px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
+    '.cr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:44px;height:44px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));cursor:pointer}' +
+    '.cr-slider::-moz-range-thumb{width:44px;height:44px;border-radius:50%;border:0;background:url(' + BASE + 'assets/striker.png' + VQ + ') center/contain no-repeat,radial-gradient(circle at 40% 35%,#fff,#9fd0ff 60%,#3b78c4);cursor:pointer}' +
     '.cr-slider:disabled{opacity:.7}' +
-    '.cr-otrack{width:100%;padding:8px 28px 14px;box-sizing:border-box}' +
+    '.cr-otrack{width:100%;padding:8px 28px 6px;box-sizing:border-box;margin-top:auto}' +
     '.cr-oslider{pointer-events:none}' +
     /* slider ke niche ka text hata diya */
     '.cr-msg{display:none}' +
@@ -923,12 +923,6 @@
       if (imgs.board) ctx.drawImage(imgs.board, 0, 0, CFG.W, CFG.H);
       else { ctx.fillStyle = '#d9a35f'; ctx.fillRect(0, 0, CFG.W, CFG.H); }
 
-      // jo khilaadi abhi nahi khel raha, uska striker apni line par rakha dikhta hai
-      if (phase === 'aim' || phase === 'moving') {
-        ctx.save(); ctx.globalAlpha = 0.92;
-        drawBody({ type: 'striker', x: CFG.center.x, y: CFG.lines[1 - turn].y, r: CFG.strikerR });
-        ctx.restore();
-      }
       if (phase === 'aim') {
         // coin ke upar striker ho to laal (sirf apne turn par)
         if (canControl() && !isFree(S, striker.x, striker.y)) {
