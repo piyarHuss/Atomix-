@@ -23,6 +23,9 @@
      window.CarromGame.remoteAim({x,dx,dy,power,on})          (online opponent ka live aim/slider)
      onFinish({ won:true|false, winner:'you'|'bot', points })
 
+   v8:
+     - QUEEN (red goti) FIX: queen akeli pocket ho to turn milta hai (cover karne ke liye).
+       Us shot me apni goti dali to queen cover, warna queen wapas center me. HUD me ♛? dikhta hai.
    v7:
      - AIM GUIDE ab Carrom Pool jaisa: bada dotted circle, striker ke peeche kaale dots,
        gradient arrow (peela -> laal), arrow ke aage safed dots + ghost striker.
@@ -257,7 +260,7 @@
     var s = own * 10 - oth * 7;
     if (queenP) {
       if (own > 0) s += 14;                               // queen cover ho gayi
-      else queenAlive = true;                              // queen wapas rakhi jayegi
+      else { queenAlive = true; s += 5; }                              // queen wapas rakhi jayegi
     }
     if (own > 0) s += 4;                                   // dobara shot milega
     if (startOpp - oth <= 0) return -300;                 // opponent ki aakhri gotti dalna = haar
@@ -517,6 +520,7 @@
     var imgs = {}, sprites = {};
     var S = { bodies: [], events: [] }, striker = mkBody('striker', CFG.center.x, CFG.lines[0].y);
     var turn = 0, phase = 'loading', queenOwner = -1, shotPocketed = [], anims = [];
+    var queenPending = -1;   // jis player ne queen akeli pocket ki aur abhi cover karni baaki hai (-1 = koi nahi)
     var aim = { on: false, dx: 0, dy: -1, power: 0 }, flip = false, scale = 1;
     var acc = 0, lastT = 0, raf = 0, timers = [], tleft = 0, tInt = 0, endWait = 0, destroyed = false, botBusy = false, finished = false;
     var ro = null;
@@ -614,7 +618,7 @@
       [0, 1].forEach(function (p) {
         var el = $('.cr-pl[data-p="' + p + '"]');
         el.querySelector('.n').textContent = o.names[p];
-        el.querySelector('.c').textContent = remaining(COLORS[p]) + ' left' + (queenOwner === p ? '  ♛' : '');
+        el.querySelector('.c').textContent = remaining(COLORS[p]) + ' left' + (queenOwner === p ? '  ♛' : (queenPending === p ? '  ♛?' : ''));
         el.classList.toggle('act', turn === p && phase !== 'over' && phase !== 'loading');
         var tm = el.querySelector('.tm'), showT = o.turnTime && turn === p && phase === 'aim';
         tm.textContent = showT ? Math.max(0, tleft) : '';
@@ -671,7 +675,7 @@
         if (tleft <= lim) {
           clearInterval(tInt); aim.on = false;
           if (net && mineTurn()) { try { net.send({ type: 'pass' }); } catch (e) {} }
-          say('Time up! Turn passed'); Sound.play('foul'); turn = 1 - turn; beginTurn();
+          returnQueen(); say('Time up! Turn passed'); Sound.play('foul'); turn = 1 - turn; beginTurn();
         }
       }, 1000);
     }
@@ -755,6 +759,16 @@
       b.x = px; b.y = py; b.vx = b.vy = 0; b.alive = true; b.pocketed = false;
     }
 
+    // pending queen (cover nahi hui) ko wapas center me rakho
+    function returnQueen() {
+      if (queenPending < 0) return;
+      for (var i = 0; i < S.bodies.length; i++) {
+        var qb = S.bodies[i];
+        if (qb.type === 'queen' && !qb.alive) { respawn(qb); break; }
+      }
+      queenPending = -1; hud();
+    }
+
     function endShot() {
       var idx = S.bodies.indexOf(striker); if (idx >= 0) S.bodies.splice(idx, 1);
       var p = turn, mine = COLORS[p], own = [], oth = [], queen = null, foul = false, i, b;
@@ -765,7 +779,7 @@
         else if (b.type === mine) own.push(b);
         else oth.push(b);
       }
-      var text = '', cont = false;
+      var text = '', cont = false, pend = (queenPending === p);
       if (foul) {
         text = 'Foul! Striker pocketed';
         own.forEach(respawn);
@@ -774,11 +788,16 @@
           if (!b.alive && b.type === mine && own.indexOf(b) < 0) { respawn(b); break; }
         }
         if (queen) respawn(queen);
+        if (pend) returnQueen();
         Sound.play('foul');
       } else {
-        if (queen) {
+        if (pend) {
+          // pichli shot me queen pocket hui thi: ab apni goti dalo to cover, warna queen wapas
+          if (own.length > 0) { queenOwner = p; queenPending = -1; text = 'Queen covered!'; }
+          else { returnQueen(); text = 'Queen not covered, returned'; }
+        } else if (queen) {
           if (own.length > 0) { queenOwner = p; text = 'Queen covered!'; }
-          else { respawn(queen); text = 'Queen returned (not covered)'; }
+          else { queenPending = p; cont = true; text = 'Queen pocketed! Cover it now'; }   // dobara shot milta hai
         }
         if (own.length > 0) { cont = true; if (!text) text = 'Nice! Shoot again'; }
         else if (oth.length > 0 && !text) text = 'Opponent coin pocketed';
@@ -821,7 +840,7 @@
     }
 
     function startMatch() {
-      S = { bodies: newBoard(), events: [] }; anims = []; queenOwner = -1; turn = 0; shotPocketed = [];
+      S = { bodies: newBoard(), events: [] }; anims = []; queenOwner = -1; queenPending = -1; turn = 0; shotPocketed = [];
       flip = (o.mode === 'online' && o.myIndex === 1);
       ov.style.display = 'none'; ov.innerHTML = '';
       beginTurn(); Sound.play('turn');
@@ -1098,7 +1117,7 @@
     function applyNet(m) {
       if (m.type === 'shot') api.remoteShot(m);
       else if (m.type === 'pass') {
-        clearInterval(tInt); aim.on = false; say('Opponent time up');
+        clearInterval(tInt); aim.on = false; returnQueen(); say('Opponent time up');
         turn = 1 - turn; beginTurn();
       }
     }
