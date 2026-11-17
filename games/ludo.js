@@ -1425,8 +1425,8 @@
       return best;
     }
 
-    // AI-only tactical dice selection: pehle woh dice dekho jo capture/finish
-    // ya strong safe move dete hain. Human aur online dice par iska asar nahi.
+    // Legacy tactical dice scorer retained for reference; roll() no longer calls it.
+    // Bot and human both receive a fair random 1-6 dice result.
     function chooseBotDice() {
       const previousRolled = state.rolled;
       const previousDice = state.dice;
@@ -1492,11 +1492,15 @@
       state.busy = true;
 
       const isForced = Number.isInteger(forced) && forced >= 1 && forced <= 6;
-      const n = isForced ? forced : (
-        isBot(color)
-          ? chooseBotDice()
-          : 1 + Math.floor(Math.random() * 6)
-      );
+      // AI dice tuning: when the computer (red) rolls, six has a 15% chance.
+      // The remaining 85% is split equally across 1-5 (17% each).
+      // Human rolls remain fair (1-6 equally likely); online forced rolls
+      // always use the value received from the opponent.
+      const rollComputerDie = () =>
+        Math.random() < 0.15 ? 6 : 1 + Math.floor(Math.random() * 5);
+      const n = isForced
+        ? forced
+        : (isAI && color === "red" ? rollComputerDie() : 1 + Math.floor(Math.random() * 6));
 
       /* meri roll: value yahin banti hai aur opponent ko bheji jati hai */
       if (ONLINE && color === "blue" && !isForced) sendNet({ type: "roll", v: n });
