@@ -38,7 +38,7 @@ const DEP_QR_AMT = true;                  /* QR me amount rakhna hai? Scan par e
 const DEP_CREDIT = { cash: 1, gems: 0 };
 const DEP_QR_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', 'qrcode.min.js'];
 
-const DEP_DEBUG = true;                   /* TEMP: red box me asli Firebase data dikhata hai. Test ke baad false karo */
+const DEP_DEBUG = false;                  /* true = red box me Firebase data dikhta hai (sirf testing). Live me HAMESHA false */
 let DEP_DBG = '';
 let DEP_BUSY = 0, DEP_FAILS = [], DEP_SESS = null, DEP_T = 0;
 const DEP_DONE = {};
@@ -215,7 +215,7 @@ async function depVerify() {
     } catch (e) {
       console.error('DEP: read failed', e.code, e.message);
       DEP_DBG += '\nREAD ERROR: ' + (e.code || '') + ' ' + (e.message || '');
-      depBad('Network error', 'Could not check UTR (' + (e.code || 'unknown') + '). Try again.'); return;
+      depBad('Connection problem', 'Could not verify right now. Please try again in a moment.'); return;
     }
     depLog('utr data =', JSON.stringify(d), '| tombstone =', JSON.stringify(used));
     if (used) { bad('Wrong UTR', 'This UTR was already used.'); return; }
@@ -237,9 +237,7 @@ async function depVerify() {
     catch (e) {
       console.error('DEP: claim failed', e.code, e.message);
       dbSet('dep/' + u, { amt: bank, ts, c: 2 });
-      const perm = e && e.code === 'PERMISSION_DENIED';
-      bad(perm ? 'Claim blocked' : 'Claim failed',
-        perm ? 'Firebase rules ne write block kiya (PERMISSION_DENIED). Rules check karo.' : (e.code || 'This UTR is already used or invalid.'));
+            bad('Verification failed', 'We could not process this UTR. Please try again or contact support.');
       return;
     }
     ok = 1;
