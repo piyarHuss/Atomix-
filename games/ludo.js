@@ -100,7 +100,6 @@
   const STEP_MS = 190;
 
   const TURN_SECONDS = 15;
-  const BOT_AGGRESSION = 1.25;
   const TOKEN_NUDGE = { red: [0, 0], blue: [0, 0] };
 
   const BET_KEYS = ["bet","entryFee","entry","entry_fee","betAmount","bet_amount","amount","stake","fee","price","prize"];
@@ -557,6 +556,7 @@
       busy: false,
       gameOver: false,
       tokens: { red: [-1,-1,-1,-1], blue: [-1,-1,-1,-1] },
+      sixStreak: { red: 0, blue: 0 },
       winner: null,
       moving: null
     };
@@ -1265,7 +1265,10 @@
       state.dice = null;
       state.moving = null;
 
-      if (!extra) state.turn = other(state.turn);
+      if (!extra) {
+        state.sixStreak[state.turn] = 0;
+        state.turn = other(state.turn);
+      }
 
       if (extra) audio.play("extra_turn");
       else if (ctl(state.turn)) audio.play("your_turn");
@@ -1290,109 +1293,195 @@
     /* ================================================================ */
     /*  SMART + AGGRESSIVE BOT BRAIN (sirf AI match me)                  */
     /* ================================================================ */
+    // Exact dice-based danger estimate: opponent ke kitne dice results par
+    // koi blue goti is red square ko kaat sakti hai.
     function enemyThreat(g, foeTokens) {
       if (g < 0 || SAFE_TRACK_INDEXES.has(g)) return 0;
-      let p = 0;
-      let anyAtHome = false;
+      let dangerousDice = new Set();
 
       for (const s of foeTokens) {
-        if (s === -1) { anyAtHome = true; continue; }
-        if (s < 0 || s > LAST_TRACK_STEP) continue;
-        for (let dist = 1; dist <= 12; dist++) {
-          const t = s + dist;
-          if (t > LAST_TRACK_STEP) break;
-          if (globalIndex("blue", t) === g) {
-            p += dist <= 6 ? 1 / 6 : 1 / 36;
-            break;
+        if (s >= 0 && s <= LAST_TRACK_STEP) {
+          for (let die = 1; die <= 6; die++) {
+            if (s + die <= LAST_TRACK_STEP &&
+                globalIndex("blue", s + die) === g) {
+              dangerousDice.add(die);
+            }
           }
+        } else if (s === -1) {
+          // Ghar se nikalne ke baad isi turn mein aage nahi badh sakta.
+          if (globalIndex("blue", 0) === g) dangerousDice.add(6);
         }
       }
-
-      if (anyAtHome) {
-        const dist = (g - PLAYERS.blue.start + TRACK_LEN) % TRACK_LEN;
-        if (dist >= 1 && dist <= 6) p += 1 / 36;
-      }
-      return Math.min(p, 0.95);
+      return dangerousDice.size / 6;
     }
 
     function chooseAiToken(legal, d) {
       const mine = state.tokens.red;
-      const foe  = state.tokens.blue;
-
-      const myProg  = mine.reduce((a, s) => a + Math.max(s, 0), 0);
-      const foeProg = foe.reduce((a, s) => a + Math.max(s, 0), 0);
-      const behind  = foeProg - myProg;
-      const riskW   = behind > 40 ? 0.6 : behind < -40 ? 1.3 : 1;
-      const aggr    = BOT_AGGRESSION * (behind > 40 ? 1.3 : 1);
-
+      const foe = state.tokens.blue;
+      const totalProgress = arr => arr.reduce((sum, s) =>
+        sum + (s === FINISH ? 52 : s < 0 ? 0 : s), 0);
+      const behind = totalProgress(foe) - totalProgress(mine);
+      const desperate = behind > 35;
       const onBoard = mine.filter(s => s >= 0 && s < FINISH).length;
-
       let best = legal[0];
       let bestScore = -Infinity;
 
       for (const index of legal) {
-        const old  = mine[index];
+        const old = mine[index];
         const next = old === -1 ? 0 : old + d;
-        let score = d;
+        const nextMine = mine.slice();
+        nextMine[index] = next;
+        let nextFoe = foe.slice();
+        let score = 0;
 
+        // Race progress: ghar ke kareeb pahunchne par progress ki value badhti hai.
         if (old === -1) {
-          score += 32;
-          if (onBoard === 0) score += 45;
-          else if (onBoard === 1) score += 12;
+          score += onBoard === 0 ? 105 : onBoard === 1 ? 82 : 62;
+        } else {
+          score += d * (next >= LANE_START ? 5.5 : 3.2);
+          if (next >= LANE_START && old < LANE_START) score += 95;
         }
 
-        if (next === FINISH) score += 120;
-        else if (next >= LANE_START) score += 38 + (old < LANE_START ? 22 : 0);
+        // Finish is the strongest strategic move.
+        if (next === FINISH) score += 340;
 
-        let foeAfter = foe;
+        // Capture every opposing token on the landing square.
+        let capturedCount = 0;
         if (next <= LAST_TRACK_STEP) {
           const g = globalIndex("red", next);
-          const safe = SAFE_TRACK_INDEXES.has(g);
-
-          if (safe) {
-            score += 24;
-          } else {
-            let capLoss = 0;
-            foeAfter = foe.map(s => {
-              if (s >= 0 && s <= LAST_TRACK_STEP && globalIndex("blue", s) === g) {
-                capLoss += s + 15;
+          if (!SAFE_TRACK_INDEXES.has(g)) {
+            nextFoe = nextFoe.map(s => {
+              if (s >= 0 && s <= LAST_TRACK_STEP &&
+                  globalIndex("blue", s) === g) {
+                capturedCount++;
                 return -1;
               }
               return s;
             });
-            if (capLoss > 0) score += (95 + capLoss * 2.5) * aggr;
+          }
+        }
+        if (capturedCount) score += 245 * capturedCount;
 
-            const risk = enemyThreat(g, foeAfter);
-            score -= risk * (next + 15) * 3 * riskW;
-
-            for (let dist = 1; dist <= 6; dist++) {
-              const t = next + dist;
-              if (t > LAST_TRACK_STEP) break;
-              const gt = globalIndex("red", t);
-              if (SAFE_TRACK_INDEXES.has(gt)) continue;
-              foeAfter.forEach(s => {
-                if (s >= 0 && s <= LAST_TRACK_STEP && globalIndex("blue", s) === gt) {
-                  score += (1 / 6) * (s + 15) * 2 * aggr;
-                }
-              });
-            }
+        // Avoid exposing valuable pieces; exact one-die threat probability.
+        if (next >= 0 && next <= LAST_TRACK_STEP) {
+          const g = globalIndex("red", next);
+          if (!SAFE_TRACK_INDEXES.has(g)) {
+            const risk = enemyThreat(g, nextFoe);
+            const pieceValue = 42 + next * 1.35;
+            score -= risk * pieceValue * (desperate ? 0.72 : 1.45);
+          } else {
+            score += 28; // safe square protection
           }
         }
 
+        // Moving away from danger is valuable, especially for advanced pieces.
         if (old >= 0 && old <= LAST_TRACK_STEP) {
-          const gOld = globalIndex("red", old);
-          const oldRisk = enemyThreat(gOld, foe);
-          score += oldRisk * (old + 15) * 3;
-
-          if (SAFE_TRACK_INDEXES.has(gOld) && next <= LAST_TRACK_STEP &&
-              !SAFE_TRACK_INDEXES.has(globalIndex("red", next))) score -= 6;
+          const oldG = globalIndex("red", old);
+          const oldRisk = enemyThreat(oldG, foe);
+          score += oldRisk * (38 + old * 1.35) * 1.25;
+          if (SAFE_TRACK_INDEXES.has(oldG) &&
+              next <= LAST_TRACK_STEP &&
+              !SAFE_TRACK_INDEXES.has(globalIndex("red", next))) {
+            score -= 18;
+          }
         }
 
-        score += Math.random() * 3;
+        // Prefer spreading pieces: more active pieces create more future choices.
+        const activeAfter = nextMine.filter(s => s >= 0 && s < FINISH).length;
+        if (old === -1) score += 24;
+        if (activeAfter >= 2 && old >= 0 && old < LAST_TRACK_STEP) score += 7;
 
-        if (score > bestScore) { bestScore = score; best = index; }
+        // Tactical look-ahead: don't land where the opponent can immediately
+        // capture multiple pieces; reward positions that threaten blue pieces.
+        if (next <= LAST_TRACK_STEP) {
+          const g = globalIndex("red", next);
+          if (!SAFE_TRACK_INDEXES.has(g)) {
+            let attackDice = new Set();
+            for (const bs of nextFoe) {
+              if (bs < 0 || bs > LAST_TRACK_STEP) continue;
+              for (let die = 1; die <= 6; die++) {
+                if (bs + die <= LAST_TRACK_STEP &&
+                    globalIndex("blue", bs + die) === g) {
+                  attackDice.add(die);
+                }
+              }
+            }
+            score += attackDice.size * (desperate ? 5 : 3);
+          }
+        }
+
+        // Winning race: increase urgency when close to finishing.
+        const finishedAfter = nextMine.filter(s => s === FINISH).length;
+        score += finishedAfter * 22;
+        if (next === FINISH && nextMine.every(s => s === FINISH)) score += 10000;
+
+        // Tiny randomness prevents identical predictable choices in equal positions.
+        score += Math.random() * 1.5;
+        if (score > bestScore) {
+          bestScore = score;
+          best = index;
+        }
       }
       return best;
+    }
+
+    // AI-only tactical dice selection: pehle woh dice dekho jo capture/finish
+    // ya strong safe move dete hain. Human aur online dice par iska asar nahi.
+    function chooseBotDice() {
+      const previousRolled = state.rolled;
+      const previousDice = state.dice;
+      const options = [];
+
+      for (let die = 1; die <= 6; die++) {
+        state.rolled = true;
+        state.dice = die;
+        const legal = getLegal(state);
+        if (!legal.length) continue;
+
+        const index = chooseAiToken(legal, die);
+        const old = state.tokens.red[index];
+        const next = old === -1 ? 0 : old + die;
+        let score = 0;
+
+        // Tactical priorities: capture > finish > survival > useful progress.
+        let capturesMade = 0;
+        if (next <= LAST_TRACK_STEP) {
+          const g = globalIndex("red", next);
+          if (!SAFE_TRACK_INDEXES.has(g)) {
+            const captures = state.tokens.blue.filter(bs =>
+              bs >= 0 && bs <= LAST_TRACK_STEP && globalIndex("blue", bs) === g
+            ).length;
+            capturesMade = captures;
+            score += captures * 1500;
+          }
+        }
+        if (next === FINISH) score += 1100;
+        if (old === -1) score += 100;
+        else score += die * (next >= LANE_START ? 8 : 4);
+
+        if (next >= 0 && next <= LAST_TRACK_STEP) {
+          const g = globalIndex("red", next);
+          if (SAFE_TRACK_INDEXES.has(g)) score += 140;
+          else score -= enemyThreat(g, state.tokens.blue) * (95 + next * 1.2);
+        }
+        // Avoid wasting a six when a smaller roll gives a safer or stronger move.
+        // Six remains preferred when it actually releases a token or wins/captures.
+        if (die === 6 && old !== -1 && !capturesMade && next !== FINISH) score -= 24;
+        if (state.sixStreak.red === 1 && die === 6) score -= 35;
+        if (next === FINISH && state.tokens.red.every((v, i) => i === index ? true : v === FINISH)) score += 10000;
+        options.push({ die, score, index });
+      }
+
+      state.rolled = previousRolled;
+      state.dice = previousDice;
+      if (!options.length) return 1 + Math.floor(Math.random() * 6);
+
+      options.sort((a, b) => b.score - a.score);
+      // Choose the best tactical outcome. Randomize only between near-equal
+      // choices so the bot feels less scripted without throwing away good moves.
+      const bestScore = options[0].score;
+      const nearBest = options.filter(option => bestScore - option.score <= 8);
+      return nearBest[Math.floor(Math.random() * nearBest.length)].die;
     }
 
     /* forced = opponent (dusre phone) ki bheji hui dice value. Local roll me undefined. */
@@ -1403,7 +1492,11 @@
       state.busy = true;
 
       const isForced = Number.isInteger(forced) && forced >= 1 && forced <= 6;
-      const n = isForced ? forced : 1 + Math.floor(Math.random() * 6);
+      const n = isForced ? forced : (
+        isBot(color)
+          ? chooseBotDice()
+          : 1 + Math.floor(Math.random() * 6)
+      );
 
       /* meri roll: value yahin banti hai aur opponent ko bheji jati hai */
       if (ONLINE && color === "blue" && !isForced) sendNet({ type: "roll", v: n });
@@ -1421,6 +1514,20 @@
       state.dice = n;
       state.rolled = true;
       state.busy = false;
+
+      // Professional-style rule: third consecutive six forfeits this turn.
+      state.sixStreak[color] = n === 6 ? state.sixStreak[color] + 1 : 0;
+      if (state.sixStreak[color] >= 3) {
+        state.busy = true;
+        state.rolled = false;
+        audio.play("no_move");
+        update();
+        await wait(850);
+        if (destroyed || state.gameOver) return;
+        state.sixStreak[color] = 0;
+        nextTurn(false);
+        return;
+      }
 
       const legal = getLegal(state);
 
