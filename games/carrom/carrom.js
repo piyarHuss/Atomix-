@@ -1,5 +1,5 @@
 /* =====================================================================
-   games/carrom/carrom.js  -  Carrom Masters engine (v5: pro striker + smart bot)
+   games/carrom/carrom.js  -  Carrom Masters engine (v6: bigger coins + online play)
    ---------------------------------------------------------------------
    Folder:
      games/carrom/carrom.js
@@ -23,11 +23,10 @@
      window.CarromGame.remoteAim({x,dx,dy,power,on})          (online opponent ka live aim/slider)
      onFinish({ won:true|false, winner:'you'|'bot', points })
 
-   NEW in v5:
-     - Striker bahut bada (coin ka 2x, mobile carrom jaisa)
-     - Opponent (bot ya online) ka striker slide hota dikhta hai, phir aim/pull-back, phir shot
-     - Slider ke niche koi text nahi
-     - Bot: har shot ko exact physics se simulate karke best shot chunta hai (full hard)
+   v6:
+     - GOTI BADI: coinR 25 -> 34, striker 50 -> 54 (neeche CFG me).
+       Aur bada/chhota karna ho to sirf CFG.coinR (aur CFG.strikerR) badlo, baaki sab apne aap adjust hota hai.
+     - Online (user vs user): match.net se shot / aim / pass / forfeit sync (matchmaking.js ka MatchNet)
    ===================================================================== */
 (function (GLOBAL) {
   'use strict';
@@ -36,7 +35,7 @@
   try { SRC = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
   var BASE = SRC ? SRC.replace(/[?#].*$/, '').replace(/[^\/]*$/, '') : 'games/carrom/';
   var LA = BASE + '../assets/';   // Ludo ki shared assets
-  // Telegram cache todne ke liye: carrom.js?v=5 se "?v=5" nikaal ke har asset/sound par lagate hain
+  // Telegram cache todne ke liye: carrom.js?v=6 se "?v=6" nikaal ke har asset/sound par lagate hain
   var VQ = (SRC.match(/\?v=[^&#]*/) || [''])[0];
   function U(p) { return p + VQ; }
   var TG = null;
@@ -44,8 +43,9 @@
 
   /* ------------------------------------------------------------------
      CONFIG  (coordinates board.png ke original size 1241 x 1268 mein)
-     strikerR: striker ka size. Coin = 25, pehle 31 tha -> ab 38 (coin se 2x, mobile carrom pro look).
-               Aur bada chahiye to 40-42 kar do.
+     coinR:    gotti ka radius.  Pehle 25 tha (bahut chhoti), ab 34.
+               Aur bada chahiye to 36-38 kar do (38 se upar pocket me dikkat aa sakti hai).
+     strikerR: striker ka radius. Gotti se thoda bada: 54.
      ------------------------------------------------------------------ */
   var CFG = {
     W: 1241, H: 1268,
@@ -53,7 +53,7 @@
     pockets: [{ x: 113, y: 112 }, { x: 1127, y: 112 }, { x: 113, y: 1108 }, { x: 1127, y: 1108 }],
     pocketR: 46,
     center: { x: 620, y: 615 },
-    coinR: 25, strikerR: 50, strikerM: 2.0,
+    coinR: 34, strikerR: 54, strikerM: 2.0,
     lines: [{ y: 1011 }, { y: 211 }],
     x1: 259, x2: 980,
     maxSpeed: 3400,
@@ -470,12 +470,16 @@
     var match = opts.match || {};
     var mount = opts.mount || document.body;
     var online = (match.opponentType === 'human' || match.ai === false || match.online === true);
+    var net = match.net || null;                       // matchmaking.js ka MatchNet (user vs user)
+    var myIdx = net ? (match.role === 'guest' ? 1 : 0) : (online ? (match.myIndex || 0) : 0);
+    var meN = match.me || 'You', opN = match.opponent || 'Bot';
+    var meA = match.meAvatar || '', opA = match.opponentAvatar || '';
     var o = {
       mode: online ? 'online' : 'bot',
       difficulty: 'hard',   // computer hamesha full hard (match.difficulty ignore hota hai)
-      names: [match.me || 'You', match.opponent || 'Bot'],
-      avatars: [match.meAvatar || '', match.opponentAvatar || ''],
-      myIndex: online ? (match.myIndex || 0) : 0,
+      names: myIdx === 0 ? [meN, opN] : [opN, meN],
+      avatars: myIdx === 0 ? [meA, opA] : [opA, meA],
+      myIndex: myIdx,       // host = 0 (white, pehli turn), guest = 1 (black)
       turnTime: match.turnTime || 20   // har turn 20 sec; time khatam to turn opponent ko
     };
 
@@ -513,6 +517,7 @@
     var botPlan = null;      // bot ki animation (slide -> aim -> fire)
     var remote = null;       // online opponent ka live aim
     var lastEmit = 0;
+    var pendingMsg = null;   // opponent ka message jo abhi apply nahi ho paya (online)
 
     // ---------- music (Ludo wali bg_music.mp3) ----------
     var music = new Audio(U(BASE + '../sounds/bg_music.mp3'));
@@ -623,11 +628,13 @@
     }
     function sliderFromX(x) { return Math.round((x - CFG.x1) / (CFG.x2 - CFG.x1) * 1000); }
 
-    // apna aim/slider online opponent ko bhejna (agar app ne onAim diya ho)
+    // apna aim/slider online opponent ko bhejna
     function emitAim(force) {
-      if (!opts.onAim || o.mode !== 'online' || !canControl()) return;
-      var t = Date.now(); if (!force && t - lastEmit < 60) return; lastEmit = t;
-      try { opts.onAim({ p: turn, x: striker.x, dx: aim.dx, dy: aim.dy, power: aim.power, on: aim.on }); } catch (e) {}
+      if (o.mode !== 'online' || !canControl()) return;
+      var t = Date.now(); if (!force && t - lastEmit < 90) return; lastEmit = t;
+      var d = { p: turn, x: striker.x, dx: aim.dx, dy: aim.dy, power: aim.power, on: aim.on };
+      if (opts.onAim) try { opts.onAim(d); } catch (e) {}
+      if (net) { try { net.send({ type: 'aim', x: d.x, dx: d.dx, dy: d.dy, power: d.power, on: d.on }); } catch (e) {} }
     }
 
     // ---------- turn flow ----------
@@ -641,6 +648,10 @@
       slider.disabled = !canControl();
       hud(); startTimer();
       if (isBot()) { botBusy = true; later(botTurn, 450); }
+      if (pendingMsg && isOppOnline()) {
+        var pm = pendingMsg; pendingMsg = null;
+        later(function () { if (phase === 'aim' && isOppOnline()) applyNet(pm); }, 60);
+      } else if (pendingMsg) pendingMsg = null;
     }
     function startTimer() {
       clearInterval(tInt);
@@ -649,7 +660,12 @@
       tInt = setInterval(function () {
         if (phase !== 'aim' || paused) return;
         tleft--; hud();
-        if (tleft <= 0) { clearInterval(tInt); aim.on = false; say('Time up! Turn passed'); Sound.play('foul'); turn = 1 - turn; beginTurn(); }
+        var lim = (net && !mineTurn()) ? -5 : 0;   // online me opponent ko 5 sec grace
+        if (tleft <= lim) {
+          clearInterval(tInt); aim.on = false;
+          if (net && mineTurn()) { try { net.send({ type: 'pass' }); } catch (e) {} }
+          say('Time up! Turn passed'); Sound.play('foul'); turn = 1 - turn; beginTurn();
+        }
       }, 1000);
     }
 
@@ -711,6 +727,7 @@
       botPlan = null; remote = null; aim.on = false;
       Sound.play('strike', 0.4 + 0.6 * power);
       if (!noEmit && opts.onShot) try { opts.onShot({ p: turn, x: x, dx: dx, dy: dy, power: power }); } catch (e) {}
+      if (!noEmit && net) { try { net.send({ type: 'shot', x: x, dx: dx, dy: dy, power: power }); } catch (e) {} }
     }
 
     function respawn(b) {
@@ -809,6 +826,10 @@
       ov.querySelector('.stay').onclick = function () { Sound.play('click'); ov.style.display = 'none'; ov.innerHTML = ''; paused = false; };
       ov.querySelector('.leave').onclick = function () {
         Sound.play('click'); paused = false;
+        if (net) {
+          try { net.send({ type: 'forfeit' }); } catch (e) {}
+          try { if (typeof fdb !== 'undefined' && typeof UID !== 'undefined' && UID && match.matchId) fdb.ref('matches/' + match.matchId + '/left/' + UID).set(true); } catch (e) {}
+        }
         if (opts.onExit) { try { opts.onExit(); } catch (e) { console.error(e); } }
         else api.destroy();
       };
@@ -1033,10 +1054,31 @@
         document.removeEventListener('visibilitychange', onVis);
         try { if (TG) TG.offEvent('viewportChanged', onResize); } catch (e) {}
         if (ro) { try { ro.disconnect(); } catch (e) {} }
+        if (net) { try { net.close(); } catch (e) {} }
         if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
         if (current === api) current = null;
       }
     };
+
+    // ---------- ONLINE: opponent ke messages ----------
+    function applyNet(m) {
+      if (m.type === 'shot') api.remoteShot(m);
+      else if (m.type === 'pass') {
+        clearInterval(tInt); aim.on = false; say('Opponent time up');
+        turn = 1 - turn; beginTurn();
+      }
+    }
+    if (net) {
+      net.onMsg(function (m) {
+        if (destroyed || phase === 'over' || !m) return;
+        if (m.type === 'aim') { api.remoteAim(m); return; }
+        if (m.type === 'forfeit') { finish(o.myIndex); return; }
+        if (m.type === 'shot' || m.type === 'pass') {
+          if (phase === 'aim' && isOppOnline()) applyNet(m); else pendingMsg = m;
+        }
+      });
+      net.onOppLeft(function () { if (!destroyed && phase !== 'over') finish(o.myIndex); });
+    }
 
     // ---------- start ----------
     Sound.load();
