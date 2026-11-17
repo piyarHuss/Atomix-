@@ -1,5 +1,5 @@
 /* =====================================================================
-   games/carrom/carrom.js  -  Carrom Masters engine (v6: bigger coins + online play)
+   games/carrom/carrom.js  -  Carrom Masters engine (v7: pro aim guide + mixed bot)
    ---------------------------------------------------------------------
    Folder:
      games/carrom/carrom.js
@@ -23,9 +23,14 @@
      window.CarromGame.remoteAim({x,dx,dy,power,on})          (online opponent ka live aim/slider)
      onFinish({ won:true|false, winner:'you'|'bot', points })
 
+   v7:
+     - AIM GUIDE ab Carrom Pool jaisa: bada dotted circle, striker ke peeche kaale dots,
+       gradient arrow (peela -> laal), arrow ke aage safed dots + ghost striker.
+       (render() ke andar "aim guide" wala block; circle ka size CFG.maxPull se)
+     - BOT: ab kabhi Medium kabhi Hard (har turn random). CFG.botHardChance se control:
+       0.5 = aadhi turn hard, 0.7 = zyada hard, 0.3 = zyada medium.
    v6:
-     - GOTI BADI: coinR 25 -> 34, striker 50 -> 54 (neeche CFG me).
-       Aur bada/chhota karna ho to sirf CFG.coinR (aur CFG.strikerR) badlo, baaki sab apne aap adjust hota hai.
+     - GOTI BADI: coinR 34, striker 54 (CFG me).
      - Online (user vs user): match.net se shot / aim / pass / forfeit sync (matchmaking.js ka MatchNet)
    ===================================================================== */
 (function (GLOBAL) {
@@ -35,7 +40,7 @@
   try { SRC = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
   var BASE = SRC ? SRC.replace(/[?#].*$/, '').replace(/[^\/]*$/, '') : 'games/carrom/';
   var LA = BASE + '../assets/';   // Ludo ki shared assets
-  // Telegram cache todne ke liye: carrom.js?v=6 se "?v=6" nikaal ke har asset/sound par lagate hain
+  // Telegram cache todne ke liye: carrom.js?v=7 se "?v=7" nikaal ke har asset/sound par lagate hain
   var VQ = (SRC.match(/\?v=[^&#]*/) || [''])[0];
   function U(p) { return p + VQ; }
   var TG = null;
@@ -43,9 +48,10 @@
 
   /* ------------------------------------------------------------------
      CONFIG  (coordinates board.png ke original size 1241 x 1268 mein)
-     coinR:    gotti ka radius.  Pehle 25 tha (bahut chhoti), ab 34.
-               Aur bada chahiye to 36-38 kar do (38 se upar pocket me dikkat aa sakti hai).
-     strikerR: striker ka radius. Gotti se thoda bada: 54.
+     coinR:    gotti ka radius (34).
+     strikerR: striker ka radius (54).
+     maxPull:  aim ke dotted circle ka radius + max pull-back.
+     botHardChance: bot har turn is probability se HARD khelta hai, baaki MEDIUM.
      ------------------------------------------------------------------ */
   var CFG = {
     W: 1241, H: 1268,
@@ -60,7 +66,8 @@
     dt: 1 / 180,
     wallE: 0.78, hitE: 0.93,
     drag: 1.15, decel: 95, stopV: 14,
-    maxPull: 260
+    maxPull: 260,
+    botHardChance: 0.5
   };
   var COLORS = ['white', 'black'];
 
@@ -476,7 +483,7 @@
     var meA = match.meAvatar || '', opA = match.opponentAvatar || '';
     var o = {
       mode: online ? 'online' : 'bot',
-      difficulty: 'hard',   // computer hamesha full hard (match.difficulty ignore hota hai)
+      // bot ka level har turn botTurn() me random chuna jata hai (CFG.botHardChance), match.difficulty ignore hota hai
       names: myIdx === 0 ? [meN, opN] : [opN, meN],
       avatars: myIdx === 0 ? [meA, opA] : [opA, meA],
       myIndex: myIdx,       // host = 0 (white, pehli turn), guest = 1 (black)
@@ -671,7 +678,9 @@
 
     // Bot: pehle sochta hai, phir striker slide karta hai, phir pull-back/aim dikhata hai, phir shot
     function botTurn() {
-      var pick = botPick(S, 1, o.difficulty, queenOwner);
+      // har turn random: kabhi Medium, kabhi Hard
+      var lvl = Math.random() < CFG.botHardChance ? 'hard' : 'medium';
+      var pick = botPick(S, 1, lvl, queenOwner);
       var a0 = Math.PI / 2;   // bot upar se neeche ki taraf khelta hai
       var da = pick.ang - a0;
       while (da > Math.PI) da -= 2 * Math.PI;
@@ -954,37 +963,62 @@
         if (canControl() && !isFree(S, striker.x, striker.y)) {
           ctx.fillStyle = 'rgba(255,0,0,.35)'; ctx.beginPath(); ctx.arc(striker.x, striker.y, CFG.strikerR + 6, 0, 7); ctx.fill();
         }
-        // aim guide: apna, bot ka aur online opponent ka - sabka dikhta hai
-        if (aim.on && aim.power > 0.03) {
-          var rc = rayCast(S, striker.x, striker.y, aim.dx, aim.dy, CFG.strikerR);
-          var GUIDE = 330;                       // guide ki max lambai
-          var gl = Math.min(rc.t, GUIDE), gi, gn, ga;
+        // aim guide (Carrom Pool style): apna, bot ka aur online opponent ka - sabka dikhta hai
+        if (aim.on) {
           ctx.save();
           ctx.lineCap = 'round';
-          // pull-back band: striker ke peeche, power ke hisab se
-          ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 12;
-          ctx.beginPath(); ctx.moveTo(striker.x, striker.y);
-          ctx.lineTo(striker.x - aim.dx * aim.power * 120, striker.y - aim.dy * aim.power * 120); ctx.stroke();
-          // chhote dots, door jaate hue fade
-          gn = Math.floor(gl / 26);
-          for (gi = 1; gi <= gn; gi++) {
-            ga = 1 - (gi / (gn + 1)) * 0.85;
-            ctx.fillStyle = 'rgba(255,255,255,' + ga.toFixed(2) + ')';
-            ctx.beginPath(); ctx.arc(striker.x + aim.dx * gi * 26, striker.y + aim.dy * gi * 26, 5, 0, 7); ctx.fill();
-          }
-          // ghost striker: sirf jab gotti paas ho
-          if (rc.hit && rc.t <= GUIDE) {
-            ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(rc.x, rc.y, CFG.strikerR, 0, 7); ctx.stroke();
-            var cdx = rc.hit.x - rc.x, cdy = rc.hit.y - rc.y, cl = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
-            for (gi = 1; gi <= 3; gi++) {
-              ctx.fillStyle = 'rgba(255,220,90,' + (1 - gi * 0.25).toFixed(2) + ')';
-              ctx.beginPath(); ctx.arc(rc.hit.x + cdx / cl * gi * 24, rc.hit.y + cdy / cl * gi * 24, 4.5, 0, 7); ctx.fill();
+          // 1) bada dotted circle (max pull range)
+          ctx.setLineDash([2, 9]);
+          ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(25,12,5,.7)';
+          ctx.beginPath(); ctx.arc(striker.x, striker.y, CFG.maxPull, 0, 7); ctx.stroke();
+          ctx.setLineDash([]);
+
+          if (aim.power > 0.03) {
+            var pw = aim.power, dxn = aim.dx, dyn = aim.dy, gi, d;
+
+            // 2) pull-back: striker ke peeche kaale dots (power ke hisaab se lambe)
+            var back = CFG.strikerR + 16 + pw * (CFG.maxPull - CFG.strikerR - 16);
+            for (d = CFG.strikerR + 18, gi = 0; d <= back; d += 24, gi++) {
+              ctx.fillStyle = 'rgba(25,12,5,' + Math.max(0.3, 0.85 - gi * 0.035).toFixed(2) + ')';
+              ctx.beginPath(); ctx.arc(striker.x - dxn * d, striker.y - dyn * d, Math.max(3, 6.5 - gi * 0.35), 0, 7); ctx.fill();
+            }
+
+            // 3) gradient arrow (shot ki direction me)
+            var a0 = CFG.strikerR + 10, alen = 70 + pw * 170, aend = a0 + alen, head = 46, neck = aend - head;
+            ctx.save();
+            ctx.translate(striker.x, striker.y); ctx.rotate(Math.atan2(dyn, dxn));
+            var gr = ctx.createLinearGradient(a0, 0, aend, 0);
+            gr.addColorStop(0, '#ffe14d'); gr.addColorStop(0.55, '#ffa21f'); gr.addColorStop(1, '#ff3b1a');
+            ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+            ctx.fillStyle = gr;
+            ctx.beginPath();
+            ctx.moveTo(a0, -6); ctx.lineTo(neck, -11); ctx.lineTo(neck, -27);
+            ctx.lineTo(aend, 0);
+            ctx.lineTo(neck, 27); ctx.lineTo(neck, 11); ctx.lineTo(a0, 6);
+            ctx.closePath(); ctx.fill();
+            ctx.shadowColor = 'transparent';
+            ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(110,40,0,.55)'; ctx.stroke();
+            ctx.restore();
+
+            // 4) arrow ke aage safed guide dots (gotti ya wall tak)
+            var rc = rayCast(S, striker.x, striker.y, dxn, dyn, CFG.strikerR);
+            var gl = Math.min(rc.t, 520);
+            for (d = aend + 18, gi = 0; d < gl; d += 26, gi++) {
+              ctx.fillStyle = 'rgba(255,255,255,' + Math.max(0.25, 1 - gi * 0.09).toFixed(2) + ')';
+              ctx.beginPath(); ctx.arc(striker.x + dxn * d, striker.y + dyn * d, Math.max(3.5, 6.5 - gi * 0.3), 0, 7); ctx.fill();
+            }
+
+            // 5) ghost striker + gotti ki direction (sirf jab gotti raste me ho)
+            if (rc.hit && rc.t <= 520) {
+              ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 3;
+              ctx.beginPath(); ctx.arc(rc.x, rc.y, CFG.strikerR, 0, 7); ctx.stroke();
+              var cdx = rc.hit.x - rc.x, cdy = rc.hit.y - rc.y, cl = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
+              for (gi = 1; gi <= 4; gi++) {
+                ctx.fillStyle = 'rgba(255,255,255,' + (1 - gi * 0.2).toFixed(2) + ')';
+                ctx.beginPath(); ctx.arc(rc.hit.x + cdx / cl * gi * 26, rc.hit.y + cdy / cl * gi * 26, 5, 0, 7); ctx.fill();
+              }
             }
           }
-          // power ring (striker ke aas-paas)
-          ctx.lineWidth = 8; ctx.strokeStyle = 'hsl(' + (120 - aim.power * 120) + ',90%,55%)';
-          ctx.beginPath(); ctx.arc(striker.x, striker.y, CFG.strikerR + 13, -Math.PI / 2, -Math.PI / 2 + aim.power * Math.PI * 2); ctx.stroke();
           ctx.restore();
         }
       }
