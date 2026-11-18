@@ -103,7 +103,7 @@
       });
     });
 
-    /* Tasks  (NEW: ad fields adNet / adBlock / adLimit / adKind / adId pass hote hain) */
+    /* Tasks  (NEW: adNet / adBlock / adLimit / adKind / adId app tak pahunchte hain) */
     safe('tasks', () => {
       if (CFG.tasks == null) return;
       const rows = arr(CFG.tasks);
