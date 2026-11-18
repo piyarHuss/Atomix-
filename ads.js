@@ -1,22 +1,15 @@
 /* =====================================================================
-   ads.js  -  Ludo Masters  (Adsgram + Monetag)  -  ADMIN PANEL COMPATIBLE
+   ads.js v2 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
    Load order (index.html):
-     profile_plus.js  ->  remote_config.js  ->  ads.js  ->  boot();
+     profile_plus.js -> remote_config.js -> ads.js -> boot();
 
-   Ye file ab admin panel ke fields padhti hai (RC.ads):
-     enabled, pNet, pBlock, fNet, fBlock, cooldownSec, maxAdsPerDay,
-     taskOn, taskBlock, taskReward, taskIntervalMin, maxTaskPerDay, monetagSdk
-   Aur har Watch Ad task ke fields (task object):
-     adNet, adBlock, adLimit, id
-
-   Watch Ad card se ad chalane ke liye:  showRewardedAd(cb, task)
-     task = poora task object ya task ka id. Na do to Default (Primary) chalega.
-
-   Reward tabhi milta hai jab user ad poora dekhe. Skip = reward nahi, fallback bhi nahi.
-   Ad na mile (error) = Fallback chalega. Ads Network ke default neeche DEF me hain.
+   v2: Watch Ad card ki pehchan pakki (id / title+subtitle / card order).
+       Pehchan na ho to toast: "Card pehchana nahi gaya".
+   DEBUG = true: har ad par toast me "task=<id> | chain=..." dikhega (testing).
+   LIVE se pehle DEBUG = false karo.
    ===================================================================== */
 (() => {
-  const DEBUG = false;   /* true karke Telegram ke andar test karo, toast me exact error aayega. Live se pehle false */
+  const DEBUG = true;
 
   const DEF = {
     pNet: 'adsgram', pBlock: '59522',
@@ -24,27 +17,31 @@
     cooldownSec: 20, maxAdsPerDay: 0,
     taskOn: true, taskBlock: 'task-59520', taskReward: 10, taskIntervalMin: 5, maxTaskPerDay: 0,
     monetagSdk: '//libtl.com/sdk.js',
-    intBlock: 'int-59518',          /* result screen interstitial */
-    intGapMs: 180000                /* interstitial ke beech kam se kam 3 minute */
+    intBlock: 'int-59518',
+    intGapMs: 180000
   };
   const num2 = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+  /* admin panel ki value kisi bhi naam se aaye (Adsgram Rewarded, monetag_r ...) -> adsgram / monetag */
+  const normNet = n => { n = String(n || '').toLowerCase(); return n.includes('monetag') ? 'monetag' : n.includes('adsgram') ? 'adsgram' : n === 'demo' ? 'demo' : ''; };
   const cfg = () => {
     const a = (window.RC && window.RC.ads) || {};
     const o = {};
     Object.keys(DEF).forEach(k => { o[k] = (a[k] !== undefined && a[k] !== null && a[k] !== '') ? a[k] : DEF[k]; });
-    if (a.fNet === 'none') { o.fNet = 'none'; o.fBlock = ''; }
+    o.pNet = normNet(o.pNet) || 'adsgram';
+    o.fNet = normNet(o.fNet);
+    if (a.fNet === 'none') { o.fNet = ''; o.fBlock = ''; }
     if (a.fBlock === '' && a.fNet !== undefined) o.fBlock = '';
     o.enabled = a.enabled !== false;
     o.taskOn = a.taskOn !== false && o.taskOn !== false;
     return o;
   };
   const inTg = () => !!(window.Telegram && Telegram.WebApp && Telegram.WebApp.initData);
-  const dbg = m => { if (DEBUG) { try { toast(String(m)); } catch (e) {} } console.warn('[ads]', m); };
+  const dbg = m => { if (DEBUG) { try { toast(String(m)); } catch (e) { } } console.warn('[ads]', m); };
 
   /* ---- localStorage helpers (soft limits) ---- */
   const LS = {
     get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
   };
   const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
   const dayState = () => { const s = LS.get('ads_day', null); return (s && s.d === today()) ? s : { d: today(), t: 0, c: {}, tk: 0 }; };
@@ -70,9 +67,18 @@
     }));
     return MZ[z];
   }
-  { const c = cfg(); if (c.fNet === 'monetag' && c.fBlock) ensureMonetag(c.fBlock); if (c.pNet === 'monetag' && c.pBlock) ensureMonetag(c.pBlock); }
+  /* sab Monetag zones pehle se load karo (primary, fallback, aur har task card ke) */
+  function preloadMonetag() {
+    const c = cfg(), zones = new Set();
+    if (c.fNet === 'monetag' && c.fBlock) zones.add(String(c.fBlock));
+    if (c.pNet === 'monetag' && c.pBlock) zones.add(String(c.pBlock));
+    adTasks().forEach(t => { if (normNet(t.adNet) === 'monetag' && t.adBlock) zones.add(String(t.adBlock)); });
+    zones.forEach(z => ensureMonetag(z));
+  }
+  setTimeout(preloadMonetag, 1500);
+  setTimeout(preloadMonetag, 6000);   /* config Firebase se aane ke baad dobara */
 
-  /* ---- providers: resolve = user ne ad dekha | reject(err.skipped) = skip | reject = ad nahi mila ---- */
+  /* ---- providers ---- */
   const run = {
     demo: () => new Promise(res => _demo(res)),
     adsgram: block => new Promise((res, rej) => {
@@ -81,7 +87,6 @@
         window.Adsgram.init({ blockId: String(block) }).show()
           .then(r => (r && r.done === false) ? rej(Object.assign(new Error('skipped'), { skipped: 1 })) : res())
           .catch(e => {
-            /* Adsgram: error:true = ad mila hi nahi, warna user ne skip/close kiya */
             if (e && e.error === false) rej(Object.assign(new Error('skipped'), { skipped: 1 }));
             else rej(new Error((e && (e.description || e.message)) || 'Adsgram no ad'));
           });
@@ -94,7 +99,7 @@
   };
 
   /* ---- Rewarded ad (Watch Ad tasks) ---- */
-  const _demo = showRewardedAd;     /* purana 3 second wala demo ad */
+  const _demo = showRewardedAd;
   function loadingBox(on) {
     let o = document.getElementById('ad-load');
     if (!on) { if (o) o.remove(); return; }
@@ -103,30 +108,64 @@
     o.innerHTML = '<div class="ad-box"><b>Loading ad…</b><small>Please wait</small></div>';
     document.getElementById('app').appendChild(o);
   }
-  const adTasks = () => ((window.RC && window.RC.tasks) ? Object.values(window.RC.tasks) : []).filter(x => x && x.kind === 'ad');
+  const adTasks = () => ((window.RC && window.RC.tasks) ? Object.values(window.RC.tasks) : [])
+    .filter(x => x && x.kind === 'ad' && x.enabled !== false);
+
+  /* ---- CARD PEHCHAN: kaun sa Watch Ad card dabaya ---- */
+  const reEsc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const clean = s => String(s || '').replace(/\s+/g, ' ').trim();
+  function detectTask(el) {
+    const list = adTasks(); if (!list.length || !el) return null;
+    /* 1) onclick / data-* / id me task id (hyphen ke saath) */
+    let n = el, d = 0;
+    while (n && n !== document.body && d < 8) {
+      const s = (n.getAttribute ? (n.getAttribute('onclick') || '') : '') + ' ' + (n.dataset ? Object.values(n.dataset).join(' ') : '') + ' ' + (n.id || '');
+      const hit = list.find(x => new RegExp('(^|[^\\w-])' + reEsc(x.id) + '($|[^\\w-])').test(s));
+      if (hit) return hit;
+      n = n.parentElement; d++;
+    }
+    /* 2) card ka title + subtitle text */
+    n = el; d = 0;
+    while (n && n !== document.body && d < 8) {
+      const tx = clean(n.textContent);
+      if (tx && tx.length < 500) {
+        const m = list.filter(x => x.t && tx.includes(clean(x.t)) && (!x.sub || tx.includes(clean(x.sub))));
+        if (m.length === 1) return m[0];
+        if (m.length > 1) {
+          /* 3) same title wale cards: order se pehchano */
+          const par = n.parentElement;
+          if (par) {
+            const sibs = [...par.children].filter(c => c.tagName === n.tagName && c.className === n.className && m.some(x => clean(c.textContent).includes(clean(x.t))));
+            const i = sibs.indexOf(n);
+            if (i >= 0 && m[i]) return m[i];
+          }
+          return null;
+        }
+      }
+      n = n.parentElement; d++;
+    }
+    return null;
+  }
+  document.addEventListener('click', e => {
+    try {
+      const hit = detectTask(e.target);
+      if (hit) { window.__adTask = hit.id; setTimeout(() => { window.__adTask = null; }, 1500); }
+      else window.__adTask = null;
+    } catch (err) { console.warn('[ads] detect error', err); }
+  }, true);
+
   function findTask(t) {
     if (t && typeof t === 'object') return t;
     if (t == null || t === '') { t = window.__adTask; window.__adTask = null; if (!t) return null; }
-    return adTasks().find(x => x.id === t) || null;
+    return adTasks().find(x => String(x.id) === String(t)) || null;
   }
-
-  /* Button ke click se pehle (capture) pata kar lo ki kaun sa Watch Ad card dabaya gaya.
-     Isse app ka task-click code badle bina har card ka apna ad + apni limit chalti hai. */
-  document.addEventListener('click', e => {
-    try {
-      const el = e.target.closest && e.target.closest('[onclick],[data-id],[data-t]');
-      if (!el) return;
-      const s = (el.getAttribute('onclick') || '') + ' ' + (el.dataset.id || '') + ' ' + (el.dataset.t || '');
-      const hit = adTasks().find(x => new RegExp('(^|[\\s\'"(,])' + String(x.id).replace(/[^\w]/g, '') + '([\\s\'")]|$)').test(s));
-      if (hit) { window.__adTask = hit.id; setTimeout(() => { window.__adTask = null; }, 1500); }
-    } catch (err) { }
-  }, true);
 
   showRewardedAd = function (cb, taskArg) {
     const c = cfg();
     if (!c.enabled) { toast('Ads are turned off'); return; }
     const task = findTask(taskArg), tid = task && task.id ? String(task.id) : '';
     const st = dayState();
+    if (!task && adTasks().length) dbg('Card pehchana nahi gaya: Default (Primary) chalega');
 
     /* daily limits */
     if (c.maxAdsPerDay > 0 && st.t >= c.maxAdsPerDay) { toast('Daily ad limit reached. Come back tomorrow'); return; }
@@ -139,12 +178,12 @@
 
     /* ad chain: card ka apna ad -> (nahi to) Primary -> Fallback */
     const chain = [];
-    const add = (net, block) => { if (net && net !== 'none' && block && run[net] && !chain.some(x => x.net === net && x.block === String(block))) chain.push({ net, block: String(block) }); };
-    if (task && task.kind === 'ad' && task.adNet && task.adBlock) add(task.adNet, task.adBlock);
+    const add = (net, block) => { net = normNet(net); if (net && block && run[net] && !chain.some(x => x.net === net && x.block === String(block))) chain.push({ net, block: String(block) }); };
+    if (task && normNet(task.adNet) && task.adBlock) add(task.adNet, task.adBlock);
     else add(c.pNet, c.pBlock);
     add(c.fNet, c.fBlock);
     if (!chain.length) chain.push({ net: 'demo', block: '' });
-    dbg('chain: ' + chain.map(x => x.net + ':' + x.block).join(' -> ') + ' | task=' + (tid || 'none (Default)') + ' | RC.ads.pBlock=' + ((window.RC && window.RC.ads && window.RC.ads.pBlock) || 'MISSING'));
+    dbg('task=' + (tid || 'NONE') + ' | ' + chain.map(x => x.net + ':' + x.block).join(' -> '));
 
     let finished = 0;
     loadingBox(true);
@@ -157,7 +196,7 @@
         LS.set('ads_last', Date.now());
         cb();                                                          /* reward sirf yahan */
       }).catch(e => {
-        if (e && e.skipped) { loadingBox(false); toast('Ad skipped. Reward nahi mila'); return; }   /* skip par fallback nahi */
+        if (e && e.skipped) { loadingBox(false); toast('Ad skipped. Reward nahi mila'); return; }
         dbg(p.net + ' ' + p.block + ' failed: ' + (e && e.message || e));
         next(i + 1);
       });
@@ -172,7 +211,7 @@
     lastInt = Date.now();
     let d = 0; const go2 = () => { if (!d) { d = 1; then(); } };
     try { window.Adsgram.init({ blockId: String(c.intBlock) }).show().then(go2).catch(go2); } catch (e) { go2(); }
-    setTimeout(go2, 20000);   /* kuch atak jaye to bhi aage badho */
+    setTimeout(go2, 20000);
   }
   const _ra = resAgain, _rh = resHome;
   resAgain = function () { if (RES.busy) return; interstitial(() => _ra()); };
