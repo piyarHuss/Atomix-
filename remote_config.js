@@ -1,12 +1,10 @@
 /* =====================================================================
-   remote_config.js  v2  —  Ludo Masters  (Admin Panel se poora control)
+   remote_config.js  v3  -  Ludo Masters  (Admin Panel se poora control)
    Load order (index.html):
      <script src="profile_plus.js"></script>
      <script src="remote_config.js"></script>
+     <script src="ads.js"></script>
      <script>boot();</script>
-   Admin panel ka "Save & Publish" -> Firebase config/*  -> yahan se app par lagta hai.
-   Control hota hai: App Settings, Games, Packs, Pools, Daily Rewards,
-   Missions, Tasks, Login/Big bonus, Ads on/off, Maintenance, Announcement, Ban.
    ===================================================================== */
 (() => {
   const CK = 'lm_cfg_v2';
@@ -17,7 +15,7 @@
   const dkey = d => { d = new Date(d); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
   const safe = (name, f) => { try { f(); } catch (e) { console.error('[remote_config] ' + name + ' failed:', e); } };
 
-  /* ---- app ke ORIGINAL (default) values, taaki config dobara lagne par sahi se reset ho ---- */
+  /* ---- app ke ORIGINAL (default) values ---- */
   const ORIG = {
     pools: POOLS.map(x => Object.assign({}, x)),
     dr: DR.map(x => Object.assign({}, x)),
@@ -36,7 +34,7 @@
   window.tkLink = id => {
     const u = window.TKURL[id]; if (!u) return;
     try { window.open(u, '_blank'); } catch (e) { location.href = u; }
-    setTimeout(() => { tkAdd(id); go('tasks'); }, 5000);          /* link khulne ke ~5 sec baad progress */
+    setTimeout(() => { tkAdd(id); go('tasks'); }, 5000);
   };
   window.inviteTask = id => {
     const d = { title: 'Ludo Masters', text: 'Join me on Ludo Masters and win rewards!', url: location.href };
@@ -49,26 +47,22 @@
     try { localStorage.setItem(CK, JSON.stringify(CFG)); } catch (e) { }
     const a = CFG.app || {};
 
-    /* App settings */
-    safe('minWd', () => { if (a.minWd != null) MIN_WD = num(a.minWd) || MIN_WD; });          /* profile_plus.js me const -> let chahiye */
+    safe('minWd', () => { if (a.minWd != null) MIN_WD = num(a.minWd) || MIN_WD; });
     safe('demoPayments', () => { if (a.demoPayments != null) DEMO_PAYMENTS = !!a.demoPayments; });
     if (a.turnSeconds) window.LUDO_TURN_SECONDS = num(a.turnSeconds);
     RCX.loginBonus = a.loginBonus != null ? num(a.loginBonus) : 10;
     RCX.bigBonus = a.bigBonus != null ? num(a.bigBonus) : 50;
     RCX.adsOn = !(CFG.ads && CFG.ads.enabled === false);
 
-    /* Games on/off + title */
     safe('games', () => arr(CFG.games).forEach(g => {
       if (g && GAMES[g.key]) { GAMES[g.key].ready = !!g.ready; if (g.title) GAMES[g.key].title = g.title; }
     }));
 
-    /* Store / Deposit packs */
     safe('packs', () => {
       const p = arr(CFG.packs);
       if (p.length) { DEP_AMT.length = 0; p.forEach(x => DEP_AMT.push(num(x.amt))); }
     });
 
-    /* Pools & Cards */
     safe('pools', () => {
       if (CFG.pools == null) return;
       const rows = arr(CFG.pools).filter(r => r.enabled !== false);
@@ -84,20 +78,18 @@
       });
     });
 
-    /* Daily rewards (7 din) */
     safe('daily', () => {
       if (CFG.daily == null) return;
       const rows = arr(CFG.daily);
       for (let i = 0; i < 7; i++) {
         const r = rows[i]; if (!r) { DR[i] = Object.assign({}, ORIG.dr[i]); continue; }
         let g = num(r.g), c = num(r.c);
-        if (!g && !c) g = 10;                                   /* dono 0 -> 10 diamond */
-        if (i === 6) DR[i] = { g, c };                          /* Day 7 me dono dikhte hain */
+        if (!g && !c) g = 10;
+        if (i === 6) DR[i] = { g, c };
         else { const o = {}; if (g) o.g = g; if (c) o.c = c; DR[i] = o; }
       }
     });
 
-    /* Missions */
     safe('missions', () => {
       if (CFG.missions == null) return;
       const rows = arr(CFG.missions);
@@ -111,19 +103,21 @@
       });
     });
 
-    /* Tasks */
+    /* Tasks  (NEW: ad fields adNet / adBlock / adLimit / adKind / adId pass hote hain) */
     safe('tasks', () => {
       if (CFG.tasks == null) return;
       const rows = arr(CFG.tasks);
       TASKS.length = 0; window.TKURL = {};
       rows.forEach(r => {
         if (r.enabled === false) return;
-        if (r.kind === 'ad' && !RCX.adsOn) return;               /* Ads Network OFF = ad tasks hide */
+        if (r.kind === 'ad' && !RCX.adsOn) return;
         const o = ORIG.tasks.find(x => x.id === r.id) || {};
         const t = Object.assign({}, o, {
           id: r.id, sec: r.sec === 'ads' ? 'ads' : 'tasks', t: r.t || 'Task', sub: r.sub || '',
           n: num(r.n) > 0 ? num(r.n) : 1, r: num(r.r), kind: r.kind, btn: r.btn || 'Go',
-          ic: r.ic || o.ic || 'title_gamepad', e: o.e || '✅'
+          ic: r.ic || o.ic || 'title_gamepad', e: o.e || '✅',
+          adNet: r.adNet || '', adBlock: r.adBlock || '', adLimit: num(r.adLimit),
+          adKind: r.adKind || '', adId: r.adId || ''
         });
         if (r.kind === 'ad') { delete t.go; }
         else if (r.kind === 'link') { window.TKURL[r.id] = r.url || ''; t.go = "tkLink('" + r.id + "')"; }
@@ -134,7 +128,7 @@
     });
   }
 
-  /* ---- Login bonus / Big bonus: amount admin se ---- */
+  /* ---- Login bonus / Big bonus ---- */
   claimLogin = function (b) {
     if (TK.login) return; TK.login = 1; tkSave();
     rewardFx(b, { g: RCX.loginBonus }, () => go('tasks'));
@@ -154,7 +148,7 @@
     };
   })();
 
-  /* ---- Store page: cards admin ke packs se ---- */
+  /* ---- Store page ---- */
   (() => {
     const o = V.store;
     const kfmt = n => n >= 1000 ? (n / 1000).toFixed(n % 1000 ? 1 : 0) + 'k' : String(n);
@@ -188,7 +182,6 @@
     else unblock('rc-mt');
   }
 
-  /* ---- announcement (ek baar; text badle to phir) ---- */
   function announce() {
     const t = ((CFG.app || {}).announcement || '').trim(); if (!t) return;
     let seen = ''; try { seen = localStorage.getItem('lm_ann') || ''; } catch (e) { }
@@ -197,7 +190,6 @@
     setTimeout(() => toast('📢 ' + t), 1500);
   }
 
-  /* ---- tracking: createdAt, lastSeen, daily activity (admin Dashboard) ---- */
   function track() {
     if (!UID) return;
     const u = db().ref('users/' + UID);
@@ -213,7 +205,6 @@
     }).catch(() => { });
   }
 
-  /* ---- pehli baar data aane par ---- */
   const SAFE_RERENDER = ['home', 'games', 'store', 'pool', 'missions', 'tasks', 'menu', 'profile', 'wallet', 'community', 'avatars', 'stats'];
   const _ar = applyRemote;
   let started = false;
@@ -221,7 +212,7 @@
     _ar(v, first);
     if (first && !started) {
       started = true;
-      applyCfg(CFG); maint();                                   /* cache se turant (pehle render se pehle) */
+      applyCfg(CFG); maint();
       db().ref('config').once('value').then(s => {
         applyCfg(s.val() || {}); maint(); announce();
         if (SAFE_RERENDER.includes(cur) && !document.getElementById('pp-sh') && !document.getElementById('dr')) { try { rer(); } catch (e) { } }
@@ -230,7 +221,7 @@
     }
   };
 
-  /* ---- Deposit: deposits list + total + VIP + diamonds ---- */
+  /* ---- Deposit ---- */
   const _od = onDepositSuccess;
   onDepositSuccess = function (amount) {
     const pack = arr(CFG.packs).find(p => num(p.amt) === num(amount)) || { gems: 0 };
