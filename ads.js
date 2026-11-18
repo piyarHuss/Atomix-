@@ -1,7 +1,6 @@
 /* =====================================================================
-   ads.js v6 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
+   ads.js v7 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
    Load order: profile_plus.js -> remote_config.js -> ads.js -> boot();
-   remote_config.js v3 wala hi rakho (usme badlav nahi).
    Testing ke baad DEBUG = false kar dena.
    Count reset: localStorage.removeItem('ads_day')
    ===================================================================== */
@@ -92,17 +91,27 @@
 
   const run = {
     demo: () => new Promise(res => _demo(res)),
+
+    /* Adsgram: "BlockId should starts with int-" error aaye to khud int- laga kar ek baar dobara */
     adsgram: block => new Promise((res, rej) => {
       if (!window.Adsgram || !inTg()) return rej(new Error('Adsgram only works inside Telegram'));
-      try {
-        window.Adsgram.init({ blockId: String(block) }).show()
-          .then(r => (r && r.done === false) ? rej(Object.assign(new Error('skipped'), { skipped: 1 })) : res())
-          .catch(e => {
-            if (e && e.error === false) rej(Object.assign(new Error('skipped'), { skipped: 1 }));
-            else rej(new Error((e && (e.description || e.message)) || 'Adsgram no ad'));
-          });
-      } catch (e) { rej(e); }
+      const digits = String(block).replace(/^\D*/, '');
+      const attempt = (id, retry) => {
+        const fail = e => {
+          if (e && e.error === false) return rej(Object.assign(new Error('skipped'), { skipped: 1 }));
+          const msg = String((e && (e.description || e.message)) || '');
+          if (retry && /int-/i.test(msg) && id.indexOf('int-') !== 0) return attempt('int-' + digits, false);
+          rej(new Error(msg || 'Adsgram no ad'));
+        };
+        try {
+          window.Adsgram.init({ blockId: id }).show()
+            .then(r => (r && r.done === false) ? rej(Object.assign(new Error('skipped'), { skipped: 1 })) : res())
+            .catch(fail);
+        } catch (e) { fail(e); }
+      };
+      attempt(String(block), true);
     }),
+
     monetag: block => ensureMonetag(block).then(fn => {
       if (!fn) throw new Error('Monetag SDK not loaded (zone ' + block + ')');
       const t0 = Date.now();
@@ -206,11 +215,15 @@
     const wait = Math.ceil((LS.get('ads_last', 0) + c.cooldownSec * 1000 - Date.now()) / 1000);
     if (c.cooldownSec > 0 && wait > 0) { if (userClick) toast('Next ad in ' + wait + 's'); return; }
 
+    /* chain: card ka apna ad ho to SIRF wahi (fallback nahi). Warna Primary -> Fallback */
     const chain = [];
     const add = (net, block) => { net = normNet(net); if (net && block && run[net] && !chain.some(x => x.net === net && x.block === String(block))) chain.push({ net, block: String(block) }); };
-    if (task && normNet(task.adNet) && task.adBlock) add(task.adNet, task.adBlock);
-    else add(c.pNet, c.pBlock);
-    add(c.fNet, c.fBlock);
+    if (task && normNet(task.adNet) && task.adBlock) {
+      add(task.adNet, task.adBlock);
+    } else {
+      add(c.pNet, c.pBlock);
+      add(c.fNet, c.fBlock);
+    }
     if (!chain.length) chain.push({ net: 'demo', block: '' });
     dbg('task=' + (tid || 'NONE') + ' via=' + f.via + ' adNet=' + (task && task.adNet || '-') + ' used=' + used + '/' + lim + ' | ' + chain.map(x => x.net + ':' + x.block).join(' -> '));
 
@@ -225,7 +238,7 @@
         if (finished) return; finished = 1; end();
         const s2 = dayState(); s2.t++; if (tid) s2.c[tid] = (s2.c[tid] || 0) + 1; saveDay(s2);
         LS.set('ads_last', Date.now());
-        cb();
+        cb();                                          /* reward sirf yahan */
       }).catch(e => {
         if (e && e.skipped) { end(); toast('Ad skipped. Reward nahi mila'); return; }
         dbg(p.net + ' ' + p.block + ' failed: ' + (e && e.message || e));
