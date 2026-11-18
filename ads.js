@@ -1,11 +1,12 @@
 /* =====================================================================
-   ads.js v5 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
+   ads.js v6 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
    Load order: profile_plus.js -> remote_config.js -> ads.js -> boot();
-   Debug: console me  localStorage.setItem('ads_debug','1')  (band: removeItem)
+   remote_config.js v3 wala hi rakho (usme badlav nahi).
+   Testing ke baad DEBUG = false kar dena.
    Count reset: localStorage.removeItem('ads_day')
    ===================================================================== */
 (() => {
-  const DEBUG = (() => { try { return localStorage.getItem('ads_debug') === '1'; } catch (e) { return false; } })();
+  const DEBUG = true;   /* TEST: toast me chain dikhega. Live me false */
 
   const DEF = {
     pNet: 'adsgram', pBlock: '59522',
@@ -155,59 +156,63 @@
     return null;
   }
 
-  let lastClick = 0;   /* user ne abhi click kiya ya nahi (limit toast sirf asli click par) */
+  let lastClick = 0;
   document.addEventListener('click', e => {
     lastClick = Date.now();
     try {
       const hit = detectTask(e.target);
-      if (hit) { window.__adTask = hit.id; setTimeout(() => { window.__adTask = null; }, 1500); }
+      if (hit) { window.__adTask = hit.id; setTimeout(() => { window.__adTask = null; }, 4000); }
       else window.__adTask = null;
     } catch (err) { console.warn('[ads] detect error', err); }
   }, true);
 
-  function findTask(t) {
-    if (t && typeof t === 'object') return t;
-    if (t == null || t === '') { t = window.__adTask; window.__adTask = null; if (!t) return null; }
-    return adTasks().find(x => String(x.id) === String(t)) || null;
+  /* Card dhundo: (1) argument  (2) click se  (3) cb function ke text me id */
+  function findTask(t, cb) {
+    if (t && typeof t === 'object') return { task: t, via: 'arg' };
+    let via = 'arg';
+    if (t == null || t === '') { t = window.__adTask; window.__adTask = null; via = 'click'; }
+    let hit = t ? adTasks().find(x => String(x.id) === String(t)) : null;
+    if (hit) return { task: hit, via };
+    try {
+      const src = String(cb || '');
+      hit = adTasks().find(x => src.indexOf("'" + x.id + "'") > -1 || src.indexOf('"' + x.id + '"') > -1);
+      if (hit) return { task: hit, via: 'cb' };
+    } catch (e) { }
+    return { task: null, via: 'none' };
   }
   const taskDone = id => { try { return !!(typeof TK !== 'undefined' && TK.c && TK.c[id]); } catch (e) { return false; } };
 
   let busy = 0, lastEnd = 0;
 
   showRewardedAd = function (cb, taskArg) {
-    /* ad chal raha ho ya abhi khatam hua ho to dobara call ignore (chupchap) */
     if (busy || Date.now() - lastEnd < 1500) return;
 
     const c = cfg();
     if (!c.enabled) { toast('Ads are turned off'); return; }
     const userClick = Date.now() - lastClick < 1000;
-    const task = findTask(taskArg), tid = task && task.id ? String(task.id) : '';
+    const f = findTask(taskArg, cb), task = f.task, tid = task && task.id ? String(task.id) : '';
     const st = dayState();
 
-    /* total daily limit */
     if (c.maxAdsPerDay > 0 && st.t >= c.maxAdsPerDay) { if (userClick) toast('Daily ad limit reached. Come back tomorrow'); return; }
 
-    /* is card ki daily limit */
     const lim = task ? Math.round(num2(task.adLimit)) : 0;
     const used = tid ? (st.c[tid] || 0) : 0;
     if (lim > 0 && tid && used >= lim) {
-      if (taskDone(tid)) return;                       /* task poora ho chuka: koi message nahi */
+      if (taskDone(tid)) return;
       if (userClick) toast('Daily limit poori: ' + used + '/' + lim);
       return;
     }
 
-    /* cooldown */
     const wait = Math.ceil((LS.get('ads_last', 0) + c.cooldownSec * 1000 - Date.now()) / 1000);
     if (c.cooldownSec > 0 && wait > 0) { if (userClick) toast('Next ad in ' + wait + 's'); return; }
 
-    /* chain: card ka ad -> Primary -> Fallback */
     const chain = [];
     const add = (net, block) => { net = normNet(net); if (net && block && run[net] && !chain.some(x => x.net === net && x.block === String(block))) chain.push({ net, block: String(block) }); };
     if (task && normNet(task.adNet) && task.adBlock) add(task.adNet, task.adBlock);
     else add(c.pNet, c.pBlock);
     add(c.fNet, c.fBlock);
     if (!chain.length) chain.push({ net: 'demo', block: '' });
-    dbg('task=' + (tid || 'NONE') + ' used=' + used + '/' + lim + ' | ' + chain.map(x => x.net + ':' + x.block).join(' -> '));
+    dbg('task=' + (tid || 'NONE') + ' via=' + f.via + ' adNet=' + (task && task.adNet || '-') + ' used=' + used + '/' + lim + ' | ' + chain.map(x => x.net + ':' + x.block).join(' -> '));
 
     let finished = 0;
     busy = 1;
@@ -220,7 +225,7 @@
         if (finished) return; finished = 1; end();
         const s2 = dayState(); s2.t++; if (tid) s2.c[tid] = (s2.c[tid] || 0) + 1; saveDay(s2);
         LS.set('ads_last', Date.now());
-        cb();                                          /* reward sirf yahan */
+        cb();
       }).catch(e => {
         if (e && e.skipped) { end(); toast('Ad skipped. Reward nahi mila'); return; }
         dbg(p.net + ' ' + p.block + ' failed: ' + (e && e.message || e));
