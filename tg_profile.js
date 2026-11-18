@@ -1,28 +1,47 @@
-/* tg_profile.js — Telegram naam + photo avatar
-   Load: profile_plus.js -> deposit.js -> fast_deposit.js -> tg_profile.js -> boot() */
+/* tg_profile.js v3 — Telegram naam + photo avatar
+   Load: [telegram-web-app.js] -> profile_plus.js -> deposit.js -> fast_deposit.js -> tg_profile.js?v=3 -> boot() */
 (() => {
-  const UNICODE = true;    /* true = Hindi etc naam allowed, false = sirf English */
-  const AV = 99;           /* Telegram avatar ka special number */
+  const UNICODE = true;   /* true = Hindi etc naam allowed */
+  const DEBUG = true;     /* true = shuru me toast dikhega (testing). Live me false karo */
+  const AV = 99;
 
-  const U = window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user;
-  if (!U) return;
+  /* ---- Telegram user dhoondho (SDK, initData, URL hash, sessionStorage) ---- */
+  const parse = d => { try { const u = new URLSearchParams(d).get('user'); return u ? JSON.parse(u) : null; } catch (e) { return null; } };
+  const getUser = () => {
+    try { const w = window.Telegram && Telegram.WebApp; if (w) { if (w.initDataUnsafe && w.initDataUnsafe.user) return w.initDataUnsafe.user; if (w.initData) { const u = parse(w.initData); if (u) return u; } } } catch (e) { }
+    try { const h = new URLSearchParams(location.hash.slice(1)).get('tgWebAppData'); if (h) { const u = parse(h); if (u) return u; } } catch (e) { }
+    try { const s = JSON.parse(sessionStorage.getItem('__telegram__initParams') || 'null'); if (s && s.tgWebAppData) { const u = parse(s.tgWebAppData); if (u) return u; } } catch (e) { }
+    return null;
+  };
 
   const BAD = UNICODE ? /[^\p{L}\p{N}_ ]/gu : /[^A-Za-z0-9_ ]/g;
   const OK = UNICODE ? /^[\p{L}\p{N}_ ]+$/u : /^[A-Za-z0-9_ ]+$/;
   const len = s => Array.from(s).length;
   const clean = s => Array.from(String(s || '').replace(BAD, '').replace(/ +/g, ' ').trim()).slice(0, 16).join('').trim();
 
-  let name = clean((U.first_name || '') + ' ' + (U.last_name || ''));
-  if (len(name) < 3) name = clean(U.username);
-  if (len(name) < 3) name = '';
+  let U = null, name = '', PHOTO = '', INIT = '';
+  const prep = () => {
+    if (U) return true;
+    U = getUser();
+    if (!U) return false;
+    name = clean((U.first_name || '') + ' ' + (U.last_name || ''));
+    if (len(name) < 3) name = clean(U.username);
+    if (len(name) < 3) name = '';
+    const letter = (Array.from(clean(U.first_name || U.username))[0] || 'P').toUpperCase();
+    INIT = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#7a3ff0"/>' +
+      '<text x="50" y="67" font-size="50" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle" fill="#fff">' + letter + '</text></svg>');
+    PHOTO = U.photo_url || INIT;
+    return true;
+  };
+  prep();   /* abhi try karo (hash badalne se pehle) */
 
-  const letter = (Array.from(clean(U.first_name || U.username))[0] || 'P').toUpperCase();
-  const INIT = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#7a3ff0"/>' +
-    '<text x="50" y="67" font-size="50" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle" fill="#fff">' + letter + '</text></svg>');
-  const PHOTO = U.photo_url || INIT;
+  if (DEBUG) setTimeout(() => {
+    prep();
+    try { toast('TG sdk: ' + (window.Telegram ? 'ok' : 'MISSING') + ' | user: ' + (U ? U.first_name : 'NOT FOUND') + ' | photo: ' + (U && U.photo_url ? 'yes' : 'no')); } catch (e) { }
+  }, 3500);
 
-  /* edit-name check (Hindi allow) */
+  /* ---- naam edit check (Hindi allow) ---- */
   if (UNICODE) ppCheck = function () {
     const n = document.getElementById('ppn').value.trim();
     let e = '';
@@ -32,11 +51,11 @@
     return { n, e };
   };
 
-  /* naam + pehli baar avatar */
+  /* ---- naam + pehli baar avatar ---- */
   const _ar = applyRemote;
   applyRemote = function (v, first) {
     _ar(v, first);
-    if (!first) return;
+    if (!first || !prep()) return;
     v = v || {};
     let ch = false;
     if (name && PROF.name === 'LudoKing123') {
@@ -54,9 +73,10 @@
     myAv = AV; dbSet('myAv', AV); rer(); toast('Telegram avatar selected');
   };
 
-  /* Avatars page: upar Telegram card */
+  /* ---- Avatars page: upar Telegram card ---- */
   const _av = V.avatars;
   V.avatars = function () {
+    if (!prep()) return _av();
     const sel = myAv === AV;
     const card = `<div class="av-card"><div class="av-sh">Telegram Avatar <small>From your account</small></div>
 <div class="av-g"><div class="av-t${sel ? ' sel' : ''}" onclick="tgPick()"><div class="av-im"><img class="as" src="assets/av${AV}.png" alt="">${sel ? '<b class="av-ck">✓</b>' : ''}</div>
@@ -64,11 +84,12 @@
     return _av().replace('<div class="av-card">', card + '<div class="av-card">');
   };
 
-  /* har av99 image -> Telegram photo (fail ho to initials) */
-  const sel = 'img[src*="av' + AV + '.png"]';
+  /* ---- har av99 image -> Telegram photo (fail ho to initials) ---- */
+  const SEL = 'img[src*="av' + AV + '.png"]';
   const fix = r => {
-    const l = r.matches && r.matches(sel) ? [r] : [];
-    if (r.querySelectorAll) r.querySelectorAll(sel).forEach(i => l.push(i));
+    if (!prep()) return;
+    const l = r.matches && r.matches(SEL) ? [r] : [];
+    if (r.querySelectorAll) r.querySelectorAll(SEL).forEach(i => l.push(i));
     l.forEach(i => {
       i.removeAttribute('onerror');
       i.referrerPolicy = 'no-referrer';
