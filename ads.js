@@ -1,15 +1,21 @@
 /* =====================================================================
-   ads.js v2 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
+   ads.js v3 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
    Load order (index.html):
      profile_plus.js -> remote_config.js -> ads.js -> boot();
 
-   v2: Watch Ad card ki pehchan pakki (id / title+subtitle / card order).
-       Pehchan na ho to toast: "Card pehchana nahi gaya".
-   DEBUG = true: har ad par toast me "task=<id> | chain=..." dikhega (testing).
-   LIVE se pehle DEBUG = false karo.
+   Admin panel fields (RC.ads):
+     enabled, pNet, pBlock, fNet, fBlock, cooldownSec, maxAdsPerDay,
+     taskOn, taskBlock, taskReward, taskIntervalMin, maxTaskPerDay, monetagSdk
+   Har Watch Ad task ke fields:
+     adNet, adBlock, adLimit, id
+
+   - Card me jo Ad Network + Block set hai wahi chalta hai (Adsgram / Monetag).
+   - Card ki Daily limit (adLimit) har user ke liye alag count hoti hai. 0 = unlimited.
+   - Card ka ad fail ho to Fallback. Skip karne par reward nahi, fallback bhi nahi.
+   - Reward tabhi jab user ad poora dekhe.
    ===================================================================== */
 (() => {
-  const DEBUG = true;
+  const DEBUG = false;   /* true = testing ke liye toast me "task=... | chain" dikhega. Live me false */
 
   const DEF = {
     pNet: 'adsgram', pBlock: '59522',
@@ -17,11 +23,11 @@
     cooldownSec: 20, maxAdsPerDay: 0,
     taskOn: true, taskBlock: 'task-59520', taskReward: 10, taskIntervalMin: 5, maxTaskPerDay: 0,
     monetagSdk: '//libtl.com/sdk.js',
-    intBlock: 'int-59518',
-    intGapMs: 180000
+    intBlock: 'int-59518',          /* result screen interstitial */
+    intGapMs: 180000                /* interstitial ke beech kam se kam 3 minute */
   };
   const num2 = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
-  /* admin panel ki value kisi bhi naam se aaye (Adsgram Rewarded, monetag_r ...) -> adsgram / monetag */
+  /* admin panel ki value kisi bhi naam se aaye ("Adsgram Rewarded", "monetag"...) -> adsgram / monetag */
   const normNet = n => { n = String(n || '').toLowerCase(); return n.includes('monetag') ? 'monetag' : n.includes('adsgram') ? 'adsgram' : n === 'demo' ? 'demo' : ''; };
   const cfg = () => {
     const a = (window.RC && window.RC.ads) || {};
@@ -58,6 +64,9 @@
   addScript('https://telegram.org/js/telegram-web-app.js');
   addScript('https://sad.adsgram.ai/js/sad.min.js');
 
+  const adTasks = () => ((window.RC && window.RC.tasks) ? Object.values(window.RC.tasks) : [])
+    .filter(x => x && x.kind === 'ad' && x.enabled !== false);
+
   const MZ = {};
   function ensureMonetag(zone) {
     const c = cfg(), z = String(zone), fn = 'show_' + z;
@@ -67,7 +76,7 @@
     }));
     return MZ[z];
   }
-  /* sab Monetag zones pehle se load karo (primary, fallback, aur har task card ke) */
+  /* sab Monetag zones pehle se load karo (primary, fallback, aur har card ke) */
   function preloadMonetag() {
     const c = cfg(), zones = new Set();
     if (c.fNet === 'monetag' && c.fBlock) zones.add(String(c.fBlock));
@@ -78,7 +87,7 @@
   setTimeout(preloadMonetag, 1500);
   setTimeout(preloadMonetag, 6000);   /* config Firebase se aane ke baad dobara */
 
-  /* ---- providers ---- */
+  /* ---- providers: resolve = user ne ad dekha | reject(err.skipped) = skip | reject = ad nahi mila ---- */
   const run = {
     demo: () => new Promise(res => _demo(res)),
     adsgram: block => new Promise((res, rej) => {
@@ -87,6 +96,7 @@
         window.Adsgram.init({ blockId: String(block) }).show()
           .then(r => (r && r.done === false) ? rej(Object.assign(new Error('skipped'), { skipped: 1 })) : res())
           .catch(e => {
+            /* Adsgram: error:false = user ne skip/close kiya, error:true = ad mila hi nahi */
             if (e && e.error === false) rej(Object.assign(new Error('skipped'), { skipped: 1 }));
             else rej(new Error((e && (e.description || e.message)) || 'Adsgram no ad'));
           });
@@ -98,8 +108,8 @@
     })
   };
 
-  /* ---- Rewarded ad (Watch Ad tasks) ---- */
-  const _demo = showRewardedAd;
+  /* ---- Rewarded ad ---- */
+  const _demo = showRewardedAd;     /* purana 3 second wala demo ad */
   function loadingBox(on) {
     let o = document.getElementById('ad-load');
     if (!on) { if (o) o.remove(); return; }
@@ -108,10 +118,8 @@
     o.innerHTML = '<div class="ad-box"><b>Loading ad…</b><small>Please wait</small></div>';
     document.getElementById('app').appendChild(o);
   }
-  const adTasks = () => ((window.RC && window.RC.tasks) ? Object.values(window.RC.tasks) : [])
-    .filter(x => x && x.kind === 'ad' && x.enabled !== false);
 
-  /* ---- CARD PEHCHAN: kaun sa Watch Ad card dabaya ---- */
+  /* ---- CARD PEHCHAN: kaun sa Watch Ad card dabaya gaya ---- */
   const reEsc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const clean = s => String(s || '').replace(/\s+/g, ' ').trim();
   function detectTask(el) {
@@ -146,6 +154,7 @@
     }
     return null;
   }
+  /* Button ke click se pehle (capture) pata kar lo ki kaun sa card dabaya gaya */
   document.addEventListener('click', e => {
     try {
       const hit = detectTask(e.target);
@@ -165,9 +174,8 @@
     if (!c.enabled) { toast('Ads are turned off'); return; }
     const task = findTask(taskArg), tid = task && task.id ? String(task.id) : '';
     const st = dayState();
-    if (!task && adTasks().length) dbg('Card pehchana nahi gaya: Default (Primary) chalega');
 
-    /* daily limits */
+    /* daily limits: total + is card ki apni limit */
     if (c.maxAdsPerDay > 0 && st.t >= c.maxAdsPerDay) { toast('Daily ad limit reached. Come back tomorrow'); return; }
     const cl = task ? num2(task.adLimit) : 0;
     if (cl > 0 && tid && (st.c[tid] || 0) >= cl) { toast('Is task ki daily limit poori ho gayi'); return; }
@@ -176,7 +184,7 @@
     const wait = Math.ceil((LS.get('ads_last', 0) + c.cooldownSec * 1000 - Date.now()) / 1000);
     if (c.cooldownSec > 0 && wait > 0) { toast('Next ad in ' + wait + 's'); return; }
 
-    /* ad chain: card ka apna ad -> (nahi to) Primary -> Fallback */
+    /* ad chain: card ka apna ad -> (card na mile to) Primary -> Fallback */
     const chain = [];
     const add = (net, block) => { net = normNet(net); if (net && block && run[net] && !chain.some(x => x.net === net && x.block === String(block))) chain.push({ net, block: String(block) }); };
     if (task && normNet(task.adNet) && task.adBlock) add(task.adNet, task.adBlock);
@@ -196,7 +204,7 @@
         LS.set('ads_last', Date.now());
         cb();                                                          /* reward sirf yahan */
       }).catch(e => {
-        if (e && e.skipped) { loadingBox(false); toast('Ad skipped. Reward nahi mila'); return; }
+        if (e && e.skipped) { loadingBox(false); toast('Ad skipped. Reward nahi mila'); return; }   /* skip par fallback nahi */
         dbg(p.net + ' ' + p.block + ' failed: ' + (e && e.message || e));
         next(i + 1);
       });
@@ -211,7 +219,7 @@
     lastInt = Date.now();
     let d = 0; const go2 = () => { if (!d) { d = 1; then(); } };
     try { window.Adsgram.init({ blockId: String(c.intBlock) }).show().then(go2).catch(go2); } catch (e) { go2(); }
-    setTimeout(go2, 20000);
+    setTimeout(go2, 20000);   /* kuch atak jaye to bhi aage badho */
   }
   const _ra = resAgain, _rh = resHome;
   resAgain = function () { if (RES.busy) return; interstitial(() => _ra()); };
