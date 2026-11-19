@@ -1,11 +1,12 @@
 /* =====================================================================
-   ads.js v7 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
+   ads.js v8 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
    Load order: profile_plus.js -> remote_config.js -> ads.js -> boot();
    Testing ke baad DEBUG = false kar dena.
    Count reset: localStorage.removeItem('ads_day')
    ===================================================================== */
 (() => {
-  const DEBUG = true;   /* TEST: toast me chain dikhega. Live me false */
+  const DEBUG = true;          /* TEST: toast me chain + error dikhega. Live me false */
+  const CARD_FALLBACK = true;  /* true = card ka ad fail ho to Primary/Fallback chale. false = sirf card ka ad */
 
   const DEF = {
     pNet: 'adsgram', pBlock: '59522',
@@ -112,11 +113,17 @@
       attempt(String(block), true);
     }),
 
+    /* Monetag: asli error message saath me */
     monetag: block => ensureMonetag(block).then(fn => {
       if (!fn) throw new Error('Monetag SDK not loaded (zone ' + block + ')');
       const t0 = Date.now();
-      return withTimeout(Promise.resolve(fn()), 25000, 'Monetag timeout (zone ' + block + ')')
-        .then(() => { if (Date.now() - t0 < 2500) throw Object.assign(new Error('skipped'), { skipped: 1 }); });
+      return withTimeout(Promise.resolve().then(() => fn()), 25000, 'Monetag timeout (zone ' + block + ')')
+        .then(() => { if (Date.now() - t0 < 2500) throw Object.assign(new Error('skipped'), { skipped: 1 }); })
+        .catch(e => {
+          if (e && e.skipped) throw e;
+          let d = ''; try { d = (e && e.message) || JSON.stringify(e); } catch (x) { }
+          throw new Error('Monetag: ' + (d || 'no ad / rejected'));
+        });
     })
   };
 
@@ -215,11 +222,12 @@
     const wait = Math.ceil((LS.get('ads_last', 0) + c.cooldownSec * 1000 - Date.now()) / 1000);
     if (c.cooldownSec > 0 && wait > 0) { if (userClick) toast('Next ad in ' + wait + 's'); return; }
 
-    /* chain: card ka apna ad ho to SIRF wahi (fallback nahi). Warna Primary -> Fallback */
+    /* chain: card ka apna ad -> (CARD_FALLBACK true ho to) Primary -> Fallback */
     const chain = [];
     const add = (net, block) => { net = normNet(net); if (net && block && run[net] && !chain.some(x => x.net === net && x.block === String(block))) chain.push({ net, block: String(block) }); };
     if (task && normNet(task.adNet) && task.adBlock) {
       add(task.adNet, task.adBlock);
+      if (CARD_FALLBACK) { add(c.pNet, c.pBlock); add(c.fNet, c.fBlock); }
     } else {
       add(c.pNet, c.pBlock);
       add(c.fNet, c.fBlock);
