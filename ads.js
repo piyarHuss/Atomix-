@@ -1,12 +1,17 @@
 /* =====================================================================
-   ads.js v8 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
+   ads.js v9 - Ludo Masters (Adsgram + Monetag) - ADMIN PANEL COMPATIBLE
    Load order: profile_plus.js -> remote_config.js -> ads.js -> boot();
    Testing ke baad DEBUG = false kar dena.
    Count reset: localStorage.removeItem('ads_day')
+
+   v9 changes:
+   - CARD_FALLBACK = false: card me jo network select hai wahi chalega (Adsgram card = Adsgram, Monetag card = Monetag)
+   - Monetag SDK URL: agar admin me poora <script ...> tag paste ho jaye to bhi src khud nikal leta hai
+   - Monetag SDK load fail hone par cache hat jata hai, agli baar dobara try hoga
    ===================================================================== */
 (() => {
-  const DEBUG = true;          /* TEST: toast me chain + error dikhega. Live me false */
-  const CARD_FALLBACK = true;  /* true = card ka ad fail ho to Primary/Fallback chale. false = sirf card ka ad */
+  const DEBUG = true;           /* TEST: toast me chain + error dikhega. Live me false */
+  const CARD_FALLBACK = false;  /* false = card ka apna network hi chalega. true = fail hone par Primary/Fallback chalega */
 
   const DEF = {
     pNet: 'adsgram', pBlock: '59522',
@@ -66,12 +71,27 @@
     return Object.values(byId).filter(x => x && x.kind === 'ad' && x.enabled !== false);
   };
 
+  /* ---- Monetag ---- */
+  /* Admin me galti se poora <script src='...'> tag paste ho to bhi sirf src nikal lo */
+  const sdkUrl = s => {
+    s = String(s || '');
+    const m = s.match(/src\s*=\s*['"]([^'"]+)['"]/i);
+    return (m ? m[1] : s).trim();
+  };
+
   const MZ = {};
   function ensureMonetag(zone) {
     const c = cfg(), z = String(zone), fn = 'show_' + z;
     if (window[fn]) return Promise.resolve(window[fn]);
-    if (!MZ[z]) MZ[z] = addScript(c.monetagSdk, { 'data-zone': z, 'data-sdk': fn }).then(() => new Promise(r => {
-      let n = 0; const t = setInterval(() => { if (window[fn] || ++n > 30) { clearInterval(t); r(window[fn]); } }, 100);
+    if (!MZ[z]) MZ[z] = addScript(sdkUrl(c.monetagSdk) || DEF.monetagSdk, { 'data-zone': z, 'data-sdk': fn }).then(() => new Promise(r => {
+      let n = 0;
+      const t = setInterval(() => {
+        if (window[fn] || ++n > 30) {
+          clearInterval(t);
+          if (!window[fn]) delete MZ[z];   /* load fail hua to cache hata do, agli baar retry hoga */
+          r(window[fn]);
+        }
+      }, 100);
     }));
     return MZ[z];
   }
