@@ -12,7 +12,7 @@
      - Opponent leave kare ya 3 turn miss kare to aap jeet jate ho
    (AI match pehle jaisa hi chalta hai)
 
-   v5.4 ADD: Smart + aggressive bot brain.
+   v5.4 ADD: Smart + aggressive bot brain (fair dice, tactical move selection).
    v5.3 ADD: 15-second turn timer.
    v5.2 FIX: exact cell centers.
 
@@ -1368,7 +1368,9 @@
             });
           }
         }
-        if (capturedCount) score += 245 * capturedCount;
+        // Strong tactical priority: capture is usually the best move, but a
+        // guaranteed finish (10000 points) always outranks an ordinary capture.
+        if (capturedCount) score += 900 * capturedCount;
 
         // Avoid exposing valuable pieces; exact one-die threat probability.
         if (next >= 0 && next <= LAST_TRACK_STEP) {
@@ -1498,15 +1500,11 @@
       state.busy = true;
 
       const isForced = Number.isInteger(forced) && forced >= 1 && forced <= 6;
-      // AI dice tuning: when the computer (red) rolls, six has a 15% chance.
-      // The remaining 85% is split equally across 1-5 (17% each).
-      // Human rolls remain fair (1-6 equally likely); online forced rolls
-      // always use the value received from the opponent.
-      const rollComputerDie = () =>
-        Math.random() < 0.15 ? 6 : 1 + Math.floor(Math.random() * 5);
-      const n = isForced
-        ? forced
-        : (isAI && color === "red" ? rollComputerDie() : 1 + Math.floor(Math.random() * 6));
+      // Fair dice for every player: each number from 1 to 6 has equal chance.
+      // The AI becomes stronger through better move selection, never by
+      // changing dice odds or using the entry fee / bet amount.
+      // Online forced rolls always use the value received from the opponent.
+      const n = isForced ? forced : 1 + Math.floor(Math.random() * 6);
 
       /* meri roll: value yahin banti hai aur opponent ko bheji jati hai */
       if (ONLINE && color === "blue" && !isForced) sendNet({ type: "roll", v: n });
