@@ -1,4 +1,9 @@
-/* LUDO MASTERS — 2 PLAYER LUDO (v5.5 ONLINE)
+/* LUDO MASTERS — 2 PLAYER LUDO (v5.6 ONLINE)
+   v5.6 ADD: FIRST TOKEN HOME WINS
+     - Jis player ki pehli 1 goti ghar (FINISH) pahunchegi wahi jeetega
+     - 4 goti pahunchane ki zarurat nahi
+     - Counter ab 0/1 dikhata hai, bot finish wali chaal ko sabse upar rakhta hai
+
    v5.5 ADD: REAL USER vs USER online play (match.net from matchmaking.js)
      - Har phone par aap hamesha neeche wale = BLUE, opponent upar wala = RED
      - Sirf apni turn par apna dice / apne tokens chalte hain (opponent ka dice/token lock)
@@ -51,6 +56,9 @@
   const LAST_TRACK_STEP = 42;
   const LANE_START = 43;
   const FINISH = 47;
+
+  /* v5.6: kitni goti ghar pahunchne par jeet (1 = pehli goti par hi jeet) */
+  const TOKENS_TO_WIN = 1;
 
   const TRACK = [
     [5,0],[5,1],[5,2],[5,3],[5,4],
@@ -707,7 +715,7 @@
             <div class="lm2-avatar" id="lm2-red-profile">
               ${avatarHtml(match.opponentAvatar || PLAYERS.red.avatar, opponent)}
               <span class="lm2-tmr" id="lm2-red-tmr" hidden><b>15</b></span>
-              <em class="lm2-count" id="lm2-red-count">0/4</em>
+              <em class="lm2-count" id="lm2-red-count">0/${TOKENS_TO_WIN}</em>
             </div>
           </div>
         </div>
@@ -731,7 +739,7 @@
               <div class="lm2-avatar" id="lm2-blue-profile">
                 ${avatarHtml(match.meAvatar || PLAYERS.blue.avatar, me)}
                 <span class="lm2-tmr" id="lm2-blue-tmr" hidden><b>15</b></span>
-                <em class="lm2-count" id="lm2-blue-count">0/4</em>
+                <em class="lm2-count" id="lm2-blue-count">0/${TOKENS_TO_WIN}</em>
               </div>
             </div>
             <div class="lm2-quick">
@@ -1038,7 +1046,7 @@
         profiles[color].classList.toggle("turn", myTurn);
 
         const done = state.tokens[color].filter(s => s === FINISH).length;
-        counts[color].textContent = `${done}/4`;
+        counts[color].textContent = `${Math.min(done, TOKENS_TO_WIN)}/${TOKENS_TO_WIN}`;
       });
 
       renderTokens();
@@ -1342,8 +1350,8 @@
           if (next >= LANE_START && old < LANE_START) score += 95;
         }
 
-        // Finish is the strongest strategic move.
-        if (next === FINISH) score += 340;
+        // v5.6: pehli goti finish = seedha jeet, isliye ye sabse upar.
+        if (next === FINISH) score += 10000;
 
         // Capture every opposing token on the landing square.
         let capturedCount = 0;
@@ -1413,7 +1421,6 @@
         // Winning race: increase urgency when close to finishing.
         const finishedAfter = nextMine.filter(s => s === FINISH).length;
         score += finishedAfter * 22;
-        if (next === FINISH && nextMine.every(s => s === FINISH)) score += 10000;
 
         // Tiny randomness prevents identical predictable choices in equal positions.
         score += Math.random() * 1.5;
@@ -1455,7 +1462,7 @@
             score += captures * 1500;
           }
         }
-        if (next === FINISH) score += 1100;
+        if (next === FINISH) score += 11000;
         if (old === -1) score += 100;
         else score += die * (next >= LANE_START ? 8 : 4);
 
@@ -1468,7 +1475,6 @@
         // Six remains preferred when it actually releases a token or wins/captures.
         if (die === 6 && old !== -1 && !capturesMade && next !== FINISH) score -= 24;
         if (state.sixStreak.red === 1 && die === 6) score -= 35;
-        if (next === FINISH && state.tokens.red.every((v, i) => i === index ? true : v === FINISH)) score += 10000;
         options.push({ die, score, index });
       }
 
@@ -1635,8 +1641,12 @@
       const reachedHome = newStep === FINISH;
       if (reachedHome) audio.play("token_home");
 
-      if (state.tokens[color].every(s => s === FINISH)) {
+      /* v5.6: pehli goti ghar pahunchte hi jeet (TOKENS_TO_WIN = 1) */
+      if (state.tokens[color].filter(s => s === FINISH).length >= TOKENS_TO_WIN) {
         state.moving = null;
+        update();
+        await wait(500);   /* goti ko ghar me pahunchte dikhne do, phir result */
+        if (destroyed) return;
         finishGame(color);
         return;
       }
