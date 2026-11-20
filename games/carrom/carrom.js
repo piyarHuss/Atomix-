@@ -1,5 +1,5 @@
 /* =====================================================================
-   games/carrom/carrom.js  -  Carrom Masters engine (v7: pro aim guide + mixed bot)
+   games/carrom/carrom.js  -  Carrom Masters engine (v8.1: image path fix)
    ---------------------------------------------------------------------
    Folder:
      games/carrom/carrom.js
@@ -23,6 +23,11 @@
      window.CarromGame.remoteAim({x,dx,dy,power,on})          (online opponent ka live aim/slider)
      onFinish({ won:true|false, winner:'you'|'bot', points })
 
+   v8.1:
+     - IMAGE FIX: BASE detect na ho to page ke <script> tags me carrom*.js dhoondta hai.
+       Image load fail ho to kai paths try karta hai (BASE, games/carrom/, /games/carrom/ ...),
+       pehle ?v= ke saath phir bina. Jo path chale use BASE bana leta hai (CSS bhi update).
+       Fail hone par console me saare tried URLs + screen par toast "Image missing: ...".
    v8:
      - QUEEN (red goti) FIX: queen akeli pocket ho to turn milta hai (cover karne ke liye).
        Us shot me apni goti dali to queen cover, warna queen wapas center me. HUD me ♛? dikhta hai.
@@ -41,7 +46,17 @@
 
   var SRC = '';
   try { SRC = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+  if (!SRC) {
+    // currentScript null ho (eval / dynamic load) to page ke scripts me carrom*.js dhoondo
+    try {
+      var _ss = document.getElementsByTagName('script');
+      for (var _i = _ss.length - 1; _i >= 0; _i--) {
+        if (/carrom[^\/]*\.js/i.test(_ss[_i].src || '')) { SRC = _ss[_i].src; break; }
+      }
+    } catch (e) {}
+  }
   var BASE = SRC ? SRC.replace(/[?#].*$/, '').replace(/[^\/]*$/, '') : 'games/carrom/';
+  var BASE0 = BASE;               // shuru ka BASE (agar baad me badle to CSS update ke kaam aata hai)
   var LA = BASE + '../assets/';   // Ludo ki shared assets
   // Telegram cache todne ke liye: carrom.js?v=7 se "?v=7" nikaal ke har asset/sound par lagate hain
   var VQ = (SRC.match(/\?v=[^&#]*/) || [''])[0];
@@ -546,21 +561,65 @@
     function say(t, ms) { toast.textContent = t; toast.classList.add('show'); later(function () { toast.classList.remove('show'); }, ms || 1400); }
 
     // ---------- assets ----------
+    // v8.1: image fail ho to kai paths try karta hai; jo chale use BASE bana leta hai
     function loadImages(done) {
       var names = { board: 'board.png', white: 'coin_white.png', black: 'coin_black.png', queen: 'coin_queen.png', striker: 'striker.png' };
-      var keys = Object.keys(names), left = keys.length, fired = false;
-      function fin() { if (fired) return; fired = true; done(); }
+      var keys = Object.keys(names), left = keys.length, fired = false, failed = [], okBase = null;
+      var baseList = [BASE, 'games/carrom/', '/games/carrom/', './games/carrom/', '../games/carrom/'];
+
+      function fin() {
+        if (fired) return; fired = true;
+        console.log('[carrom] BASE =', BASE, '| SRC =', SRC || '(empty)');
+        if (failed.length) {
+          console.warn('[carrom] failed images:', failed.join(', '));
+          say('Image missing: ' + failed.join(', '), 5000);
+        }
+        done();
+      }
       setTimeout(fin, 8000);   // slow network (Telegram): 8 sec baad bina rukke game shuru
-      keys.forEach(function (k) {
-        var im = new Image();
-        im.onload = function () {
-          imgs[k] = im;
-          if (fired) { try { buildSprites(); } catch (e) {} }   // der se aayi image ke baad sprites dobara
-          if (!--left) fin();
-        };
-        im.onerror = function () { imgs[k] = null; if (!--left) fin(); };
-        im.src = U(BASE + 'assets/' + names[k]);
-      });
+
+      function useBase(b) {
+        // jo base chal gaya use yaad rakho, CSS (striker thumb, menu images) bhi update
+        if (okBase) return;
+        okBase = b;
+        if (b !== BASE) {
+          console.log('[carrom] working base:', b);
+          var old = BASE0;
+          BASE = b;
+          try {
+            var se = document.getElementById('cr-style');
+            if (se) se.textContent = CSS.split(old).join(b);
+          } catch (e) {}
+        }
+      }
+
+      function loadOne(k) {
+        var list = okBase ? [okBase].concat(baseList) : baseList.slice();
+        var tries = [], i;
+        for (i = 0; i < list.length; i++) {
+          tries.push(list[i] + 'assets/' + names[k] + VQ);      // ?v= ke saath
+          if (VQ) tries.push(list[i] + 'assets/' + names[k]);   // bina ?v= ke
+        }
+        var idx = 0;
+        (function next() {
+          if (idx >= tries.length) {
+            console.warn('[carrom] image FAIL (sab paths try kiye):', names[k], tries);
+            imgs[k] = null; failed.push(names[k]);
+            if (!--left) fin();
+            return;
+          }
+          var url = tries[idx++], im = new Image();
+          im.onload = function () {
+            imgs[k] = im;
+            useBase(url.replace(/assets\/[^\/]*$/, ''));
+            if (fired) { try { buildSprites(); } catch (e) {} }   // der se aayi image ke baad sprites dobara
+            if (!--left) fin();
+          };
+          im.onerror = function () { console.warn('[carrom] try fail:', url); next(); };
+          im.src = url;
+        })();
+      }
+      keys.forEach(loadOne);
     }
     function makeSprite(img, px, tint) {
       var c = document.createElement('canvas'); c.width = c.height = px;
