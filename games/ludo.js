@@ -1,9 +1,4 @@
-/* LUDO MASTERS — 2 PLAYER LUDO (v5.6 ONLINE)
-   v5.6 ADD: FIRST TOKEN HOME WINS
-     - Jis player ki pehli 1 goti ghar (FINISH) pahunchegi wahi jeetega
-     - 4 goti pahunchane ki zarurat nahi
-     - Counter ab 0/1 dikhata hai, bot finish wali chaal ko sabse upar rakhta hai
-
+/* LUDO MASTERS — 2 PLAYER LUDO (v5.5 ONLINE)
    v5.5 ADD: REAL USER vs USER online play (match.net from matchmaking.js)
      - Har phone par aap hamesha neeche wale = BLUE, opponent upar wala = RED
      - Sirf apni turn par apna dice / apne tokens chalte hain (opponent ka dice/token lock)
@@ -12,7 +7,7 @@
      - Opponent leave kare ya 3 turn miss kare to aap jeet jate ho
    (AI match pehle jaisa hi chalta hai)
 
-   v5.4 ADD: Smart + aggressive bot brain (fair dice, tactical move selection).
+   v5.4 ADD: Smart + aggressive bot brain.
    v5.3 ADD: 15-second turn timer.
    v5.2 FIX: exact cell centers.
 
@@ -56,9 +51,6 @@
   const LAST_TRACK_STEP = 42;
   const LANE_START = 43;
   const FINISH = 47;
-
-  /* v5.6: kitni goti ghar pahunchne par jeet (1 = pehli goti par hi jeet) */
-  const TOKENS_TO_WIN = 1;
 
   const TRACK = [
     [5,0],[5,1],[5,2],[5,3],[5,4],
@@ -715,7 +707,7 @@
             <div class="lm2-avatar" id="lm2-red-profile">
               ${avatarHtml(match.opponentAvatar || PLAYERS.red.avatar, opponent)}
               <span class="lm2-tmr" id="lm2-red-tmr" hidden><b>15</b></span>
-              <em class="lm2-count" id="lm2-red-count">0/${TOKENS_TO_WIN}</em>
+              <em class="lm2-count" id="lm2-red-count">0/4</em>
             </div>
           </div>
         </div>
@@ -739,7 +731,7 @@
               <div class="lm2-avatar" id="lm2-blue-profile">
                 ${avatarHtml(match.meAvatar || PLAYERS.blue.avatar, me)}
                 <span class="lm2-tmr" id="lm2-blue-tmr" hidden><b>15</b></span>
-                <em class="lm2-count" id="lm2-blue-count">0/${TOKENS_TO_WIN}</em>
+                <em class="lm2-count" id="lm2-blue-count">0/4</em>
               </div>
             </div>
             <div class="lm2-quick">
@@ -1046,7 +1038,7 @@
         profiles[color].classList.toggle("turn", myTurn);
 
         const done = state.tokens[color].filter(s => s === FINISH).length;
-        counts[color].textContent = `${Math.min(done, TOKENS_TO_WIN)}/${TOKENS_TO_WIN}`;
+        counts[color].textContent = `${done}/4`;
       });
 
       renderTokens();
@@ -1350,8 +1342,8 @@
           if (next >= LANE_START && old < LANE_START) score += 95;
         }
 
-        // v5.6: pehli goti finish = seedha jeet, isliye ye sabse upar.
-        if (next === FINISH) score += 10000;
+        // Finish is the strongest strategic move.
+        if (next === FINISH) score += 340;
 
         // Capture every opposing token on the landing square.
         let capturedCount = 0;
@@ -1368,9 +1360,7 @@
             });
           }
         }
-        // Strong tactical priority: capture is usually the best move, but a
-        // guaranteed finish (10000 points) always outranks an ordinary capture.
-        if (capturedCount) score += 900 * capturedCount;
+        if (capturedCount) score += 245 * capturedCount;
 
         // Avoid exposing valuable pieces; exact one-die threat probability.
         if (next >= 0 && next <= LAST_TRACK_STEP) {
@@ -1423,6 +1413,7 @@
         // Winning race: increase urgency when close to finishing.
         const finishedAfter = nextMine.filter(s => s === FINISH).length;
         score += finishedAfter * 22;
+        if (next === FINISH && nextMine.every(s => s === FINISH)) score += 10000;
 
         // Tiny randomness prevents identical predictable choices in equal positions.
         score += Math.random() * 1.5;
@@ -1461,22 +1452,29 @@
               bs >= 0 && bs <= LAST_TRACK_STEP && globalIndex("blue", bs) === g
             ).length;
             capturesMade = captures;
-            score += captures * 1500;
+            score += captures * 2400;
           }
         }
-        if (next === FINISH) score += 11000;
-        if (old === -1) score += 100;
-        else score += die * (next >= LANE_START ? 8 : 4);
+        if (next === FINISH) score += 1800;
+        if (old === -1) {
+          const botOnBoard = state.tokens.red.filter(v => v >= 0 && v < FINISH).length;
+          // First token out is a major early-game priority.
+          score += botOnBoard === 0 ? 650 : 260;
+        } else {
+          score += die * (next >= LANE_START ? 12 : 7);
+          if (next >= LANE_START && old < LANE_START) score += 320;
+        }
 
         if (next >= 0 && next <= LAST_TRACK_STEP) {
           const g = globalIndex("red", next);
-          if (SAFE_TRACK_INDEXES.has(g)) score += 140;
-          else score -= enemyThreat(g, state.tokens.blue) * (95 + next * 1.2);
+          if (SAFE_TRACK_INDEXES.has(g)) score += 220;
+          else score -= enemyThreat(g, state.tokens.blue) * (150 + next * 1.8);
         }
         // Avoid wasting a six when a smaller roll gives a safer or stronger move.
         // Six remains preferred when it actually releases a token or wins/captures.
-        if (die === 6 && old !== -1 && !capturesMade && next !== FINISH) score -= 24;
-        if (state.sixStreak.red === 1 && die === 6) score -= 35;
+        if (die === 6 && old !== -1 && !capturesMade && next !== FINISH) score -= 10;
+        if (state.sixStreak.red === 1 && die === 6) score -= 90;
+        if (next === FINISH && state.tokens.red.every((v, i) => i === index ? true : v === FINISH)) score += 10000;
         options.push({ die, score, index });
       }
 
@@ -1500,11 +1498,15 @@
       state.busy = true;
 
       const isForced = Number.isInteger(forced) && forced >= 1 && forced <= 6;
-      // Fair dice for every player: each number from 1 to 6 has equal chance.
-      // The AI becomes stronger through better move selection, never by
-      // changing dice odds or using the entry fee / bet amount.
-      // Online forced rolls always use the value received from the opponent.
-      const n = isForced ? forced : 1 + Math.floor(Math.random() * 6);
+      // HARD AI: human/online dice remain fair. In AI matches the bot
+      // evaluates all six possible dice outcomes and selects the one that
+      // creates the strongest legal move. This makes the bot much tougher.
+      // When all bot tokens are at base, a six is prioritized to release one.
+      const n = isForced
+        ? forced
+        : (isAI && color === "red"
+            ? chooseBotDice()
+            : 1 + Math.floor(Math.random() * 6));
 
       /* meri roll: value yahin banti hai aur opponent ko bheji jati hai */
       if (ONLINE && color === "blue" && !isForced) sendNet({ type: "roll", v: n });
@@ -1639,12 +1641,8 @@
       const reachedHome = newStep === FINISH;
       if (reachedHome) audio.play("token_home");
 
-      /* v5.6: pehli goti ghar pahunchte hi jeet (TOKENS_TO_WIN = 1) */
-      if (state.tokens[color].filter(s => s === FINISH).length >= TOKENS_TO_WIN) {
+      if (state.tokens[color].every(s => s === FINISH)) {
         state.moving = null;
-        update();
-        await wait(500);   /* goti ko ghar me pahunchte dikhne do, phir result */
-        if (destroyed) return;
         finishGame(color);
         return;
       }
