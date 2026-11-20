@@ -1038,7 +1038,7 @@
         profiles[color].classList.toggle("turn", myTurn);
 
         const done = state.tokens[color].filter(s => s === FINISH).length;
-        counts[color].textContent = `${done}/4`;
+        counts[color].textContent = `${done}/1`;
       });
 
       renderTokens();
@@ -1519,10 +1519,17 @@
       // evaluates all six possible dice outcomes and selects the one that
       // creates the strongest legal move. This makes the bot much tougher.
       // When all bot tokens are at base, a six is prioritized to release one.
+      // Slightly improved bot luck only: 6 is 20% (normal fair chance is 16.7%).
+      // Other numbers remain available; the bot no longer picks the best die from all six.
+      const rollComputerDie = () => {
+        const r = Math.random();
+        if (r < 0.20) return 6;
+        return 1 + Math.floor((r - 0.20) / 0.16);
+      };
       const n = isForced
         ? forced
         : (isAI && color === "red"
-            ? chooseBotDice()
+            ? rollComputerDie()
             : 1 + Math.floor(Math.random() * 6));
 
       /* meri roll: value yahin banti hai aur opponent ko bheji jati hai */
@@ -1664,7 +1671,9 @@
       const reachedHome = newStep === FINISH;
       if (reachedHome) audio.play("token_home");
 
-      if (state.tokens[color].every(s => s === FINISH)) {
+      // Match rule: first player to finish even ONE token wins the game.
+      // Remaining three tokens do not need to reach home.
+      if (reachedHome) {
         state.moving = null;
         finishGame(color);
         return;
