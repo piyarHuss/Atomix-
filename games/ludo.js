@@ -1315,8 +1315,25 @@
       return dangerousDice.size / 6;
     }
 
+    // Bot focus strategy: ek waqt par sirf EK goti ko finish tak le jana.
+    // Jab tak focused goti finish nahi hoti, doosri goti base se bahar nahi niklegi.
+    function getBotFocusToken() {
+      const mine = state.tokens.red;
+      const activeIndex = mine.findIndex(s => s >= 0 && s < FINISH);
+      if (activeIndex !== -1) return activeIndex;
+      return mine.findIndex(s => s === -1);
+    }
+
     function chooseAiToken(legal, d) {
       const mine = state.tokens.red;
+      const focusIndex = getBotFocusToken();
+      // Agar ek goti board par hai to sirf usi ko move karo.
+      // Agar koi active goti nahi hai to sirf ek base wali goti release karo.
+      if (focusIndex !== -1 && legal.includes(focusIndex)) {
+        legal = [focusIndex];
+      } else if (focusIndex !== -1 && mine[focusIndex] === -1) {
+        legal = legal.filter(i => i === focusIndex);
+      }
       const foe = state.tokens.blue;
       const totalProgress = arr => arr.reduce((sum, s) =>
         sum + (s === FINISH ? 52 : s < 0 ? 0 : s), 0);
@@ -1386,10 +1403,8 @@
           }
         }
 
-        // Prefer spreading pieces: more active pieces create more future choices.
-        const activeAfter = nextMine.filter(s => s >= 0 && s < FINISH).length;
-        if (old === -1) score += 24;
-        if (activeAfter >= 2 && old >= 0 && old < LAST_TRACK_STEP) score += 7;
+        // Single-token strategy: never spread pieces; keep focus on one goti.
+        if (old === -1 && onBoard > 0) score -= 100000;
 
         // Tactical look-ahead: don't land where the opponent can immediately
         // capture multiple pieces; reward positions that threaten blue pieces.
@@ -1438,6 +1453,8 @@
         const legal = getLegal(state);
         if (!legal.length) continue;
 
+        const focusIndex = getBotFocusToken();
+        if (focusIndex !== -1 && !legal.includes(focusIndex)) continue;
         const index = chooseAiToken(legal, die);
         const old = state.tokens.red[index];
         const next = old === -1 ? 0 : old + die;
@@ -1458,8 +1475,8 @@
         if (next === FINISH) score += 1800;
         if (old === -1) {
           const botOnBoard = state.tokens.red.filter(v => v >= 0 && v < FINISH).length;
-          // First token out is a major early-game priority.
-          score += botOnBoard === 0 ? 650 : 260;
+          // Release exactly one token; other tokens stay at base until this one finishes.
+          score += botOnBoard === 0 ? 650 : -100000;
         } else {
           score += die * (next >= LANE_START ? 12 : 7);
           if (next >= LANE_START && old < LANE_START) score += 320;
@@ -1539,7 +1556,13 @@
         return;
       }
 
-      const legal = getLegal(state);
+      let legal = getLegal(state);
+      if (isBot(color)) {
+        const focusIndex = getBotFocusToken();
+        // If the focused goti cannot move with this dice, pass the turn.
+        // Do not use a six to release a second goti.
+        if (focusIndex !== -1 && !legal.includes(focusIndex)) legal = [];
+      }
 
       if (!legal.length) {
         state.busy = true;
