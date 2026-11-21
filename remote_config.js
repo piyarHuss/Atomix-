@@ -1,5 +1,9 @@
 /* =====================================================================
-   remote_config.js  v3  -  Ludo Masters  (Admin Panel se poora control)
+   remote_config.js  v3.1  -  Ludo Masters  (Admin Panel se poora control)
+   v3.1 fixes:
+     - safe() ab error ka name + message print karta hai (pehle sirf TypeError {})
+     - minWd / demoPayments: agar main code me const hai to bhi crash nahi,
+       value window.RC_MIN_WD / window.RC_DEMO me mil jati hai
    Load order (index.html):
      <script src="profile_plus.js"></script>
      <script src="remote_config.js"></script>
@@ -13,7 +17,10 @@
   const arr = v => Array.isArray(v) ? v.filter(x => x != null) : Object.values(v || {});
   const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
   const dkey = d => { d = new Date(d); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-  const safe = (name, f) => { try { f(); } catch (e) { console.error('[remote_config] ' + name + ' failed:', e); } };
+  const safe = (name, f) => {
+    try { f(); }
+    catch (e) { console.error('[remote_config] ' + name + ' failed:', (e && e.name) || '', (e && e.message) || e); }
+  };
 
   /* ---- app ke ORIGINAL (default) values ---- */
   const ORIG = {
@@ -47,8 +54,24 @@
     try { localStorage.setItem(CK, JSON.stringify(CFG)); } catch (e) { }
     const a = CFG.app || {};
 
-    safe('minWd', () => { if (a.minWd != null) MIN_WD = num(a.minWd) || MIN_WD; });
-    safe('demoPayments', () => { if (a.demoPayments != null) DEMO_PAYMENTS = !!a.demoPayments; });
+    /* minWd: main code me `let MIN_WD` hona chahiye. const ho to fallback chalega */
+    safe('minWd', () => {
+      if (a.minWd == null) return;
+      const v = num(a.minWd);
+      window.RC_MIN_WD = v || window.RC_MIN_WD;
+      try { MIN_WD = v || MIN_WD; }
+      catch (e) { console.warn('[remote_config] MIN_WD const hai -> main code me `let MIN_WD` karo. Abhi window.RC_MIN_WD =', window.RC_MIN_WD); }
+    });
+
+    /* demoPayments: main code me `let DEMO_PAYMENTS` hona chahiye */
+    safe('demoPayments', () => {
+      if (a.demoPayments == null) return;
+      const v = !!a.demoPayments;
+      window.RC_DEMO = v;
+      try { DEMO_PAYMENTS = v; }
+      catch (e) { console.warn('[remote_config] DEMO_PAYMENTS const hai -> main code me `let DEMO_PAYMENTS` karo. Abhi window.RC_DEMO =', v); }
+    });
+
     if (a.turnSeconds) window.LUDO_TURN_SECONDS = num(a.turnSeconds);
     RCX.loginBonus = a.loginBonus != null ? num(a.loginBonus) : 10;
     RCX.bigBonus = a.bigBonus != null ? num(a.bigBonus) : 50;
@@ -103,7 +126,7 @@
       });
     });
 
-    /* Tasks  (NEW: adNet / adBlock / adLimit / adKind / adId app tak pahunchte hain) */
+    /* Tasks  (adNet / adBlock / adLimit / adKind / adId app tak pahunchte hain) */
     safe('tasks', () => {
       if (CFG.tasks == null) return;
       const rows = arr(CFG.tasks);
@@ -224,11 +247,12 @@
   /* ---- Deposit ---- */
   const _od = onDepositSuccess;
   onDepositSuccess = function (amount) {
+    const demo = (typeof window.RC_DEMO === 'boolean') ? window.RC_DEMO : DEMO_PAYMENTS;
     const pack = arr(CFG.packs).find(p => num(p.amt) === num(amount)) || { gems: 0 };
     const gems = num(pack.gems);
     try {
-      db().ref('deposits').push({ uid: UID, amt: num(amount), gems, ts: TS(), method: DEMO_PAYMENTS ? 'demo' : 'app' });
-      if (!DEMO_PAYMENTS) {
+      db().ref('deposits').push({ uid: UID, amt: num(amount), gems, ts: TS(), method: demo ? 'demo' : 'app' });
+      if (!demo) {
         db().ref('users/' + UID + '/dep/total').transaction(t => num(t) + num(amount));
         db().ref('users/' + UID + '/dep/count').transaction(t => num(t) + 1);
       }
