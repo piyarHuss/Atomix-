@@ -414,6 +414,8 @@ V.refer = () => {
    SUPPORT / ABOUT / PRIVACY / TERMS
    ===================================================================== */
 const FAQ = [
+  ['How do I earn money?', () => 'Play games in the cash pool and win Rupees (₹). You can also earn Diamonds from Daily Reward, Tasks, Missions and Watch Ads, and earn more by inviting friends from Refer & Earn.'],
+  ['How do I deposit money?', () => 'Open Store → Deposit, choose a pack and pay by UPI. After the payment is verified your balance is credited. If it does not show up, send us the payment UTR using Send a message or Live Support.'],
   ['How do I withdraw money?', () => `Open Profile → Wallet → Withdraw. Only Rupees (₹) can be withdrawn and the minimum is ₹${MIN_WD}. Requests stay “pending” until our team reviews and pays them.`],
   ['What are Diamonds used for?', () => 'Diamonds are used to enter diamond pools. They cannot be withdrawn.'],
   ['How does Refer & Earn work?', () => 'Share your link from Profile → Refer & Earn. When a new player joins through it, you can claim your reward from the My Referrals tab.'],
@@ -426,10 +428,12 @@ function infoPage(title, ik, ie, back, inner) {
 }
 V.support = () => infoPage('Help & Support', 'support', '🎧', 'profile', `
 <div class="av-card"><div class="av-sh">Contact us</div>
-<button class="pp-s vipb" style="margin-top:0" onclick="openSupport()">Chat on Telegram (@WinUpHelp)</button>
-<button class="pp-s vipb" style="margin-top:8px" onclick="refFeedback()">Send a message</button></div>
+<button class="pp-s vipb" style="margin-top:0" onclick="refFeedback()">Send a message</button></div>
 <div class="av-card"><div class="av-sh">Frequently asked questions</div>${FAQ.map(f => `<details class="rf-q"><summary>${f[0]}</summary><p>${f[1]()}</p></details>`).join('')}</div>
-<div class="av-card"><div class="av-sh">Still need help?</div><button class="pp-s" style="width:100%" onclick="refFeedback()">Write feedback</button></div>`);
+<div class="av-card"><div class="av-sh">Still need help?</div><button class="pp-s" style="width:100%" onclick="refFeedback()">Write feedback</button></div>
+<div class="ls-card" onclick="openSupport()"><span class="ls-ic">${A('support', '🎧', 34, 44)}</span>
+<div class="ls-tx"><b>Live Support</b><small>Chat with our team on Telegram</small></div>
+<button class="ls-bt" onclick="event.stopPropagation();openSupport()">Chat Now</button></div>`);
 V.about = () => infoPage('About Us', 'about', 'ℹ️', 'community', `
 <div class="av-card"><div class="av-sh">Ludo Masters</div><p class="rf-tx">Play Ludo, complete missions, invite friends and earn rewards, all inside Telegram.</p><p class="rf-tx">Version 1.0</p></div>
 <div class="av-card"><div class="av-sh">Links</div>
@@ -591,6 +595,12 @@ ${[['telegram', '✈️', 'Telegram Channel', 'Join Now', "refOpen('channelUrl')
 .rf-q summary{font-weight:700;font-size:calc(13.5*var(--u));color:#2a1b5e;cursor:pointer}
 .rf-q p{margin-top:calc(6*var(--u));font-size:calc(12.5*var(--u));color:#4a3a8a;line-height:1.45}
 .rf-tx{font-size:calc(13*var(--u));color:#4a3a8a;line-height:1.5;margin:0 calc(4*var(--u)) calc(6*var(--u))}
+.ls-card{display:flex;align-items:center;gap:calc(10*var(--u));margin:calc(14*var(--u)) 0 calc(8*var(--u));padding:calc(12*var(--u)) calc(14*var(--u));border-radius:calc(22*var(--u));background:linear-gradient(135deg,#2a9df4,#1b5fd8);border:calc(2*var(--u)) solid rgba(255,255,255,.7);box-shadow:0 calc(6*var(--u)) calc(16*var(--u)) rgba(20,60,160,.35);color:#fff;cursor:pointer}
+.ls-ic{flex:none;width:calc(46*var(--u));height:calc(46*var(--u));display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.2)}
+.ls-tx{flex:1;min-width:0;line-height:1.25}
+.ls-tx b{display:block;font-size:calc(16*var(--u));font-weight:800}
+.ls-tx small{font-size:calc(11.5*var(--u));font-weight:600;opacity:.92}
+.ls-bt{flex:none;border:0;border-radius:calc(18*var(--u));background:#fff;color:#1b5fd8;font:800 calc(13*var(--u)) Poppins,sans-serif;padding:calc(8*var(--u)) calc(16*var(--u));cursor:pointer}
 .pp-sh textarea{width:100%;border-radius:calc(14*var(--u));border:calc(2*var(--u)) solid #cbbdf3;background:#fff;padding:calc(10*var(--u)) calc(14*var(--u));font:600 calc(14*var(--u)) Poppins,sans-serif;color:#2a1b5e;outline:0;resize:none}
 #app.rf.rw #screen{background:url(assets/ref_rw_bg.png) center top/cover no-repeat,linear-gradient(180deg,#1b0e5e,#2a14a0 45%,#140a52)}
 .rw-head{text-align:center;padding-top:calc(6*var(--u))}
