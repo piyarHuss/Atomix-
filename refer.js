@@ -9,6 +9,10 @@
    Telegram link:  https://t.me/Lwinup_bot/winup?startapp=ref_<code>
    BOT TOKEN is file me KABHI nahi daalna (client code public hota hai).
 
+   SUPPORT: Community "Support", Profile "Help & Support" aur Support page ka
+   "Chat on Telegram" button teeno https://t.me/WinUpHelp (@WinUpHelp) kholte hain.
+   Link badalna ho to neeche SUPPORT_URL badlo (ya admin config/refer/supportUrl).
+
    Firebase paths (naye):
      refCodes/<code>          = referrer uid
      refs/<referrerUid>/<uid> = { ts, n, a, claimed, g, c }
@@ -55,9 +59,11 @@
      ref_rf_add.png, ref_rf_mega.png, ref_ic_link.png, ref_s_fb.png
    ===================================================================== */
 const BOT_APP = 'https://t.me/Lwinup_bot/winup';
+/* Support Telegram account: @WinUpHelp */
+const SUPPORT_URL = 'https://t.me/WinUpHelp';
 const REF_DEF = {
   enabled: true, rewardGems: 50, rewardCash: 0, welcomeGems: 20, ptsPerRef: 100,
-  prizes: '500,300,200,100,100,50,50,50,50,50', channelUrl: '', supportUrl: ''
+  prizes: '500,300,200,100,100,50,50,50,50,50', channelUrl: '', supportUrl: SUPPORT_URL
 };
 let REFC = Object.assign({}, REF_DEF), REFC_T = 0;
 let REFS = {};                                   /* mere referrals */
@@ -91,6 +97,7 @@ async function refCfg(force) {
   REFC_T = Date.now();
   const v = await rget('config/refer');
   REFC = Object.assign({}, REF_DEF, v);
+  if (!REFC.supportUrl) REFC.supportUrl = SUPPORT_URL;   /* admin ne khali chhoda to default @WinUpHelp */
 }
 
 /* ---------- open / share ---------- */
@@ -103,6 +110,8 @@ function refOpenUrl(url) {
   } catch (e) { window.open(url, '_blank'); }
 }
 function refOpen(k) { const u = REFC[k]; if (!u) { toast('Coming soon'); return; } refOpenUrl(u); }
+/* Support: Telegram @WinUpHelp kholta hai */
+function openSupport() { refOpenUrl(REFC.supportUrl || SUPPORT_URL); }
 function refCopy() {
   const t = refLink();
   const done = () => toast('Link copied ✓');
@@ -416,7 +425,7 @@ function infoPage(title, ik, ie, back, inner) {
 }
 V.support = () => infoPage('Help & Support', 'support', '🎧', 'profile', `
 <div class="av-card"><div class="av-sh">Contact us</div>
-<button class="pp-s vipb" style="margin-top:0" onclick="${REFC.supportUrl ? "refOpen('supportUrl')" : "refFeedback()"}">${REFC.supportUrl ? 'Chat on Telegram' : 'Send a message'}</button></div>
+<button class="pp-s vipb" style="margin-top:0" onclick="openSupport()">Chat on Telegram (@WinUpHelp)</button></div>
 <div class="av-card"><div class="av-sh">Frequently asked questions</div>${FAQ.map(f => `<details class="rf-q"><summary>${f[0]}</summary><p>${f[1]()}</p></details>`).join('')}</div>
 <div class="av-card"><div class="av-sh">Still need help?</div><button class="pp-s" style="width:100%" onclick="refFeedback()">Write feedback</button></div>`);
 V.about = () => infoPage('About Us', 'about', 'ℹ️', 'community', `
@@ -424,7 +433,7 @@ V.about = () => infoPage('About Us', 'about', 'ℹ️', 'community', `
 <div class="av-card"><div class="av-sh">Links</div>
 <div class="pf-row" onclick="go('privacy')"><div><b>Privacy Policy</b></div>${A('chevron', '›', 16, 16)}</div>
 <div class="pf-row" onclick="go('terms')"><div><b>Terms &amp; Conditions</b></div>${A('chevron', '›', 16, 16)}</div>
-<div class="pf-row" onclick="go('support')"><div><b>Help &amp; Support</b></div>${A('chevron', '›', 16, 16)}</div></div>`);
+<div class="pf-row" onclick="openSupport()"><div><b>Help &amp; Support</b></div>${A('chevron', '›', 16, 16)}</div></div>`);
 V.privacy = () => infoPage('Privacy Policy', 'set_privacy', '🛡️', 'menu', `
 <div class="av-card"><div class="av-sh">What we store</div><p class="rf-tx">Anonymous account ID, display name, avatar, balances, game stats, withdrawal requests (UPI ID) and referral records. If you join through a referral link we also store your Telegram user ID to stop duplicate referrals.</p></div>
 <div class="av-card"><div class="av-sh">How we use it</div><p class="rf-tx">To run the game, credit rewards, process withdrawals, prevent fraud and improve the app. We do not sell your data.</p></div>
@@ -437,7 +446,7 @@ V.terms = () => infoPage('Terms & Conditions', 'set_terms', '📘', 'menu', `
 /* ---------- Community + Menu + Profile links ---------- */
 V.community = () => `<div class="top"><div class="ttl">${A('title_community', '👥', 26, 30)}Community</div></div>
 <div class="ban" style="padding:16px"><div><b>Join Our Community</b><small>Play • Share • Earn Together</small></div>${A('plane', '✈️', 40, 52)}</div>
-${[['telegram', '✈️', 'Telegram Channel', 'Join Now', "refOpen('channelUrl')"], ['refer', '🎁', 'Refer a Friend', 'Earn Now', "go('refer')"], ['support', '🎧', 'Support', 'Get Help', "go('support')"], ['about', 'ℹ️', 'About Us', 'Learn More', "go('about')"]].map(r => `<div class="row" style="border-radius:0;margin:0;border-bottom:1px solid #ece6ff;cursor:pointer" onclick="${r[4]}"><span class="ic" style="background:none;font-size:28px">${A(r[0], r[1], 28, 36)}</span><div>${r[2]}</div><button class="sbtn">${r[3]}</button></div>`).join('')}`;
+${[['telegram', '✈️', 'Telegram Channel', 'Join Now', "refOpen('channelUrl')"], ['refer', '🎁', 'Refer a Friend', 'Earn Now', "go('refer')"], ['support', '🎧', 'Support', 'Get Help', "openSupport()"], ['about', 'ℹ️', 'About Us', 'Learn More', "go('about')"]].map(r => `<div class="row" style="border-radius:0;margin:0;border-bottom:1px solid #ece6ff;cursor:pointer" onclick="${r[4]}"><span class="ic" style="background:none;font-size:28px">${A(r[0], r[1], 28, 36)}</span><div>${r[2]}</div><button class="sbtn">${r[3]}</button></div>`).join('')}`;
 (() => {
   const m = V.menu;
   V.menu = function () {
@@ -450,7 +459,19 @@ ${[['telegram', '✈️', 'Telegram Channel', 'Join Now', "refOpen('channelUrl')
   };
   const p = V.profile;
   V.profile = function () {
-    return p().replace('onclick="invite()"', "onclick=\"go('refer')\"").replace("onclick=\"toast('Support coming soon')\"", "onclick=\"go('support')\"");
+    let h = p()
+      .replace('onclick="invite()"', "onclick=\"go('refer')\"")
+      .replace("onclick=\"toast('Support coming soon')\"", 'onclick="openSupport()"');
+    /* "Help & Support" row ka onclick hamesha openSupport() (chahe pehle khali ho ya go('support')) */
+    const SEP = '<div class="pf-row"';
+    h = h.split(SEP).map((s, i) => {
+      if (!i) return s;
+      if (s.includes('<b>Help & Support</b>') || s.includes('<b>Help &amp; Support</b>')) {
+        return s.replace(/^\s*onclick="[^"]*"/, ' onclick="openSupport()"');
+      }
+      return s;
+    }).join(SEP);
+    return h;
   };
   const g = go;
   go = function (v) {
